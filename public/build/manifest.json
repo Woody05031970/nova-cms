@@ -1,10 +1,21 @@
 {
-  "_seo-CAKHET-R.js": {
-    "file": "assets/seo-CAKHET-R.js",
-    "name": "seo"
+  "_dist-B1OC92Vx.js": {
+    "file": "assets/dist-B1OC92Vx.js",
+    "name": "dist"
+  },
+  "_media-KTDrRNYx.js": {
+    "file": "assets/media-KTDrRNYx.js",
+    "name": "media"
+  },
+  "_seo-DYdTW-yD.js": {
+    "file": "assets/seo-DYdTW-yD.js",
+    "name": "seo",
+    "imports": [
+      "_media-KTDrRNYx.js"
+    ]
   },
   "resources/css/app.css": {
-    "file": "assets/app-CK6KmwnM.css",
+    "file": "assets/app-DtZAZiWV.css",
     "name": "app",
     "names": [
       "app.css"
@@ -13,21 +24,34 @@
     "isEntry": true
   },
   "resources/js/app.js": {
-    "file": "assets/app-4BRwJ0N8.js",
+    "file": "assets/app-CCVWgpAb.js",
     "name": "app",
     "src": "resources/js/app.js",
     "isEntry": true,
     "imports": [
-      "_seo-CAKHET-R.js"
+      "_media-KTDrRNYx.js",
+      "_seo-DYdTW-yD.js"
     ]
   },
   "resources/js/editor.js": {
-    "file": "assets/editor-DCBqz-rT.js",
+    "file": "assets/editor-FiJxO0HW.js",
     "name": "editor",
     "src": "resources/js/editor.js",
     "isEntry": true,
     "imports": [
-      "_seo-CAKHET-R.js"
+      "_media-KTDrRNYx.js",
+      "_dist-B1OC92Vx.js",
+      "_seo-DYdTW-yD.js"
+    ]
+  },
+  "resources/js/product.js": {
+    "file": "assets/product-BUeM-uoP.js",
+    "name": "product",
+    "src": "resources/js/product.js",
+    "isEntry": true,
+    "imports": [
+      "_media-KTDrRNYx.js",
+      "_dist-B1OC92Vx.js"
     ]
   },
   "resources/js/site.js": {

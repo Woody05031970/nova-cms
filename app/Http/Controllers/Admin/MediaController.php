@@ -39,10 +39,12 @@ class MediaController extends Controller
             'original_name' => $media->original_name,
             'created' => $media->created_at?->format('d.m.Y, H:i'),
             'user' => $media->user?->name,
-            'usages' => $media->usages()->map(fn ($p) => [
-                'title' => $p->title.($p->deleted_at ? ' (Papierkorb)' : ''),
-                'url' => $p->deleted_at ? null : route('admin.pages.edit', $p->id),
-            ]),
+            'usages' => $media->usages()->map(fn ($p) => $p instanceof \App\Models\Product
+                ? ['title' => $p->title, 'url' => route('admin.shop.products.edit', $p->id)]
+                : [
+                    'title' => $p->title.($p->deleted_at ? ' (Papierkorb)' : ''),
+                    'url' => $p->deleted_at ? null : route('admin.pages.edit', $p->id),
+                ]),
         ]);
     }
 

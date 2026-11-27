@@ -1,5 +1,6 @@
 @extends('layouts.admin')
 @section('title', 'Einstellungen')
+@push('head') @vite('resources/js/app.js') @endpush
 
 @section('content')
     <h1 class="text-2xl font-semibold tracking-tight">Firmenprofil und Website</h1>
@@ -52,4 +53,37 @@
 
         <div class="flex justify-end"><button class="nova-btn">Speichern</button></div>
     </form>
+
+    <form method="POST" action="{{ route('admin.settings.mail') }}" class="nova-card mt-8 space-y-5" x-data="{ mode: @js(old('mail_mode', $mail['mail_mode'] ?? '')) }">
+        @csrf @method('PUT')
+        <div>
+            <h2 class="font-semibold">E-Mail-Versand</h2>
+            <p class="mt-1 text-sm text-slate-600">Damit Bestellbestätigungen und Nachrichten zuverlässig ankommen, verschickt Nova CMS E-Mails am besten über das Postfach bei Ihrem Hoster.</p>
+        </div>
+        <div class="grid gap-2 sm:grid-cols-3">
+            @foreach (['' => ['Noch nicht eingerichtet', 'E-Mails werden nur protokolliert.'], 'smtp' => ['Über mein Postfach (SMTP)', 'Empfohlen, z. B. IONOS oder Strato.'], 'sendmail' => ['PHP-Versand des Servers', 'Einfach, landet aber öfter im Spam.']] as $k => [$l, $h])
+                <label class="flex cursor-pointer gap-2.5 rounded-xl border border-slate-200 p-3 text-sm has-[:checked]:border-nova-500 has-[:checked]:bg-nova-50">
+                    <input type="radio" name="mail_mode" value="{{ $k }}" x-model="mode" class="mt-0.5"><span><span class="font-medium">{{ $l }}</span><span class="block text-slate-500">{{ $h }}</span></span>
+                </label>
+            @endforeach
+        </div>
+        <div x-show="mode === 'smtp'" class="grid gap-4 sm:grid-cols-2">
+            <div><label class="nova-label" for="mail_host">Postausgangsserver</label>
+                <input class="nova-input" id="mail_host" name="mail_host" placeholder="z. B. smtp.ionos.de oder smtp.strato.de" value="{{ old('mail_host', $mail['mail_host']) }}"></div>
+            <div><label class="nova-label" for="mail_port">Port</label>
+                <input class="nova-input" id="mail_port" name="mail_port" inputmode="numeric" placeholder="587" value="{{ old('mail_port', $mail['mail_port']) }}"></div>
+            <div><label class="nova-label" for="mail_user">Benutzername (meist die E-Mail-Adresse)</label>
+                <input class="nova-input" id="mail_user" name="mail_user" autocomplete="off" value="{{ old('mail_user', $mail['mail_user']) }}"></div>
+            <div><label class="nova-label" for="mail_password">Passwort des Postfachs</label>
+                <input class="nova-input" id="mail_password" name="mail_password" type="password" autocomplete="new-password" placeholder="{{ $hasMailPassword ? 'gespeichert, nur zum Ändern ausfüllen' : '' }}"></div>
+        </div>
+        <div class="max-w-md"><label class="nova-label" for="mail_from">Absenderadresse</label>
+            <input class="nova-input" id="mail_from" name="mail_from" type="email" placeholder="{{ $values['contact_email'] ?: 'info@ihre-domain.de' }}" value="{{ old('mail_from', $mail['mail_from']) }}">
+            <p class="nova-help">Sollte zu Ihrer Domain gehören, sonst landen E-Mails im Spam.</p></div>
+        <div class="flex flex-wrap justify-end gap-2">
+            <button class="nova-btn-secondary" form="mail-test">Test-E-Mail an mich senden</button>
+            <button class="nova-btn">E-Mail-Einstellungen speichern</button>
+        </div>
+    </form>
+    <form id="mail-test" method="POST" action="{{ route('admin.settings.mail.test') }}">@csrf</form>
 @endsection
