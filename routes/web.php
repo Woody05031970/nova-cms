@@ -7,8 +7,10 @@ use App\Http\Controllers\Admin\Licensing\LicenseController;
 use App\Http\Controllers\Admin\Licensing\MarketplaceController;
 use App\Http\Controllers\Admin\Licensing\ServerController as LicenseServerController;
 use App\Http\Controllers\Admin\MediaController;
+use App\Http\Controllers\Admin\MenuController;
 use App\Http\Controllers\Admin\PageController;
 use App\Http\Controllers\Admin\PluginController;
+use App\Http\Controllers\Admin\SearchController;
 use App\Http\Controllers\Admin\SecurityController;
 use App\Http\Controllers\Admin\SeoController;
 use App\Http\Controllers\Admin\SettingsController;
@@ -79,6 +81,10 @@ Route::middleware(['auth', 'admin', LicenseGate::class])->prefix('admin')->name(
     Route::get('/', DashboardController::class)->name('dashboard');
 
     Route::get('/seiten', [PageController::class, 'index'])->name('pages.index');
+    Route::get('/suche', SearchController::class)->name('search');
+    Route::get('/menue', [MenuController::class, 'index'])->name('menu');
+    Route::put('/menue', [MenuController::class, 'update'])->name('menu.update');
+    Route::post('/seiten/live-vorschau', [PageController::class, 'livePreview'])->name('pages.live-preview');
     Route::post('/seiten', [PageController::class, 'store'])->name('pages.store');
     Route::get('/seiten/{page}', [PageController::class, 'edit'])->name('pages.edit');
     Route::put('/seiten/{page}', [PageController::class, 'update'])->name('pages.update');

@@ -19,7 +19,7 @@
     @if ($page->is_home && ! $preview && ($ld = $seo->businessJsonLd()))<script type="application/ld+json">{!! $ld !!}</script>@endif
 @endsection
 @section('banner')
-    @if ($preview)
+    @if ($preview && empty($live))
         <div class="bg-amber-100 px-4 py-2 text-center text-sm text-amber-900">Vorschau: {{ $page->isPublished() ? 'Diese Seite ist online.' : 'Diese Seite ist noch ein Entwurf und für Besucher nicht sichtbar.' }}
             <a href="{{ route('admin.pages.edit', $page) }}" class="ml-2 font-medium underline">Zurück zum Bearbeiten</a></div>
     @endif

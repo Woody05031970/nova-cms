@@ -95,3 +95,6 @@
         </form>
     </dialog>
 @endsection
+@push('head')
+    <script>document.addEventListener('DOMContentLoaded', () => { if (location.hash === '#neu') document.getElementById('new-page')?.showModal(); });</script>
+@endpush

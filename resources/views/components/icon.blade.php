@@ -21,6 +21,16 @@ $paths = [
     'key' => 'M15 7a4 4 0 1 1-3.9 4.9L4 19v2h3v-2h2v-2h2l1.1-1.1A4 4 0 0 1 15 7zm1.5 2.5h.01',
     'store' => 'M4 9l1.5-5h13L20 9M4 9h16M4 9v11h16V9M9 20v-6h6v6',
     'clock' => 'M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18zM12 7v5l3 2',
+    'menu' => 'M4 6h16M4 12h10M8 18h12',
+    'grip' => 'M9 6h.01M15 6h.01M9 12h.01M15 12h.01M9 18h.01M15 18h.01',
+    'code' => 'M8 8l-4 4 4 4M16 8l4 4-4 4M13.5 5l-3 14',
+    'eye' => 'M2.5 12S6 5 12 5s9.5 7 9.5 7-3.5 7-9.5 7-9.5-7-9.5-7zM12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6z',
+    'command' => 'M9 6a3 3 0 1 0-3 3h12a3 3 0 1 0-3-3v12a3 3 0 1 0 3-3H6a3 3 0 1 0 3 3z',
+    'plus' => 'M12 5v14M5 12h14',
+    'trash' => 'M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3',
+    'monitor' => 'M3 5h18v11H3zM8 20h8M12 16v4',
+    'phone' => 'M8 3h8v18H8zM11 18h2',
+    'chevron' => 'M9 6l6 6-6 6',
 ];
 @endphp
 <svg {{ $attributes->merge(['class' => $class]) }} viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="{{ $paths[$name] ?? $paths['puzzle'] }}"/></svg>
