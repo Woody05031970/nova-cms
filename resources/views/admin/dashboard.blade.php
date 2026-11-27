@@ -45,7 +45,25 @@
                         </li>
                     @endforeach
                 </ul>
-                @if ($open->count() > 6)<p class="mt-2 text-sm text-slate-500">und {{ $open->count() - 6 }} weitere</p>@endif
+                @if ($open->count() > 6)
+                    <details class="group">
+                        <summary class="mt-2 cursor-pointer list-none text-sm font-medium text-nova-700 hover:underline"><span class="group-open:hidden">{{ $open->count() - 6 }} weitere anzeigen</span><span class="hidden group-open:inline">Weniger anzeigen</span></summary>
+                        <ul class="divide-y divide-slate-100">
+                            @foreach ($open->slice(6) as $hint)
+                        <li class="flex items-start gap-3 py-3">
+                            <span class="mt-0.5 grid size-6 shrink-0 place-items-center rounded-full bg-amber-100 text-amber-700"><x-icon name="alert" class="size-3.5" /></span>
+                            <div class="min-w-0 flex-1">
+                                <p class="font-medium">{{ $hint['title'] }} <span class="ml-1 rounded-full bg-slate-100 px-2 py-0.5 text-xs font-normal text-slate-500">{{ $hint['area'] }}</span></p>
+                                <p class="text-sm text-slate-600">{{ $hint['help'] }}</p>
+                            </div>
+                            @if ($hint['url'])
+                                <a href="{{ $hint['url'] }}" class="nova-btn-secondary shrink-0 px-3 py-1.5">Erledigen</a>
+                            @endif
+                        </li>
+                            @endforeach
+                        </ul>
+                    </details>
+                @endif
             @endif
         </section>
     </div>

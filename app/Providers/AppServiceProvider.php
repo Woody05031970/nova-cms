@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Models\Page;
 use App\Models\Setting;
 use App\Plugins\Hooks;
 use App\Plugins\PluginManager;
@@ -30,7 +31,7 @@ class AppServiceProvider extends ServiceProvider
         $this->registerCoreHints();
         $this->app->make(PluginManager::class)->bootEnabled();
 
-        View::composer(['layouts.admin', 'site.*'], function ($view) {
+        View::composer(['layouts.admin', 'admin.*', 'site.*'], function ($view) {
             $view->with('siteName', Setting::get('site_name', 'Meine Website'));
         });
     }
@@ -53,5 +54,16 @@ class AppServiceProvider extends ServiceProvider
             fn () => Setting::get('contact_email') !== null && Setting::get('phone') !== null, $profile, 'Rechtliches');
         $hooks->addHint('Branche angeben', 'Damit kann die KI später passende Seiten und Texte vorschlagen.',
             fn () => Setting::get('industry') !== null, $profile, 'KI');
+
+        $pages = url('admin/seiten');
+        $hooks->addHint('Startseite veröffentlichen', 'Ohne Startseite sehen Besucher nur einen Platzhalter.',
+            fn () => Page::published()->where('is_home', true)->exists(), $pages, 'Inhalt');
+        $hooks->addHint('Impressum veröffentlichen', 'In Deutschland Pflicht für fast jede geschäftliche Website. Es gibt eine Vorlage unter "Neue Seite".',
+            fn () => Page::published()->where('purpose', 'imprint')->exists(), $pages, 'Rechtliches');
+        $hooks->addHint('Datenschutzerklärung veröffentlichen', 'Pflicht, sobald Besucherdaten verarbeitet werden, also praktisch immer.',
+            fn () => Page::published()->where('purpose', 'privacy')->exists(), $pages, 'Rechtliches');
+        $hooks->addHint('Beschreibungen für Google ergänzen', 'Jede veröffentlichte Seite braucht einen kurzen Text für die Suchergebnisse.',
+            fn () => Page::published()->exists() && ! Page::published()->where(fn ($q) => $q->whereNull('meta_description')->orWhere('meta_description', ''))->exists(),
+            $pages, 'SEO');
     }
 }

@@ -15,5 +15,13 @@
     },
     "optionalDependencies": {
         "@laravel/multiplex": "^0.4.1"
+    },
+    "dependencies": {
+        "@codemirror/lang-html": "^6.4.12",
+        "@tiptap/core": "^3.35.1",
+        "@tiptap/starter-kit": "^3.35.1",
+        "alpinejs": "^3.17.5",
+        "codemirror": "^6.0.2",
+        "sortablejs": "^1.15.7"
     }
 }
