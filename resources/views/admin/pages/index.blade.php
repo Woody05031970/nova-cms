@@ -54,6 +54,8 @@
                             <td class="px-5 py-3.5">
                                 @if ($page->isPublished())
                                     <span class="inline-flex items-center gap-1.5 text-emerald-700"><span class="size-2 rounded-full bg-emerald-500"></span>Online</span>
+                                @elseif ($page->isScheduled())
+                                    <span class="inline-flex items-center gap-1.5 text-sky-800"><span class="size-2 rounded-full bg-sky-500"></span>Geplant {{ $page->published_at->format('d.m., H:i') }}</span>
                                 @else
                                     <span class="inline-flex items-center gap-1.5 text-slate-500"><span class="size-2 rounded-full bg-slate-300"></span>Entwurf</span>
                                 @endif

@@ -3,12 +3,16 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Licensing\Features;
 use App\Models\Page;
 use App\Models\PageRevision;
+use App\Models\SocialPost;
 use App\Support\Pages\PageTemplates;
+use App\Support\Social\SocialPublisher;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 use Illuminate\View\View;
@@ -56,6 +60,7 @@ class PageController extends Controller
         return view('admin.pages.edit', [
             'page' => $page,
             'revisions' => $page->revisions()->with('user')->limit(10)->get(),
+            'socialPosts' => SocialPublisher::on() ? $page->socialPosts()->limit(5)->get() : collect(),
         ]);
     }
 
@@ -70,8 +75,15 @@ class PageController extends Controller
             'focus_keyword' => ['nullable', 'string', 'max:100'],
             'show_in_menu' => ['boolean'],
             'is_home' => ['boolean'],
-            'action' => ['required', Rule::in(['save', 'publish', 'unpublish'])],
+            'action' => ['required', Rule::in(['save', 'publish', 'unpublish', 'schedule'])],
+            'publish_at' => [Rule::excludeIf($request->input('action') !== 'schedule'), 'required', 'date', 'after:now'],
+            'social_networks' => ['nullable', 'array'],
+            'social_networks.*' => [Rule::in(array_keys(SocialPost::NETWORKS))],
+            'social_text' => ['nullable', 'required_with:social_networks', 'string', 'max:2200'],
         ], [
+            'publish_at.required' => 'Bitte wählen Sie Datum und Uhrzeit für die Veröffentlichung.',
+            'publish_at.after' => 'Der Termin muss in der Zukunft liegen.',
+            'social_text.required_with' => 'Bitte schreiben Sie einen Text für den Beitrag bei Facebook oder Instagram.',
             'title.required' => 'Bitte geben Sie der Seite einen Titel.',
             'meta_title.max' => 'Der Titel für Google sollte höchstens 70 Zeichen haben, sonst wird er abgeschnitten.',
         ]);
@@ -86,9 +98,11 @@ class PageController extends Controller
                 Page::where('is_home', true)->update(['is_home' => false]);
             }
 
-            $status = match ($data['action']) {
-                'publish' => 'published',
-                'unpublish' => 'draft',
+            $schedule = $data['action'] === 'schedule' && ! $page->isPublished() && Features::on('redaktionsplan');
+            $status = match (true) {
+                $data['action'] === 'publish' => 'published',
+                $data['action'] === 'unpublish' => 'draft',
+                $schedule => 'scheduled',
                 default => $page->status,
             };
 
@@ -102,18 +116,35 @@ class PageController extends Controller
                 'show_in_menu' => (bool) ($data['show_in_menu'] ?? false),
                 'is_home' => $isHome,
                 'status' => $status,
-                'published_at' => $status === 'published' ? ($page->published_at ?? now()) : $page->published_at,
+                'published_at' => match (true) {
+                    $schedule => Carbon::parse($data['publish_at']),
+                    $status === 'published' => $page->isScheduled() ? now() : ($page->published_at ?? now()),
+                    $data['action'] === 'unpublish' && $page->isScheduled() => null,
+                    default => $page->published_at,
+                },
                 'updated_by' => $request->user()->id,
             ]);
         });
 
+        $page->refresh();
+        $social = '';
+        if (! empty($data['social_networks']) && SocialPublisher::on() && in_array($page->status, ['published', 'scheduled'], true)) {
+            $posts = app(SocialPublisher::class)->forPage($page, $data['social_networks'], $data['social_text']);
+            $social = ' '.collect($posts)->map(fn (SocialPost $p) => $p->networkName().': '.match ($p->status) {
+                'sent' => 'Beitrag veröffentlicht.',
+                'pending' => 'Beitrag folgt mit der Seite.',
+                default => $p->error,
+            })->implode(' ');
+        }
+
         $message = match ($data['action']) {
             'publish' => 'Veröffentlicht. Ihre Änderungen sind jetzt auf der Website zu sehen.',
+            'schedule' => $page->isScheduled() ? 'Geplant: Die Seite geht am '.$page->published_at->format('d.m.Y').' um '.$page->published_at->format('H:i').' Uhr automatisch online.' : 'Gespeichert.',
             'unpublish' => 'Die Seite ist jetzt offline und nur noch für Sie sichtbar.',
             default => $page->isPublished() ? 'Gespeichert und auf der Website aktualisiert.' : 'Entwurf gespeichert.',
         };
 
-        return redirect()->route('admin.pages.edit', $page)->with('status', $message);
+        return redirect()->route('admin.pages.edit', $page)->with('status', $message.$social);
     }
 
     public function restoreRevision(Request $request, Page $page, PageRevision $revision): RedirectResponse

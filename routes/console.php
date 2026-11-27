@@ -1,9 +1,11 @@
 <?php
 
 use App\Licensing\Signer;
+use App\Support\Planner\Tick;
 use App\Support\Security\Scanner;
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\Schedule;
 
 Artisan::command('inspire', function () {
     $this->comment(Inspiring::quote());
@@ -43,3 +45,10 @@ Artisan::command('nova:license-keys', function () {
     $this->newLine();
     $this->warn('Achtung: Ein neues Schlüsselpaar macht alle bisher ausgegebenen Bestätigungen ungültig.');
 })->purpose('Erzeugt das Schlüsselpaar für den Nova-Lizenzserver');
+
+// Geplante Seiten und Social-Media-Beiträge (läuft auch ohne Cronjob beim nächsten Seitenaufruf)
+Artisan::command('nova:tick', function () {
+    $r = Tick::run();
+    $this->info("{$r['pages']} Seiten veröffentlicht, {$r['posts']} Beiträge gesendet.");
+})->purpose('Veröffentlicht fällige Seiten und Beiträge');
+Schedule::command('nova:tick')->everyMinute();

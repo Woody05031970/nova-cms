@@ -55,6 +55,17 @@ class Page extends Model
         return $this->status === 'published';
     }
 
+    /** Zeitgesteuert: wird zum Termin in published_at automatisch veröffentlicht (Modul Redaktionsplan) */
+    public function isScheduled(): bool
+    {
+        return $this->status === 'scheduled';
+    }
+
+    public function socialPosts(): HasMany
+    {
+        return $this->hasMany(SocialPost::class)->latest('id');
+    }
+
     public function url(): string
     {
         return $this->is_home ? route('home') : route('page.show', $this->slug);

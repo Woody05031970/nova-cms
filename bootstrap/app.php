@@ -1,11 +1,14 @@
 <?php
 
+use App\Http\Middleware\CountVisit;
 use App\Http\Middleware\EnsureAdmin;
 use App\Http\Middleware\EnsureInstalled;
 use App\Http\Middleware\Firewall;
 use App\Http\Middleware\MaintenanceMode;
 use App\Http\Middleware\RequireFeature;
+use App\Http\Middleware\RunDueTasks;
 use App\Http\Middleware\SecurityHeaders;
+use App\Http\Middleware\Turbo;
 use App\Support\Seo\NotFound;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
@@ -26,7 +29,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->append(EnsureInstalled::class);
         $middleware->prepend(Firewall::class);
         $middleware->append(SecurityHeaders::class);
-        $middleware->web(append: [MaintenanceMode::class]);
+        $middleware->web(append: [MaintenanceMode::class, RunDueTasks::class, CountVisit::class, Turbo::class]);
         $middleware->alias([
             'admin' => EnsureAdmin::class,
             'feature' => RequireFeature::class,
