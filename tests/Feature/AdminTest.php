@@ -42,7 +42,7 @@ class AdminTest extends TestCase
             $this->post('/admin/login', ['email' => $user->email, 'password' => 'falsch']);
         }
         $this->post('/admin/login', ['email' => $user->email, 'password' => 'geheim12345'])
-            ->assertSessionHasErrors(['email' => 'Zu viele Fehlversuche. Bitte warten Sie 5 Minute(n).']);
+            ->assertSessionHasErrors(['email' => 'Zu viele Fehlversuche. Aus Sicherheitsgründen ist die Anmeldung für 15 Minute(n) gesperrt.']);
         $this->assertGuest();
     }
 
@@ -59,7 +59,7 @@ class AdminTest extends TestCase
             ->assertOk()
             ->assertSee('Website-Gesundheit')
             ->assertSee('Kurzbeschreibung ergänzen')
-            ->assertSee('2 von 11 Punkten erledigt');
+            ->assertSee('2 von 13 Punkten erledigt');
     }
 
     public function test_einstellungen_speichern_erhoeht_den_gesundheitswert(): void
@@ -72,7 +72,7 @@ class AdminTest extends TestCase
             'phone' => '0221 123', 'contact_email' => 'info@example.com',
         ])->assertSessionHasNoErrors();
 
-        $this->actingAs($admin)->get('/admin')->assertDontSee('Kurzbeschreibung ergänzen')->assertSee('6 von 11 Punkten erledigt');
+        $this->actingAs($admin)->get('/admin')->assertDontSee('Kurzbeschreibung ergänzen')->assertSee('6 von 13 Punkten erledigt');
         $this->get('/')->assertSee('Bäckerei Müller')->assertSee('Brot seit 1952');
     }
 }

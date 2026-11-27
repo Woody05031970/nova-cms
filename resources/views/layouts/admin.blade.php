@@ -6,7 +6,7 @@
         ['label' => 'KI-Assistent', 'url' => route('admin.ai'), 'icon' => 'sparkles', 'order' => 30, 'active' => 'admin.ai*'],
         ['label' => 'Shop', 'url' => null, 'icon' => 'cart', 'order' => 40, 'soon' => true],
         ['label' => 'SEO', 'url' => route('admin.seo'), 'icon' => 'search', 'order' => 60, 'active' => 'admin.seo*'],
-        ['label' => 'Sicherheit', 'url' => null, 'icon' => 'shield', 'order' => 70, 'soon' => true],
+        ['label' => 'Sicherheit', 'url' => route('admin.security'), 'icon' => 'shield', 'order' => 70, 'active' => 'admin.security*'],
         ['label' => 'Plugins', 'url' => route('admin.plugins'), 'icon' => 'puzzle', 'order' => 80, 'active' => 'admin.plugins*'],
         ['label' => 'Einstellungen', 'url' => route('admin.settings'), 'icon' => 'settings', 'order' => 90, 'active' => 'admin.settings*'],
     ];
@@ -71,6 +71,9 @@
                             <x-icon name="logout" /> Abmelden
                         </button>
                     </form>
+                    <a href="{{ route('admin.account') }}" @class(['flex items-center gap-3 rounded-lg px-3 py-2 text-sm hover:bg-slate-100', 'bg-nova-50 font-medium text-nova-700' => request()->routeIs('admin.account*'), 'text-slate-600' => ! request()->routeIs('admin.account*')])>
+                        <x-icon name="user" /> Mein Konto
+                    </a>
                     <p class="px-3 pt-2 text-xs text-slate-400">Angemeldet als {{ auth()->user()->name }}</p>
                 </div>
             </nav>

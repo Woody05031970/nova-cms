@@ -16,6 +16,8 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
         // Global, damit der Installer vor jeder anderen Prüfung (z. B. Anmeldung) greift.
         $middleware->append(\App\Http\Middleware\EnsureInstalled::class);
+        $middleware->prepend(\App\Http\Middleware\Firewall::class);
+        $middleware->append(\App\Http\Middleware\SecurityHeaders::class);
         $middleware->alias([
             'admin' => \App\Http\Middleware\EnsureAdmin::class,
         ]);
