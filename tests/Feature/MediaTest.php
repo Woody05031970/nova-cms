@@ -5,10 +5,16 @@ namespace Tests\Feature;
 use App\Ai\AiDriver;
 use App\Ai\AiManager;
 use App\Ai\AiVision;
+use App\Ai\Drivers\AnthropicDriver;
 use App\Models\Media;
 use App\Models\Page;
 use App\Models\Setting;
 use App\Models\User;
+use GuzzleHttp\Client;
+use GuzzleHttp\Handler\MockHandler;
+use GuzzleHttp\HandlerStack;
+use GuzzleHttp\Middleware;
+use GuzzleHttp\Psr7\Response;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\File;
@@ -174,15 +180,15 @@ class MediaTest extends TestCase
     {
         Setting::putMany(['ai_provider' => 'anthropic', 'ai_model' => 'claude-opus-5-5', 'ai_key' => AiManager::encryptKey('k')]);
         $history = [];
-        $stack = \GuzzleHttp\HandlerStack::create(new \GuzzleHttp\Handler\MockHandler([
-            new \GuzzleHttp\Psr7\Response(200, ['Content-Type' => 'application/json'], json_encode([
+        $stack = HandlerStack::create(new MockHandler([
+            new Response(200, ['Content-Type' => 'application/json'], json_encode([
                 'id' => 'msg_1', 'type' => 'message', 'role' => 'assistant', 'model' => 'claude-opus-5-5',
                 'content' => [['type' => 'text', 'text' => 'Brote im Holzofen.']],
                 'stop_reason' => 'end_turn', 'stop_sequence' => null, 'usage' => ['input_tokens' => 1, 'output_tokens' => 1],
             ])),
         ]));
-        $stack->push(\GuzzleHttp\Middleware::history($history));
-        app()->instance(\App\Ai\Drivers\AnthropicDriver::TRANSPORT_BINDING, new \GuzzleHttp\Client(['handler' => $stack]));
+        $stack->push(Middleware::history($history));
+        app()->instance(AnthropicDriver::TRANSPORT_BINDING, new Client(['handler' => $stack]));
 
         $this->upload(UploadedFile::fake()->image('brot.jpg', 1200, 800));
         $this->actingAs($this->admin)->postJson(route('admin.media.describe', Media::sole()))->assertOk()->assertJson(['alt' => 'Brote im Holzofen.']);

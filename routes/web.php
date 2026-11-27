@@ -5,10 +5,12 @@ use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\MediaController;
 use App\Http\Controllers\Admin\PageController;
 use App\Http\Controllers\Admin\PluginController;
+use App\Http\Controllers\Admin\SeoController;
 use App\Http\Controllers\Admin\SettingsController;
 use App\Http\Controllers\Admin\UploadController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\InstallController;
+use App\Http\Controllers\SeoFileController;
 use App\Http\Controllers\SiteController;
 use Illuminate\Support\Facades\Route;
 
@@ -23,6 +25,8 @@ Route::prefix('install')->name('install.')->group(function () {
 });
 
 Route::get('/', [SiteController::class, 'home'])->name('home');
+Route::get('/robots.txt', [SeoFileController::class, 'robots'])->name('robots');
+Route::get('/sitemap.xml', [SeoFileController::class, 'sitemap'])->name('sitemap');
 
 // Anmeldung
 Route::middleware('guest')->group(function () {
@@ -61,6 +65,12 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::post('/ki/assistent', [AiController::class, 'runWizard'])->middleware('throttle:5,1')->name('ai.wizard.run');
     Route::post('/ki/text', [AiController::class, 'rewrite'])->middleware('throttle:30,1')->name('ai.rewrite');
     Route::post('/ki/beschreibung', [AiController::class, 'description'])->middleware('throttle:30,1')->name('ai.description');
+
+    Route::get('/seo', [SeoController::class, 'index'])->name('seo');
+    Route::put('/seo', [SeoController::class, 'settings'])->name('seo.settings');
+    Route::post('/seo/pruefen', [SeoController::class, 'analyse'])->middleware('throttle:120,1')->name('seo.analyse');
+    Route::post('/seo/suchbegriffe', [SeoController::class, 'keywords'])->middleware('throttle:20,1')->name('seo.keywords');
+    Route::post('/seo/vergleich', [SeoController::class, 'compare'])->middleware('throttle:10,1')->name('seo.compare');
 
     Route::get('/einstellungen', [SettingsController::class, 'edit'])->name('settings');
     Route::put('/einstellungen', [SettingsController::class, 'update'])->name('settings.update');

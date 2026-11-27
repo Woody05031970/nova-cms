@@ -5,6 +5,7 @@ import { EditorView, basicSetup } from 'codemirror';
 import { html as htmlLang } from '@codemirror/lang-html';
 import { aiPost, registerAi } from './ai.js';
 import { pickerMixin, registerMedia, uploadFile } from './media.js';
+import { seoMixin } from './seo.js';
 
 const uid = () => Math.random().toString(36).slice(2, 12);
 
@@ -27,6 +28,7 @@ async function upload(file, kind = 'image') {
 
 Alpine.data('pageEditor', (cfg) => ({
     ...pickerMixin(),
+    ...seoMixin(cfg),
     ai: (AI = cfg.ai),
     aiBusy: false,
     aiNotice: '',
@@ -47,7 +49,8 @@ Alpine.data('pageEditor', (cfg) => ({
     init() {
         this.$nextTick(() => {
             this.$watch('blocks', () => (this.dirty = true), { deep: true });
-            ['title', 'slug', 'metaTitle', 'metaDescription', 'showInMenu', 'isHome'].forEach((k) => this.$watch(k, () => (this.dirty = true)));
+            ['title', 'slug', 'metaTitle', 'metaDescription', 'focusKeyword', 'showInMenu', 'isHome'].forEach((k) => this.$watch(k, () => (this.dirty = true)));
+            this.initSeo();
         });
         window.addEventListener('beforeunload', (e) => {
             if (this.dirty) e.preventDefault();

@@ -1,10 +1,10 @@
 {
-  "_media-KTDrRNYx.js": {
-    "file": "assets/media-KTDrRNYx.js",
-    "name": "media"
+  "_seo-CAKHET-R.js": {
+    "file": "assets/seo-CAKHET-R.js",
+    "name": "seo"
   },
   "resources/css/app.css": {
-    "file": "assets/app-DlcxNNac.css",
+    "file": "assets/app-Dc15JNZd.css",
     "name": "app",
     "names": [
       "app.css"
@@ -13,21 +13,21 @@
     "isEntry": true
   },
   "resources/js/app.js": {
-    "file": "assets/app-g-GuL01X.js",
+    "file": "assets/app-4BRwJ0N8.js",
     "name": "app",
     "src": "resources/js/app.js",
     "isEntry": true,
     "imports": [
-      "_media-KTDrRNYx.js"
+      "_seo-CAKHET-R.js"
     ]
   },
   "resources/js/editor.js": {
-    "file": "assets/editor-DnPIslxE.js",
+    "file": "assets/editor-DCBqz-rT.js",
     "name": "editor",
     "src": "resources/js/editor.js",
     "isEntry": true,
     "imports": [
-      "_media-KTDrRNYx.js"
+      "_seo-CAKHET-R.js"
     ]
   },
   "resources/js/site.js": {

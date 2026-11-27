@@ -15,7 +15,7 @@ class Page extends Model
     public const MAX_REVISIONS = 20;
 
     protected $fillable = [
-        'title', 'slug', 'status', 'blocks', 'meta_title', 'meta_description',
+        'title', 'slug', 'status', 'blocks', 'meta_title', 'meta_description', 'focus_keyword',
         'is_home', 'show_in_menu', 'menu_order', 'purpose', 'published_at', 'updated_by',
     ];
 

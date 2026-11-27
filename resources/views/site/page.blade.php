@@ -2,9 +2,21 @@
 @section('title', ($page->meta_title ?: $page->title).($page->is_home && ! $page->meta_title ? '' : ' – '.$siteName))
 @section('description', $page->meta_description ?: \Illuminate\Support\Str::limit($page->plainText(), 155))
 @section('meta')
-    @if ($preview)<meta name="robots" content="noindex">@else<link rel="canonical" href="{{ $page->url() }}">@endif
+    @php
+        $seo = app(\App\Support\Seo\SiteSeo::class);
+        $shareImage = $seo->shareImage($page);
+        $desc = $page->meta_description ?: \Illuminate\Support\Str::limit($page->plainText(), 155);
+    @endphp
+    @if ($preview || ! \App\Support\Seo\SiteSeo::indexingAllowed())<meta name="robots" content="noindex">@endif
+    @unless ($preview)<link rel="canonical" href="{{ $page->url() }}">@endunless
     <meta property="og:title" content="{{ $page->meta_title ?: $page->title }}">
+    <meta property="og:description" content="{{ $desc }}">
     <meta property="og:type" content="website">
+    <meta property="og:url" content="{{ $page->url() }}">
+    <meta property="og:site_name" content="{{ $siteName }}">
+    <meta property="og:locale" content="de_DE">
+    @if ($shareImage)<meta property="og:image" content="{{ $shareImage }}"><meta name="twitter:card" content="summary_large_image">@endif
+    @if ($page->is_home && ! $preview && ($ld = $seo->businessJsonLd()))<script type="application/ld+json">{!! $ld !!}</script>@endif
 @endsection
 @section('banner')
     @if ($preview)

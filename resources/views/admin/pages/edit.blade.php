@@ -24,6 +24,10 @@
         'siteName' => $siteName,
         'host' => request()->getHost(),
         'types' => $types,
+        'focusKeyword' => old('focus_keyword', $page->focus_keyword),
+        'purpose' => $page->purpose,
+        'seoUrl' => route('admin.seo.analyse'),
+        'keywordsUrl' => route('admin.seo.keywords'),
         'ai' => [
             'enabled' => app(\App\Ai\AiManager::class)->isConfigured(),
             'setupUrl' => route('admin.ai'),
@@ -143,6 +147,37 @@
                             </div>
                         </div>
                     </div>
+                </section>
+
+                <section class="nova-card p-5" aria-labelledby="seo-check">
+                    <div class="flex items-center justify-between gap-2">
+                        <h2 id="seo-check" class="font-semibold">SEO-Check</h2>
+                        <span x-show="seo.score !== null" class="rounded-full px-2.5 py-0.5 text-sm font-semibold" :class="scoreClass(seo.score)" x-text="seo.score + ' / 100'"></span>
+                    </div>
+                    <div class="mt-3">
+                        <label class="nova-label" for="focus_keyword">Fokus-Suchbegriff</label>
+                        <input id="focus_keyword" name="focus_keyword" x-model="focusKeyword" maxlength="100" class="nova-input text-sm" placeholder="z. B. Bäckerei Köln">
+                        <p class="mt-1 text-xs text-slate-500">Womit sollen Kunden diese Seite bei Google finden?</p>
+                        <template x-if="ai.enabled">
+                            <button type="button" @click="suggestKeywords()" :disabled="keywordBusy" class="mt-1 inline-flex items-center gap-1 text-xs font-medium text-nova-700 hover:underline disabled:opacity-50">
+                                <x-icon name="sparkles" class="size-3.5" /><span x-text="keywordBusy ? 'KI überlegt …' : 'Suchbegriffe vorschlagen'"></span>
+                            </button>
+                        </template>
+                        <div x-show="keywordIdeas.length" class="mt-2 flex flex-wrap gap-1.5">
+                            <template x-for="k in keywordIdeas" :key="k">
+                                <button type="button" @click="focusKeyword = k; keywordIdeas = []" class="rounded-full bg-nova-50 px-2.5 py-1 text-xs text-nova-700 hover:bg-nova-100" x-text="k"></button>
+                            </template>
+                        </div>
+                    </div>
+                    <ul class="mt-4 space-y-2 border-t border-slate-100 pt-3 text-sm">
+                        <template x-for="c in seo.checks" :key="c.key">
+                            <li class="flex gap-2">
+                                <span class="mt-1 size-2.5 shrink-0 rounded-full" :class="{good: 'bg-emerald-500', warn: 'bg-amber-400', bad: 'bg-red-500'}[c.status]"></span>
+                                <span><span x-text="c.label" :class="c.status === 'good' ? 'text-slate-600' : 'text-slate-900'"></span>
+                                    <span x-show="c.tip" class="block text-xs text-slate-500" x-text="c.tip"></span></span>
+                            </li>
+                        </template>
+                    </ul>
                 </section>
 
                 <section class="nova-card space-y-3 p-5">
