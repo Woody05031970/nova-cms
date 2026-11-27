@@ -5,7 +5,7 @@
         ['label' => 'Medien', 'url' => route('admin.media.index'), 'icon' => 'image', 'order' => 20, 'active' => 'admin.media.*'],
         ['label' => 'KI-Assistent', 'url' => route('admin.ai'), 'icon' => 'sparkles', 'order' => 30, 'active' => 'admin.ai*'],
         ['label' => 'Shop', 'url' => null, 'icon' => 'cart', 'order' => 40, 'soon' => true],
-        ['label' => 'SEO', 'url' => null, 'icon' => 'search', 'order' => 60, 'soon' => true],
+        ['label' => 'SEO', 'url' => route('admin.seo'), 'icon' => 'search', 'order' => 60, 'active' => 'admin.seo*'],
         ['label' => 'Sicherheit', 'url' => null, 'icon' => 'shield', 'order' => 70, 'soon' => true],
         ['label' => 'Plugins', 'url' => route('admin.plugins'), 'icon' => 'puzzle', 'order' => 80, 'active' => 'admin.plugins*'],
         ['label' => 'Einstellungen', 'url' => route('admin.settings'), 'icon' => 'settings', 'order' => 90, 'active' => 'admin.settings*'],

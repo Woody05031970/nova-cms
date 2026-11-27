@@ -50,6 +50,57 @@ class ContentAssistant
         return mb_strlen($out) > 160 ? rtrim(mb_substr($out, 0, 157)).'…' : $out;
     }
 
+    /**
+     * Schlägt Suchbegriffe vor, mit denen eine Seite gefunden werden kann.
+     *
+     * @return list<string>
+     */
+    public function keywordIdeas(string $title, string $text): array
+    {
+        $system = $this->context()."\n\nDu bist SEO-Berater für kleine Unternehmen im deutschsprachigen Raum. "
+            .'Schlage Suchbegriffe vor, die echte Kunden bei Google eintippen würden: kurz (1 bis 4 Wörter), konkret, '
+            .'bei örtlichen Angeboten mit Ort. Der erste Vorschlag ist der beste.';
+
+        $data = $this->ai->json($system, "Seitentitel: {$title}\n\nSeitentext:\n".mb_substr($text, 0, 6000)."\n\nSchlage 5 Suchbegriffe vor.", [
+            'type' => 'object', 'additionalProperties' => false, 'required' => ['keywords'],
+            'properties' => ['keywords' => ['type' => 'array', 'items' => ['type' => 'string']]],
+        ], 4000);
+
+        return collect($data['keywords'] ?? [])->map(fn ($k) => trim((string) $k, " \"'„“"))->filter()->unique()->take(5)->values()->all();
+    }
+
+    /**
+     * Konkrete Schritte, um in Google vor einem Wettbewerber zu landen.
+     *
+     * @return array{summary: string, actions: list<array{title: string, detail: string}>}
+     */
+    public function competitorAdvice(array $own, array $competitor, ?string $keyword): array
+    {
+        $system = $this->context()."\n\nDu bist SEO-Berater für Laien. Vergleiche die eigene Seite mit der eines Wettbewerbers "
+            .'und gib höchstens 5 konkrete, sofort umsetzbare Schritte in einfacher Sprache (keine Fachbegriffe ohne Erklärung). '
+            .'Beziehe dich auf die Zahlen. Wichtigstes zuerst. Erfinde keine Fakten über das Unternehmen.';
+
+        $prompt = 'Suchbegriff: '.($keyword ?: 'nicht festgelegt')."\n\n"
+            .'Eigene Seite: '.json_encode($own, JSON_UNESCAPED_UNICODE)."\n\n"
+            .'Wettbewerber: '.json_encode($competitor, JSON_UNESCAPED_UNICODE);
+
+        $data = $this->ai->json($system, $prompt, [
+            'type' => 'object', 'additionalProperties' => false, 'required' => ['summary', 'actions'],
+            'properties' => [
+                'summary' => ['type' => 'string'],
+                'actions' => ['type' => 'array', 'items' => [
+                    'type' => 'object', 'additionalProperties' => false, 'required' => ['title', 'detail'],
+                    'properties' => ['title' => ['type' => 'string'], 'detail' => ['type' => 'string']],
+                ]],
+            ],
+        ], 8000);
+
+        return [
+            'summary' => (string) ($data['summary'] ?? ''),
+            'actions' => collect($data['actions'] ?? [])->take(5)->map(fn ($a) => ['title' => (string) ($a['title'] ?? ''), 'detail' => (string) ($a['detail'] ?? '')])->values()->all(),
+        ];
+    }
+
     /** Schreibt eine Bildbeschreibung (Alternativtext) für Google und Screenreader. */
     public function altText(string $data, string $mime): string
     {
