@@ -41,14 +41,33 @@ class ShopController extends Controller
 
     public function add(Request $request, Cart $cart): RedirectResponse
     {
-        $data = $request->validate(['product' => ['required', 'integer'], 'quantity' => ['nullable', 'integer', 'min:1', 'max:'.Cart::MAX_QUANTITY]]);
-        $product = Product::active()->findOrFail($data['product']);
-        if (! $product->inStock()) {
-            return back()->withErrors(['quantity' => 'Dieser Artikel ist leider ausverkauft.']);
-        }
-        $cart->add($product, (int) ($data['quantity'] ?? 1));
+        // Einzelnes Produkt oder mehrere auf einmal (Modul-Baukasten)
+        $data = $request->validate([
+            'product' => ['required_without:products', 'nullable', 'integer'],
+            'products' => ['required_without:product', 'array', 'max:50'],
+            'products.*' => ['integer'],
+            'quantity' => ['nullable', 'integer', 'min:1', 'max:'.Cart::MAX_QUANTITY],
+        ], ['products.required_without' => 'Bitte wählen Sie mindestens ein Modul aus.']);
 
-        return redirect()->route('shop.cart')->with('status', "„{$product->name}“ liegt im Warenkorb.");
+        if (! empty($data['product'])) {
+            $product = Product::active()->findOrFail($data['product']);
+            if (! $product->inStock()) {
+                return back()->withErrors(['quantity' => 'Dieser Artikel ist leider ausverkauft.']);
+            }
+            $cart->add($product, (int) ($data['quantity'] ?? 1));
+
+            return redirect()->route('shop.cart')->with('status', "„{$product->name}“ liegt im Warenkorb.");
+        }
+
+        $products = Product::active()->whereIn('id', array_unique($data['products']))->get()->filter->inStock();
+        abort_if($products->isEmpty(), 404);
+        foreach ($products as $product) {
+            $cart->add($product, 1);
+        }
+
+        return redirect()->route('shop.cart')->with('status', $products->count() === 1
+            ? "„{$products->first()->name}“ liegt im Warenkorb."
+            : $products->count().' Artikel liegen im Warenkorb.');
     }
 
     public function update(Request $request, Cart $cart): RedirectResponse

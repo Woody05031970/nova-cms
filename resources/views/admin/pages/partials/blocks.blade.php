@@ -97,15 +97,26 @@
 <template x-if="block.type === 'hero'">
     <div class="grid gap-4 md:grid-cols-2">
         <div class="space-y-3">
+            <div>
+                <label class="nova-label">Aussehen</label>
+                <div class="grid grid-cols-2 gap-2">
+                    <button type="button" class="rounded-lg border px-3 py-2 text-left text-sm" :class="(block.data.variant || 'image') === 'image' ? 'border-nova-600 bg-nova-50 text-nova-800' : 'border-slate-200 hover:bg-slate-50'" @click="block.data.variant = 'image'"><strong class="block">Bild</strong><span class="text-xs text-slate-500">Foto im Hintergrund</span></button>
+                    <button type="button" class="rounded-lg border px-3 py-2 text-left text-sm" :class="block.data.variant === 'tech' ? 'border-nova-600 bg-nova-50 text-nova-800' : 'border-slate-200 hover:bg-slate-50'" @click="block.data.variant = 'tech'"><strong class="block">Technik</strong><span class="text-xs text-slate-500">Dunkel, mit Bild daneben</span></button>
+                </div>
+            </div>
+            <div><label class="nova-label">Kleine Zeile darüber (optional)</label><input class="nova-input" x-model="block.data.eyebrow" maxlength="80" placeholder="z. B. Neu: Version 2"></div>
             <div><label class="nova-label">Überschrift</label><input class="nova-input" x-model="block.data.title" maxlength="160" placeholder="z. B. Frisches Brot jeden Morgen"></div>
             <div><label class="nova-label">Text darunter</label><textarea class="nova-input" rows="3" x-model="block.data.text" maxlength="400"></textarea></div>
             <div class="grid grid-cols-2 gap-3">
                 <div><label class="nova-label">Knopf-Text</label><input class="nova-input" x-model="block.data.button_label" maxlength="60"></div>
                 <div><label class="nova-label">Knopf-Ziel</label><input class="nova-input" x-model="block.data.button_url" placeholder="/kontakt"></div>
+                <div><label class="nova-label">Zweiter Knopf (optional)</label><input class="nova-input" x-model="block.data.button2_label" maxlength="60"></div>
+                <div><label class="nova-label">Ziel</label><input class="nova-input" x-model="block.data.button2_url" placeholder="/preise"></div>
             </div>
         </div>
         <div>
-            <label class="nova-label">Hintergrundbild</label>
+            <label class="nova-label" x-text="block.data.variant === 'tech' ? 'Bild rechts (optional)' : 'Hintergrundbild'"></label>
+            <p x-show="block.data.variant === 'tech' && !block.data.image" class="mb-2 text-xs text-slate-500">Ohne eigenes Bild zeigt Nova eine gezeichnete Ansicht der Verwaltung.</p>
             <template x-if="block.data.image">
                 <div class="relative overflow-hidden rounded-lg">
                     <img :src="block.data.image" alt="" class="aspect-video w-full object-cover">

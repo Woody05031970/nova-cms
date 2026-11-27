@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Support\Blocks\BlockSanitizer;
+use App\Support\Seo\PageAnalyzer;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -83,6 +84,8 @@ class Page extends Model
             ->map(fn ($b) => match ($b['type'] ?? null) {
                 'text' => strip_tags(str_replace('<', ' <', $b['data']['html'] ?? '')),
                 'button' => $b['data']['label'] ?? '',
+                'hero' => trim(($b['data']['title'] ?? '').' '.($b['data']['text'] ?? '')),
+                'features', 'pricing', 'modules', 'compare', 'faq', 'cta' => PageAnalyzer::structuredText($b['data'] ?? []),
                 default => '',
             })->implode(' ')));
     }

@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Admin\AccountController;
 use App\Http\Controllers\Admin\AiController;
+use App\Http\Controllers\Admin\ContactMessageController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\Licensing\LicenseController;
 use App\Http\Controllers\Admin\Licensing\MarketplaceController;
@@ -17,8 +18,10 @@ use App\Http\Controllers\Admin\SettingsController;
 use App\Http\Controllers\Admin\Shop\OrderController as ShopOrderController;
 use App\Http\Controllers\Admin\Shop\ProductController as ShopProductController;
 use App\Http\Controllers\Admin\Shop\ShopController as AdminShopController;
+use App\Http\Controllers\Admin\StarterController;
 use App\Http\Controllers\Admin\UploadController;
 use App\Http\Controllers\Auth\LoginController;
+use App\Http\Controllers\ContactController;
 use App\Http\Controllers\InstallController;
 use App\Http\Controllers\LicenseApiController;
 use App\Http\Controllers\SeoFileController;
@@ -42,6 +45,7 @@ Route::prefix('install')->name('install.')->group(function () {
 Route::get('/', [SiteController::class, 'home'])->name('home');
 Route::get('/robots.txt', [SeoFileController::class, 'robots'])->name('robots');
 Route::get('/sitemap.xml', [SeoFileController::class, 'sitemap'])->name('sitemap');
+Route::post('/kontakt/nachricht', ContactController::class)->middleware('throttle:5,1')->name('contact.send');
 
 // Shop
 Route::middleware(ShopEnabled::class)->group(function () {
@@ -83,6 +87,10 @@ Route::middleware(['auth', 'admin', LicenseGate::class])->prefix('admin')->name(
     Route::get('/seiten', [PageController::class, 'index'])->name('pages.index');
     Route::get('/suche', SearchController::class)->name('search');
     Route::get('/menue', [MenuController::class, 'index'])->name('menu');
+    Route::get('/anfragen', [ContactMessageController::class, 'index'])->name('messages');
+    Route::patch('/anfragen/{message}', [ContactMessageController::class, 'read'])->name('messages.read');
+    Route::delete('/anfragen/{message}', [ContactMessageController::class, 'destroy'])->name('messages.destroy');
+    Route::post('/startinhalt', [StarterController::class, 'store'])->name('starter.store');
     Route::put('/menue', [MenuController::class, 'update'])->name('menu.update');
     Route::post('/seiten/live-vorschau', [PageController::class, 'livePreview'])->name('pages.live-preview');
     Route::post('/seiten', [PageController::class, 'store'])->name('pages.store');

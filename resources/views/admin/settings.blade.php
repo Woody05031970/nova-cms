@@ -86,4 +86,22 @@
         </div>
     </form>
     <form id="mail-test" method="POST" action="{{ route('admin.settings.mail.test') }}">@csrf</form>
+
+    <section class="nova-card mt-6 overflow-hidden p-0" id="startpakete">
+        <div class="nova-tech-bg px-6 py-5 text-white">
+            <p class="font-mono text-[10px] font-semibold tracking-[0.14em] text-white/60 uppercase">Startpaket</p>
+            <h2 class="mt-1 text-lg font-semibold">Verkaufswebsite für Nova CMS</h2>
+        </div>
+        <div class="space-y-3 p-6 text-sm text-slate-600">
+            <p>Richtet eine komplette Website zum Verkauf von Nova CMS ein: Startseite, Funktionen, Module, Vergleich, Preise, häufige Fragen, Testversion und Kontakt, dazu Shop-Produkte für die Lizenzen und kostenpflichtige Module. Bestehende Seiten bleiben erhalten; die neue Startseite ersetzt nur die bisherige als Startseite.</p>
+            @if (\App\Support\Starter\NovaSalesSite::installed())
+                <p class="flex items-center gap-2 font-medium text-emerald-700"><x-icon name="check" class="size-4" /> Bereits eingerichtet am {{ \Illuminate\Support\Carbon::parse(\App\Models\Setting::get(\App\Support\Starter\NovaSalesSite::SETTING))->format('d.m.Y') }}.</p>
+            @else
+                <form method="POST" action="{{ route('admin.starter.store') }}" onsubmit="return confirm('Verkaufswebsite jetzt einrichten?')">
+                    @csrf
+                    <button class="nova-btn" data-starter-install>Verkaufswebsite einrichten</button>
+                </form>
+            @endif
+        </div>
+    </section>
 @endsection

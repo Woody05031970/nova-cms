@@ -4,6 +4,7 @@
         ['label' => 'Seiten', 'url' => route('admin.pages.index'), 'icon' => 'pages', 'order' => 10, 'active' => 'admin.pages.*', 'group' => 'Inhalte'],
         ['label' => 'Menü', 'url' => route('admin.menu'), 'icon' => 'menu', 'order' => 12, 'active' => 'admin.menu*', 'group' => 'Inhalte'],
         ['label' => 'Medien', 'url' => route('admin.media.index'), 'icon' => 'image', 'order' => 20, 'active' => 'admin.media.*', 'group' => 'Inhalte'],
+        ['label' => 'Anfragen', 'url' => route('admin.messages'), 'icon' => 'inbox', 'order' => 25, 'active' => 'admin.messages*', 'group' => 'Inhalte', 'badge' => \App\Models\ContactMessage::unread() ?: null],
         ['label' => 'KI-Assistent', 'url' => route('admin.ai'), 'icon' => 'sparkles', 'order' => 30, 'active' => 'admin.ai*', 'group' => 'Wachstum'],
         ['label' => 'Shop', 'url' => route('admin.shop.index'), 'icon' => 'cart', 'order' => 40, 'active' => 'admin.shop.*', 'group' => 'Wachstum'],
         ['label' => 'SEO', 'url' => route('admin.seo'), 'icon' => 'search', 'order' => 60, 'active' => 'admin.seo*', 'group' => 'Wachstum'],
@@ -76,6 +77,7 @@
                                     ]) @if($isActive($item)) aria-current="page" @endif>
                                         <x-icon :name="$item['icon']" class="size-[18px] {{ $isActive($item) ? 'text-nova-300' : 'text-slate-500 group-hover:text-slate-300' }}" />
                                         {{ $item['label'] }}
+                                        @if (! empty($item['badge']))<span class="ml-auto rounded-full bg-nova-500 px-1.5 py-0.5 font-mono text-[10px] font-semibold text-white">{{ $item['badge'] }}</span>@endif
                                     </a>
                                 @endif
                             </li>
