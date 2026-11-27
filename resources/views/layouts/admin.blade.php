@@ -11,6 +11,7 @@
         ['label' => 'KI-Assistent', 'url' => route('admin.ai'), 'icon' => 'sparkles', 'order' => 30, 'active' => 'admin.ai*', 'group' => 'Wachstum'],
         ['label' => 'Shop', 'url' => route('admin.shop.index'), 'icon' => 'cart', 'order' => 40, 'active' => 'admin.shop.*', 'group' => 'Wachstum'],
         ['label' => 'SEO', 'url' => route('admin.seo'), 'icon' => 'search', 'order' => 60, 'active' => 'admin.seo*', 'group' => 'Wachstum'],
+        ['label' => 'Barrierefreiheit', 'url' => route('admin.accessibility'), 'icon' => 'accessibility', 'order' => 65, 'active' => 'admin.accessibility*', 'group' => 'System'],
         ['label' => 'Sicherheit', 'url' => route('admin.security'), 'icon' => 'shield', 'order' => 70, 'active' => 'admin.security*', 'group' => 'System'],
         ['label' => 'Plugins', 'url' => route('admin.plugins'), 'icon' => 'puzzle', 'order' => 80, 'active' => 'admin.plugins*', 'group' => 'System'],
         ['label' => 'Einstellungen', 'url' => route('admin.settings'), 'icon' => 'settings', 'order' => 90, 'active' => 'admin.settings*', 'group' => 'System'],
@@ -52,6 +53,7 @@
     @stack('head')
 </head>
 <body class="nova-admin min-h-screen bg-slate-50 font-sans text-slate-900 antialiased">
+    <a href="#inhalt" class="nova-skip-link">Zum Inhalt springen</a>
     <div class="lg:flex">
         {{-- Seitenleiste --}}
         <aside id="sidebar" class="nova-sidebar fixed inset-y-0 left-0 z-40 flex w-72 -translate-x-full flex-col bg-slate-950 text-slate-300 transition-transform duration-200 lg:sticky lg:top-0 lg:h-screen lg:w-64 lg:shrink-0 lg:translate-x-0" aria-label="Seitenleiste">
@@ -81,7 +83,7 @@
                                     ]) @if($isActive($item)) aria-current="page" @endif>
                                         <x-icon :name="$item['icon']" class="size-[18px] {{ $isActive($item) ? 'text-nova-300' : 'text-slate-500 group-hover:text-slate-300' }}" />
                                         {{ $item['label'] }}
-                                        @if (! empty($item['locked']))<x-icon name="lock" class="ml-auto size-3.5 text-slate-500" />@endif
+                                        @if (! empty($item['locked']))<x-icon name="lock" class="ml-auto size-3.5 text-slate-500" /><span class="sr-only">(nicht in Ihrer Lizenz enthalten)</span>@endif
                                         @if (! empty($item['badge']))<span class="ml-auto rounded-full bg-nova-500 px-1.5 py-0.5 font-mono text-[10px] font-semibold text-white">{{ $item['badge'] }}</span>@endif
                                     </a>
                                 @endif
@@ -96,7 +98,7 @@
                     <span class="ml-auto rounded-full px-2 py-0.5 text-[10px] font-semibold {{ ['active' => 'bg-emerald-400/15 text-emerald-300', 'trial' => 'bg-amber-400/15 text-amber-300', 'dev' => 'bg-white/10 text-slate-400'][$licStatus] ?? 'bg-red-400/15 text-red-300' }}">{{ \App\Licensing\License::label($licStatus) }}</span>
                 </a>
                 <div class="mt-2 flex items-center gap-3 rounded-lg px-3 py-2">
-                    <a href="{{ route('admin.account') }}" class="grid size-8 shrink-0 place-items-center rounded-full bg-gradient-to-br from-nova-500 to-fuchsia-500 text-xs font-bold text-white" title="Mein Konto">{{ $initials }}</a>
+                    <a href="{{ route('admin.account') }}" class="grid size-8 shrink-0 place-items-center rounded-full bg-gradient-to-br from-nova-500 to-fuchsia-500 text-xs font-bold text-white" title="Mein Konto" aria-hidden="true" tabindex="-1">{{ $initials }}</a>
                     <a href="{{ route('admin.account') }}" class="min-w-0 flex-1 leading-tight">
                         <span class="block truncate text-sm font-medium text-white">{{ $user->name }}</span>
                         <span class="block truncate text-xs text-slate-500">Mein Konto</span>
@@ -113,7 +115,7 @@
         <div class="min-w-0 flex-1">
             {{-- Kopfleiste --}}
             <header class="sticky top-0 z-20 flex h-14 items-center gap-3 border-b border-slate-200/80 bg-white/80 px-4 backdrop-blur-md sm:px-8 lg:px-10">
-                <button type="button" class="-ml-1 rounded-md p-1.5 text-slate-600 hover:bg-slate-100 lg:hidden" data-sidebar-open aria-controls="sidebar" aria-label="Menü öffnen">
+                <button type="button" class="-ml-1 rounded-md p-1.5 text-slate-600 hover:bg-slate-100 lg:hidden" data-sidebar-open aria-controls="sidebar" aria-expanded="false" aria-label="Menü öffnen">
                     <svg class="size-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
                 </button>
                 <a href="{{ route('admin.dashboard') }}" class="lg:hidden"><x-logo /></a>
@@ -128,13 +130,13 @@
                         <kbd class="ml-4 rounded border border-slate-200 bg-slate-50 px-1.5 font-mono text-[10px] text-slate-500">Strg K</kbd>
                     </button>
                     <button type="button" data-palette-open class="rounded-md p-1.5 text-slate-600 hover:bg-slate-100 sm:hidden" aria-label="Suchen"><x-icon name="search" /></button>
-                    <a href="{{ route('home') }}" target="_blank" class="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-100" title="Website in neuem Tab öffnen">
-                        <x-icon name="external" class="size-4" /><span class="hidden md:inline">Website</span>
+                    <a href="{{ route('home') }}" target="_blank" class="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-100" title="Website in neuem Tab öffnen" aria-label="Website in neuem Tab öffnen">
+                        <x-icon name="external" class="size-4" /><span class="hidden md:inline" aria-hidden="true">Website</span>
                     </a>
                 </div>
             </header>
 
-            <main class="px-4 py-8 sm:px-8 lg:px-10">
+            <main id="inhalt" tabindex="-1" class="px-4 py-8 sm:px-8 lg:px-10">
                 <div class="mx-auto @yield('width', 'max-w-5xl')">
                     @if ($licStatus === 'trial' && ! request()->routeIs('admin.license'))
                         <div class="mb-6 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-2.5 text-sm text-amber-900" data-license-banner>

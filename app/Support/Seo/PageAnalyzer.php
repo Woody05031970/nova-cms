@@ -25,7 +25,7 @@ class PageAnalyzer
         $fullTitle = $title.(($page['is_home'] ?? false) && empty($page['meta_title']) ? '' : ' – '.Setting::get('site_name', ''));
         $description = trim((string) ($page['meta_description'] ?? ''));
         $keyword = trim((string) ($page['focus_keyword'] ?? ''));
-        $legal = in_array($page['purpose'] ?? null, ['imprint', 'privacy', 'terms', 'withdrawal', 'shipping'], true);
+        $legal = in_array($page['purpose'] ?? null, ['imprint', 'privacy', 'terms', 'withdrawal', 'shipping', 'accessibility'], true);
 
         $checks = [];
         $add = function (string $key, string $status, string $label, string $tip = '') use (&$checks) {

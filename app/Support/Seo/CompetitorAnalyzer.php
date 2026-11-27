@@ -29,7 +29,7 @@ class CompetitorAnalyzer
     }
 
     /** @return array{string, string, int} */
-    private function fetch(string $url): array
+    public function fetch(string $url, bool $html = true): array
     {
         $url = trim($url);
         if (str_contains($url, '://') && ! preg_match('#^https?://#i', $url)) {
@@ -62,7 +62,7 @@ class CompetitorAnalyzer
             if ($response->failed()) {
                 throw new RuntimeException('Die Seite antwortet mit Fehler '.$response->status().'.');
             }
-            if (! str_contains(strtolower($response->header('Content-Type')), 'html')) {
+            if ($html && ! str_contains(strtolower($response->header('Content-Type')), 'html')) {
                 throw new RuntimeException('Unter dieser Adresse liegt keine Webseite.');
             }
 

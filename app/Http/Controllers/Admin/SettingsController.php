@@ -45,6 +45,23 @@ class SettingsController extends Controller
         return back()->with('status', 'Gespeichert.');
     }
 
+    /** Wartungsmodus und Suche auf der Website */
+    public function website(Request $request): RedirectResponse
+    {
+        $data = $request->validate([
+            'maintenance_message' => ['nullable', 'string', 'max:300'],
+        ]);
+        Setting::putMany([
+            'maintenance_mode' => $request->boolean('maintenance_mode') ? '1' : '0',
+            'maintenance_message' => $data['maintenance_message'] ?? null,
+            'site_search' => $request->boolean('site_search') ? '1' : '0',
+        ]);
+
+        return back()->with('status', $request->boolean('maintenance_mode')
+            ? 'Wartungsmodus ist an. Besucher sehen einen Hinweis, Sie selbst sehen die Website weiterhin, solange Sie angemeldet sind.'
+            : 'Gespeichert. Ihre Website ist für alle sichtbar.');
+    }
+
     public function mail(Request $request): RedirectResponse
     {
         $data = $request->validate([

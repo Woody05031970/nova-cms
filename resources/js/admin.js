@@ -5,11 +5,20 @@ const $ = (s, r = document) => r.querySelector(s);
 const $$ = (s, r = document) => [...r.querySelectorAll(s)];
 
 // --- Seitenleiste auf dem Handy -------------------------------------------------
+const wide = window.matchMedia('(min-width: 1024px)');
 function sidebar(open) {
-    $('#sidebar')?.classList.toggle('-translate-x-full', !open);
+    const bar = $('#sidebar');
+    const wasOpen = $('[data-sidebar-open]')?.getAttribute('aria-expanded') === 'true';
+    bar?.classList.toggle('-translate-x-full', !open);
     $('[data-sidebar-backdrop]')?.classList.toggle('hidden', !open);
     $('[data-sidebar-open]')?.setAttribute('aria-expanded', String(open));
+    // Geschlossene Seitenleiste auf Handy und Tablet ist für Tastatur und Screenreader nicht erreichbar
+    if (bar) bar.inert = !open && !wide.matches;
+    if (open) $('#sidebar a, #sidebar button')?.focus();
+    else if (wasOpen && !wide.matches) $('[data-sidebar-open]')?.focus();
 }
+sidebar(false);
+wide.addEventListener('change', () => sidebar(false));
 document.addEventListener('click', (e) => {
     if (e.target.closest('[data-sidebar-open]')) sidebar(true);
     if (e.target.closest('[data-sidebar-close], [data-sidebar-backdrop]')) sidebar(false);

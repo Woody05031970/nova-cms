@@ -15,6 +15,7 @@
 @section('content')
     <h1 class="text-2xl font-semibold tracking-tight">SEO: bei Google gefunden werden</h1>
     <p class="mt-1 text-slate-600">Nova CMS prüft jede Seite nach den wichtigsten Regeln und sagt Ihnen, was zu tun ist.</p>
+    @include('admin.seo.partials.tabs')
 
     <div class="mt-8 grid gap-6 lg:grid-cols-3">
         <section class="nova-card flex flex-col items-center justify-center text-center">
