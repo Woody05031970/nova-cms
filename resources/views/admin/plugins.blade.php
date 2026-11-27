@@ -8,6 +8,7 @@
             <p class="mt-1 text-slate-600">Erweitern Sie Ihre Website um neue Funktionen. Plugins lassen sich jederzeit wieder ausschalten.</p>
         </div>
     </div>
+    @include('admin.plugins-nav')
 
     <section class="nova-card mt-8" aria-labelledby="upload">
         <h2 id="upload" class="font-semibold">Plugin hochladen</h2>
@@ -17,7 +18,7 @@
                    class="block w-full text-sm text-slate-600 file:mr-4 file:rounded-lg file:border-0 file:bg-nova-50 file:px-4 file:py-2.5 file:text-sm file:font-semibold file:text-nova-700 hover:file:bg-nova-100">
             <button class="nova-btn shrink-0"><x-icon name="upload" class="size-4" /> Installieren</button>
         </form>
-        <p class="nova-help mt-3">ZIP-Datei mit einer plugin.json. Installieren Sie nur Plugins aus vertrauenswürdigen Quellen. Bald finden Sie geprüfte Plugins direkt im Nova-Marketplace.</p>
+        <p class="nova-help mt-3">ZIP-Datei mit einer plugin.json. Installieren Sie nur Plugins aus vertrauenswürdigen Quellen. Geprüfte Module finden Sie im <a href="{{ route('admin.plugins.market') }}" class="text-nova-700 hover:underline">Marktplatz</a>.</p>
     </section>
 
     <section class="mt-6" aria-labelledby="installed">

@@ -2,6 +2,7 @@
 
 namespace Tests;
 
+use App\Models\Setting;
 use Illuminate\Foundation\Testing\TestCase as BaseTestCase;
 use Illuminate\Support\Facades\File;
 
@@ -35,7 +36,10 @@ abstract class TestCase extends BaseTestCase
             $_ENV[$key] = $_SERVER[$key] = $value;
         }
 
+        // Zwischengespeicherte Einstellungen stammen sonst noch aus dem vorigen Test
+        Setting::flushCache();
         parent::setUp();
+        Setting::flushCache();
 
         // Hochgeladene Dateien landen im Sandbox-Ordner, nicht im echten public/.
         $public = $this->sandbox.'/public';

@@ -3,7 +3,9 @@
 namespace App\Support\Seo;
 
 use App\Models\Page;
+use App\Models\Product;
 use App\Models\Setting;
+use App\Shop\ShopSettings;
 use Illuminate\Support\Str;
 
 /**
@@ -35,9 +37,9 @@ class SiteSeo
                 .'<priority>'.($page->is_home ? '1.0' : ($page->purpose ? '0.2' : '0.8')).'</priority></url>'."\n";
         }
 
-        if (\App\Shop\ShopSettings::enabled()) {
+        if (ShopSettings::enabled()) {
             $xml .= '  <url><loc>'.e(route('shop.index')).'</loc><priority>0.8</priority></url>'."\n";
-            foreach (\App\Models\Product::active()->get(['slug', 'updated_at']) as $product) {
+            foreach (Product::active()->get(['slug', 'updated_at']) as $product) {
                 $xml .= '  <url><loc>'.e($product->url()).'</loc><lastmod>'.$product->updated_at?->toAtomString().'</lastmod><priority>0.7</priority></url>'."\n";
             }
         }

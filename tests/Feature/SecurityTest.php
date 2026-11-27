@@ -9,6 +9,7 @@ use App\Models\User;
 use App\Support\Security\Scanner;
 use App\Support\Security\Totp;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\File;
 use Tests\TestCase;
 
@@ -233,7 +234,7 @@ class SecurityTest extends TestCase
     public function test_hochladen_legt_schutzdatei_an(): void
     {
         $this->actingAs($this->admin())
-            ->post('/admin/uploads', ['file' => \Illuminate\Http\UploadedFile::fake()->image('a.jpg'), 'kind' => 'image']);
+            ->post('/admin/uploads', ['file' => UploadedFile::fake()->image('a.jpg'), 'kind' => 'image']);
         $this->assertStringContainsString('Require all denied', file_get_contents(public_path('uploads/.htaccess')));
     }
 

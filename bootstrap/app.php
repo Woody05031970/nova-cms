@@ -1,5 +1,9 @@
 <?php
 
+use App\Http\Middleware\EnsureAdmin;
+use App\Http\Middleware\EnsureInstalled;
+use App\Http\Middleware\Firewall;
+use App\Http\Middleware\SecurityHeaders;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -15,11 +19,11 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware): void {
         // Global, damit der Installer vor jeder anderen Prüfung (z. B. Anmeldung) greift.
-        $middleware->append(\App\Http\Middleware\EnsureInstalled::class);
-        $middleware->prepend(\App\Http\Middleware\Firewall::class);
-        $middleware->append(\App\Http\Middleware\SecurityHeaders::class);
+        $middleware->append(EnsureInstalled::class);
+        $middleware->prepend(Firewall::class);
+        $middleware->append(SecurityHeaders::class);
         $middleware->alias([
-            'admin' => \App\Http\Middleware\EnsureAdmin::class,
+            'admin' => EnsureAdmin::class,
         ]);
         $middleware->redirectGuestsTo(fn () => route('login'));
         $middleware->redirectUsersTo(fn () => route('admin.dashboard'));

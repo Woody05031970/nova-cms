@@ -3,6 +3,9 @@
 namespace App\Support\Pages;
 
 use App\Models\Setting;
+use App\Shop\Money;
+use App\Shop\Payments\PaymentRegistry;
+use App\Shop\ShopSettings;
 use Illuminate\Support\Str;
 
 /**
@@ -28,14 +31,14 @@ class PageTemplates
 
     private static function shippingText(): string
     {
-        $countries = collect(\App\Shop\ShopSettings::shippingCountries())->map(fn ($c) => \App\Shop\ShopSettings::COUNTRIES[$c]['label'])->implode(', ');
-        $free = \App\Shop\ShopSettings::freeShippingFromCents();
-        $methods = collect(app(\App\Shop\Payments\PaymentRegistry::class)->available())->map(fn ($m) => '<li>'.e($m->label()).'</li>')->implode('');
+        $countries = collect(ShopSettings::shippingCountries())->map(fn ($c) => ShopSettings::COUNTRIES[$c]['label'])->implode(', ');
+        $free = ShopSettings::freeShippingFromCents();
+        $methods = collect(app(PaymentRegistry::class)->available())->map(fn ($m) => '<li>'.e($m->label()).'</li>')->implode('');
 
         return '<h2>Versandkosten</h2><p>Wir liefern nach: '.e($countries).'.</p>'
-            .'<p>Die Versandkosten betragen '.e(\App\Shop\Money::format(\App\Shop\ShopSettings::shippingCents())).' je Bestellung'
-            .($free !== null ? '. Ab einem Bestellwert von '.e(\App\Shop\Money::format($free)).' liefern wir versandkostenfrei' : '').'.</p>'
-            .'<h2>Lieferzeit</h2><p>Sofern beim Produkt nicht anders angegeben: '.e(\App\Shop\ShopSettings::deliveryTime()).'. Bei Vorkasse beginnt die Lieferzeit nach Zahlungseingang.</p>'
+            .'<p>Die Versandkosten betragen '.e(Money::format(ShopSettings::shippingCents())).' je Bestellung'
+            .($free !== null ? '. Ab einem Bestellwert von '.e(Money::format($free)).' liefern wir versandkostenfrei' : '').'.</p>'
+            .'<h2>Lieferzeit</h2><p>Sofern beim Produkt nicht anders angegeben: '.e(ShopSettings::deliveryTime()).'. Bei Vorkasse beginnt die Lieferzeit nach Zahlungseingang.</p>'
             .'<h2>Zahlungsarten</h2>'.($methods ? '<ul>'.$methods.'</ul>' : '<p>[Bitte zuerst Zahlungsarten in den Shop-Einstellungen einrichten]</p>');
     }
 

@@ -10,6 +10,11 @@
         ['label' => 'Plugins', 'url' => route('admin.plugins'), 'icon' => 'puzzle', 'order' => 80, 'active' => 'admin.plugins*'],
         ['label' => 'Einstellungen', 'url' => route('admin.settings'), 'icon' => 'settings', 'order' => 90, 'active' => 'admin.settings*'],
     ];
+    if (\App\Licensing\LicenseServer::enabled()) {
+        $core[] = ['label' => 'Lizenzserver', 'url' => route('admin.license-server'), 'icon' => 'key', 'order' => 95, 'active' => 'admin.license-server*'];
+    }
+    $lic = app(\App\Licensing\License::class);
+    $licStatus = $lic->status();
     $menu = collect(app(\App\Plugins\Hooks::class)->applyFilters('admin.menu', $core))->sortBy('order');
     $isActive = function ($item) {
         if (! empty($item['active'])) return request()->routeIs($item['active']);
@@ -74,6 +79,10 @@
                     <a href="{{ route('admin.account') }}" @class(['flex items-center gap-3 rounded-lg px-3 py-2 text-sm hover:bg-slate-100', 'bg-nova-50 font-medium text-nova-700' => request()->routeIs('admin.account*'), 'text-slate-600' => ! request()->routeIs('admin.account*')])>
                         <x-icon name="user" /> Mein Konto
                     </a>
+                    <a href="{{ route('admin.license') }}" @class(['flex items-center gap-3 rounded-lg px-3 py-2 text-sm hover:bg-slate-100', 'bg-nova-50 font-medium text-nova-700' => request()->routeIs('admin.license', 'admin.license.*'), 'text-slate-600' => ! request()->routeIs('admin.license', 'admin.license.*')])>
+                        <x-icon name="key" /> Lizenz
+                        <span class="ml-auto rounded-full px-2 py-0.5 text-[11px] font-medium {{ ['active' => 'bg-emerald-50 text-emerald-700', 'trial' => 'bg-amber-50 text-amber-700', 'dev' => 'bg-slate-100 text-slate-500'][$licStatus] ?? 'bg-red-50 text-red-700' }}">{{ \App\Licensing\License::label($licStatus) }}</span>
+                    </a>
                     <p class="px-3 pt-2 text-xs text-slate-400">Angemeldet als {{ auth()->user()->name }}</p>
                 </div>
             </nav>
@@ -81,6 +90,16 @@
 
         <main class="min-w-0 flex-1 px-4 py-8 sm:px-8 lg:px-10">
             <div class="mx-auto @yield('width', 'max-w-5xl')">
+                @if ($licStatus === 'trial' && ! request()->routeIs('admin.license'))
+                    <div class="mb-6 flex flex-wrap items-center justify-between gap-3 rounded-lg border border-amber-200 bg-amber-50 px-4 py-2.5 text-sm text-amber-900" data-license-banner>
+                        <span>Testversion: noch {{ $lic->trialDaysLeft() }} {{ $lic->trialDaysLeft() === 1 ? 'Tag' : 'Tage' }}. Danach brauchen Sie für die Verwaltung eine Lizenz. Ihre Website bleibt immer online.</span>
+                        <a href="{{ route('admin.license') }}" class="font-medium underline">Lizenz eingeben</a>
+                    </div>
+                @elseif ($licStatus === 'invalid' && ! request()->routeIs('admin.license'))
+                    <div class="mb-6 rounded-lg border border-red-200 bg-red-50 px-4 py-2.5 text-sm text-red-900" data-license-banner>
+                        Ihre Lizenz konnte nicht bestätigt werden. <a href="{{ route('admin.license') }}" class="font-medium underline">Mehr erfahren</a>
+                    </div>
+                @endif
                 <x-alerts />
                 @yield('content')
             </div>

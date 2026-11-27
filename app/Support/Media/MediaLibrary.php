@@ -3,6 +3,7 @@
 namespace App\Support\Media;
 
 use App\Models\Media;
+use App\Support\Security\Scanner;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Str;
@@ -30,7 +31,7 @@ class MediaLibrary
         $name = $base.'-'.Str::lower(Str::random(6)).'.'.$file->guessExtension();
         $mime = (string) $file->getMimeType();
 
-        \App\Support\Security\Scanner::protectUploads();
+        Scanner::protectUploads();
         $file->move(public_path($dir), $name);
 
         return $this->register($dir.'/'.$name, $kind, $file->getClientOriginalName(), $mime, $userId);

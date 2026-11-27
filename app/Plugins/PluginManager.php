@@ -2,6 +2,7 @@
 
 namespace App\Plugins;
 
+use App\Licensing\License;
 use App\Models\Plugin;
 use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Support\Facades\Artisan;
@@ -93,7 +94,7 @@ class PluginManager
     /**
      * Installiert ein Plugin aus einer ZIP-Datei. Das Plugin ist danach noch nicht aktiv.
      */
-    public function installFromZip(string $zipPath): PluginManifest
+    public function installFromZip(string $zipPath, bool $replace = false, ?string $expectedSlug = null): PluginManifest
     {
         $zip = new ZipArchive;
         if ($zip->open($zipPath) !== true) {
@@ -135,17 +136,36 @@ class PluginManager
                 throw new PluginException("Dieses Plugin benötigt Nova CMS {$manifest->requires} oder neuer.");
             }
 
+            if ($expectedSlug !== null && $manifest->slug !== $expectedSlug) {
+                throw new PluginException('Das heruntergeladene Paket passt nicht zum gewählten Modul.');
+            }
+
             $target = $this->path($manifest->slug);
+            $backup = null;
             if (file_exists($target)) {
-                throw new PluginException("Das Plugin \"{$manifest->name}\" ist bereits installiert. Bitte entfernen Sie die alte Version zuerst.");
+                if (! $replace) {
+                    throw new PluginException("Das Plugin \"{$manifest->name}\" ist bereits installiert. Bitte entfernen Sie die alte Version zuerst.");
+                }
+                // Aktualisierung: alte Version erst beiseitelegen, damit bei Fehlern nichts verloren geht
+                $backup = $target.'.alt-'.bin2hex(random_bytes(4));
+                File::moveDirectory($target, $backup);
             }
 
             File::ensureDirectoryExists($this->path());
             if (! File::moveDirectory($tmp, $target)) {
+                if ($backup) {
+                    File::moveDirectory($backup, $target);
+                }
                 throw new PluginException('Das Plugin konnte nicht in den Plugin-Ordner verschoben werden.');
+            }
+            if ($backup) {
+                File::deleteDirectory($backup);
             }
 
             $this->sync();
+            if ($replace && Plugin::where('slug', $manifest->slug)->value('enabled')) {
+                $this->runMigrations($manifest->slug);
+            }
 
             return $manifest;
         } finally {
@@ -162,6 +182,9 @@ class PluginManager
 
         if (! $manifest->isCompatible(config('nova.version'))) {
             throw new PluginException("Dieses Plugin benötigt Nova CMS {$manifest->requires} oder neuer.");
+        }
+        if ($manifest->paid && ! $this->app->make(License::class)->allows($slug)) {
+            throw new PluginException("„{$manifest->name}“ ist ein kostenpflichtiges Modul. Für die Aktivierung brauchen Sie eine Lizenz, die dieses Modul enthält.");
         }
 
         try {

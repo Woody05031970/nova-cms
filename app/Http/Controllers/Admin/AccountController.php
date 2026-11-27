@@ -7,7 +7,6 @@ use App\Models\SecurityEvent;
 use App\Support\Security\Totp;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Str;
 use Illuminate\Validation\Rules\Password;
 use Illuminate\View\View;
 

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Plugins\Hooks;
 use App\Shop\Money;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -64,7 +65,7 @@ class Order extends Model
             'payment_reference' => $reference ?? $this->payment_reference,
             'status' => $this->status === 'new' ? 'processing' : $this->status,
         ])->save();
-        app(\App\Plugins\Hooks::class)->doAction('shop.order.paid', $this);
+        app(Hooks::class)->doAction('shop.order.paid', $this);
     }
 
     public static function nextNumber(): string

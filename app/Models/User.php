@@ -3,6 +3,7 @@
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
+use App\Support\Security\Totp;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
@@ -44,7 +45,7 @@ class User extends Authenticatable
         if (! $this->hasTwoFactor()) {
             return false;
         }
-        if (\App\Support\Security\Totp::verify($this->two_factor_secret, $code)) {
+        if (Totp::verify($this->two_factor_secret, $code)) {
             return true;
         }
 

@@ -153,6 +153,22 @@
                 </div>
             </section>
 
+            @if (\App\Licensing\LicenseServer::enabled())
+                @php $spec = $product->license_spec ?? []; @endphp
+                <section class="nova-card space-y-3">
+                    <h2 class="font-semibold">Lizenz beim Kauf</h2>
+                    <p class="text-xs text-slate-500">Nach Zahlungseingang erhält der Kunde automatisch einen Lizenzschlüssel per E-Mail.</p>
+                    <label class="flex items-center gap-2 text-sm"><input type="checkbox" name="license_core" value="1" class="size-4" @checked($spec['core'] ?? false)> Nova CMS Grundlizenz</label>
+                    @foreach (\App\Models\MarketModule::where('is_paid', true)->orderBy('name')->get() as $m)
+                        <label class="flex items-center gap-2 text-sm"><input type="checkbox" name="license_modules[]" value="{{ $m->slug }}" class="size-4" @checked(in_array($m->slug, $spec['modules'] ?? []))> Modul: {{ $m->name }}</label>
+                    @endforeach
+                    <div class="grid grid-cols-2 gap-3">
+                        <div><label class="nova-label" for="license_domains">Websites</label><input class="nova-input" id="license_domains" name="license_domains" type="number" min="1" value="{{ $spec['max_domains'] ?? 1 }}"></div>
+                        <div><label class="nova-label" for="license_update_months">Updates (Monate)</label><input class="nova-input" id="license_update_months" name="license_update_months" type="number" min="0" value="{{ $spec['update_months'] ?? 12 }}"></div>
+                    </div>
+                </section>
+            @endif
+
             <div class="flex flex-wrap gap-2">
                 <button class="nova-btn flex-1 justify-center">{{ $product->exists ? 'Speichern' : 'Produkt anlegen' }}</button>
                 @if ($product->exists && \App\Shop\ShopSettings::enabled() && $product->is_active)

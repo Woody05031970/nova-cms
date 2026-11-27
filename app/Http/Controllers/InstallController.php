@@ -2,11 +2,13 @@
 
 namespace App\Http\Controllers;
 
+use App\Licensing\License;
 use App\Models\Setting;
 use App\Models\User;
 use App\Support\Install\EnvWriter;
 use App\Support\Install\InstallState;
 use App\Support\Install\Requirements;
+use App\Support\Security\Scanner;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Artisan;
@@ -117,7 +119,8 @@ class InstallController extends Controller
                 'password' => $data['password'],
                 'role' => 'admin',
             ]);
-            Setting::putMany(['site_name' => $data['site_name']]);
+            Setting::putMany(['site_name' => $data['site_name'], 'installed_at' => now()->toIso8601String()]);
+            License::installId();
 
             app(EnvWriter::class)->set([
                 'APP_NAME' => $data['site_name'],
@@ -127,8 +130,8 @@ class InstallController extends Controller
             ]);
 
             InstallState::markInstalled();
-            \App\Support\Security\Scanner::protectUploads();
-            \App\Support\Security\Scanner::storeHashes();
+            Scanner::protectUploads();
+            Scanner::storeHashes();
         } catch (Throwable $e) {
             report($e);
 

@@ -7,6 +7,7 @@ use App\Ai\AiManager;
 use App\Ai\ContentAssistant;
 use App\Http\Controllers\Controller;
 use App\Models\Media;
+use App\Models\Product;
 use App\Support\Media\MediaLibrary;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -39,7 +40,7 @@ class MediaController extends Controller
             'original_name' => $media->original_name,
             'created' => $media->created_at?->format('d.m.Y, H:i'),
             'user' => $media->user?->name,
-            'usages' => $media->usages()->map(fn ($p) => $p instanceof \App\Models\Product
+            'usages' => $media->usages()->map(fn ($p) => $p instanceof Product
                 ? ['title' => $p->title, 'url' => route('admin.shop.products.edit', $p->id)]
                 : [
                     'title' => $p->title.($p->deleted_at ? ' (Papierkorb)' : ''),
