@@ -78,6 +78,7 @@ Route::middleware('feature:newsletter')->group(function () {
     Route::get('/newsletter/bestaetigen/{token}', [NewsletterController::class, 'confirm'])->name('newsletter.confirm');
 });
 Route::middleware('feature:terminbuchung')->prefix('termine')->name('booking.')->group(function () {
+    Route::redirect('/', '/termine/buchen');
     Route::get('/buchen', [BookingController::class, 'show'])->name('show');
     Route::post('/buchen', [BookingController::class, 'store'])->middleware('throttle:10,1')->name('store');
     Route::get('/{token}', [BookingController::class, 'status'])->where('token', '[A-Za-z0-9]{40}')->name('status');
