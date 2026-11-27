@@ -11,7 +11,9 @@ use App\Licensing\LicenseServer;
 use App\Licensing\LocalTransport;
 use App\Licensing\Transport;
 use App\Models\Media;
+use App\Models\MenuItem;
 use App\Models\Page;
+use App\Models\Product;
 use App\Models\Setting;
 use App\Models\User;
 use App\Plugins\Hooks;
@@ -20,6 +22,7 @@ use App\Shop\Payments\PaymentRegistry;
 use App\Shop\ShopSettings;
 use App\Support\Install\InstallState;
 use App\Support\Security\Scanner;
+use App\Support\Turbo\PageCache;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
@@ -51,6 +54,11 @@ class AppServiceProvider extends ServiceProvider
         }
 
         $this->applyMailSettings();
+        // Modul Turbo: jede Änderung an Inhalten leert den Zwischenspeicher
+        foreach ([Page::class, Product::class, MenuItem::class, Setting::class, Media::class] as $model) {
+            $model::saved(fn ($m) => $m instanceof Setting && preg_match('/^(license_|security_|seo_done|install_id|installed_at|social_)/', $m->key) ? null : PageCache::flush());
+            $model::deleted(fn () => PageCache::flush());
+        }
         // Auf dem Lizenzserver: Lizenzen für bezahlte Bestellungen ausgeben
         $this->app->make(Hooks::class)->addAction('shop.order.paid', function ($order) {
             if (LicenseServer::enabled()) {

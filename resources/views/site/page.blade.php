@@ -17,6 +17,10 @@
     <meta property="og:locale" content="de_DE">
     @if ($shareImage)<meta property="og:image" content="{{ $shareImage }}"><meta name="twitter:card" content="summary_large_image">@endif
     @if ($page->is_home && ! $preview && ($ld = $seo->businessJsonLd()))<script type="application/ld+json">{!! $ld !!}</script>@endif
+    @if (! $preview && \App\Support\Geo\Geo::on())
+        @foreach (app(\App\Support\Geo\Geo::class)->pageJsonLd($page) as $ld)<script type="application/ld+json">{!! json_encode($ld, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_HEX_TAG) !!}</script>@endforeach
+        @if (\App\Support\Geo\Geo::llmsEnabled())<link rel="alternate" type="text/markdown" href="{{ route('llms') }}" title="Übersicht für KI-Systeme">@endif
+    @endif
 @endsection
 @section('banner')
     @if ($preview && empty($live))

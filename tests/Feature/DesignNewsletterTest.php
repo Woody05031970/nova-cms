@@ -266,6 +266,6 @@ class DesignNewsletterTest extends TestCase
         $newsletter = Product::where('slug', 'modul-newsletter')->first();
         $this->assertTrue($newsletter->is_active);
         $this->assertSame(5000, $newsletter->price_cents); // eigener Preis bleibt
-        $this->assertSame(['design-pro', 'whatsapp', 'newsletter'], Product::where('slug', 'nova-cms-agentur')->first()->license_spec['modules']);
+        $this->assertEqualsCanonicalizing(array_keys(Features::ALL), Product::where('slug', 'nova-cms-agentur')->first()->license_spec['modules']);
     }
 }

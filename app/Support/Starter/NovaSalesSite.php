@@ -39,8 +39,20 @@ class NovaSalesSite
     /** Lizenzpakete: Adresse => Angaben */
     public const LICENSES = [
         'nova-cms-start' => ['Nova CMS Start', 14900, 1, 'Für eine Website, z. B. Ihr Unternehmen oder Ihren Verein.', []],
-        'nova-cms-business' => ['Nova CMS Business', 34900, 3, 'Für bis zu drei Websites, z. B. Firma, Shop und Kampagnenseite.', ['design-pro', 'whatsapp']],
-        'nova-cms-agentur' => ['Nova CMS Agentur', 89900, 15, 'Für Webdesigner und Agenturen mit bis zu 15 Kunden-Websites.', ['design-pro', 'whatsapp', 'newsletter']],
+        'nova-cms-business' => ['Nova CMS Business', 34900, 3, 'Für bis zu drei Websites, z. B. Firma, Shop und Kampagnenseite.', ['design-pro', 'whatsapp', 'seo-pro', 'statistik']],
+        'nova-cms-agentur' => ['Nova CMS Agentur', 89900, 15, 'Für Webdesigner und Agenturen mit bis zu 15 Kunden-Websites.', ['design-pro', 'whatsapp', 'newsletter', 'seo-pro', 'geo', 'social', 'redaktionsplan', 'statistik', 'turbo']],
+    ];
+
+    /** Leistungen der Pakete im Preis-Baustein */
+    private const PLAN_FEATURES = [
+        'nova-cms-business' => ['Bis zu 3 Websites', 'Alle Kernfunktionen inklusive Shop', 'Design Pro: alle Vorlagen, Effekte, Videos', 'WhatsApp, SEO Pro und Besucherstatistik', '12 Monate Updates', 'Bevorzugter Support'],
+        'nova-cms-agentur' => ['Bis zu 15 Kunden-Websites', 'Alle Kernfunktionen inklusive Shop', 'Alle Module inklusive', 'Test- und Entwicklungsumgebungen frei', '12 Monate Updates', 'Bevorzugter Support'],
+    ];
+
+    /** Frühere Fassungen der Paketleistungen: werden beim Aktualisieren ersetzt, eigene Texte bleiben */
+    private const OLD_PLAN_FEATURES = [
+        ['Bis zu 3 Websites', 'Alle Kernfunktionen inklusive Shop', 'Design Pro: alle Vorlagen, Effekte, Videos', 'WhatsApp-Anbindung', '12 Monate Updates', 'Bevorzugter Support'],
+        ['Bis zu 15 Kunden-Websites', 'Alle Kernfunktionen inklusive Shop', 'Design Pro, WhatsApp und Newsletter', 'Test- und Entwicklungsumgebungen frei', '12 Monate Updates', 'Bevorzugter Support'],
     ];
 
     /**
@@ -51,6 +63,12 @@ class NovaSalesSite
         'modul-design-pro' => ['Design Pro', 4900, 'Design', 'Alle sechs Design-Vorlagen, eigene Akzentfarbe und Schrift, Einblend-Effekte und Hintergrundvideos mit Farbschleier.', true],
         'modul-newsletter' => ['Newsletter', 6900, 'Marketing', 'Anmeldung mit Double-Opt-in, Abonnentenverwaltung, Newsletter im Design Ihrer Website und Versand über Ihren eigenen E-Mail-Server.', true],
         'modul-whatsapp' => ['WhatsApp', 2900, 'Marketing', 'Chat-Knopf auf jeder Seite und „Frage per WhatsApp stellen“ bei Produkten. Datenschutzfreundlich ohne fremde Skripte.', true],
+        'modul-seo-pro' => ['SEO Pro', 7900, 'SEO', 'Mitbewerber-Analyse: Menü, Themen, Suchbegriffe und Funktionen von bis zu fünf Mitbewerbern, dazu eine Maßnahmenliste für besseres Ranking.', true],
+        'modul-geo' => ['KI-Sichtbarkeit', 5900, 'SEO', 'Damit ChatGPT, Gemini und Perplexity Ihre Inhalte finden und zitieren: strukturierte Daten je Seite, llms.txt und eine Prüfung mit Tipps.', true],
+        'modul-social' => ['Social-Media-Beiträge', 3900, 'Marketing', 'Aus einer Seite oder einem Produkt entstehen Beiträge für Instagram, Facebook und LinkedIn, mit Hashtags und Link, fertig zum Kopieren.', true],
+        'modul-redaktionsplan' => ['Redaktionsplan', 3900, 'Inhalte', 'Seiten zu einem festen Termin automatisch veröffentlichen und Themen, Aktionen und Beiträge im Kalender planen.', true],
+        'modul-statistik' => ['Besucherstatistik', 4900, 'Marketing', 'Aufrufe, beliebteste Seiten, Herkunft, Handy-Anteil und Suchbegriffe Ihrer Besucher. Ohne Cookies, ohne Banner, ohne fremde Dienste.', true],
+        'modul-turbo' => ['Turbo', 2900, 'Technik', 'Ein Zwischenspeicher liefert Seiten an Besucher in Millisekunden aus. Gut für Besucher und für das Google-Ranking.', true],
         'modul-terminbuchung' => ['Terminbuchung', 7900, 'Service', 'Kunden buchen freie Termine direkt auf Ihrer Website, mit Bestätigung und Erinnerung per E-Mail.'],
         'modul-mehrsprachigkeit' => ['Mehrsprachigkeit', 9900, 'Inhalte', 'Jede Seite in mehreren Sprachen, mit Sprachumschalter und KI-Übersetzungsvorschlag.'],
         'modul-gutscheine' => ['Gutscheine und Rabatte', 4900, 'Shop', 'Rabattcodes, Geschenkgutscheine und zeitlich begrenzte Aktionen für Ihren Shop.'],
@@ -92,8 +110,8 @@ class NovaSalesSite
             $count += $this->product($slug, [
                 'name' => $name, 'sku' => strtoupper(str_replace('nova-cms-', 'NOVA-', $slug)), 'price_cents' => $cents, 'tax_rate' => $taxRate,
                 'short_description' => $text,
-                'description' => '<p>'.e($text).'</p><ul><li>Alle Kernfunktionen: Seiten, Menü, Medien, Shop, SEO, Sicherheit und KI-Assistent</li>'
-                    .($modules ? '<li>Inklusive Module: '.e(collect($modules)->map(fn ($m) => Features::ALL[$m][0])->implode(', ')).'</li>' : '')
+                'description' => '<p>'.e($text).'</p><ul><li>Alle Kernfunktionen: Seiten, Menü, Medien, Shop, SEO, Barrierefreiheit, Sicherheit und KI-Assistent</li>'
+                    .self::modulesLine($modules)
                     .'<li>Gültig für '.$domains.' '.($domains === 1 ? 'Website' : 'Websites').' (Test- und Entwicklungsumgebungen zählen nicht mit)</li>'
                     .'<li>12 Monate Updates inklusive, danach läuft Ihre Version unbegrenzt weiter</li>'
                     .'<li>Lizenzschlüssel kommt nach Zahlungseingang automatisch per E-Mail</li></ul>',
@@ -132,7 +150,10 @@ class NovaSalesSite
             $this->legalPages(); // z. B. die Erklärung zur Barrierefreiheit aus Version 0.5
             foreach (self::LICENSES as $slug => [, , $domains, , $modules]) {
                 $p = Product::where('slug', $slug)->first();
-                $p?->update(['license_spec' => ['modules' => $modules] + ($p->license_spec ?? ['core' => true, 'max_domains' => $domains, 'update_months' => 12])]);
+                $p?->update([
+                    'license_spec' => ['modules' => $modules] + ($p->license_spec ?? ['core' => true, 'max_domains' => $domains, 'update_months' => 12]),
+                    'description' => preg_replace('~<li>Inklusive Module: .*?</li>~u', self::modulesLine($modules), (string) $p->description, 1),
+                ]);
             }
             foreach (self::PAID_MODULES as $slug => $m) {
                 if ($m[4] ?? false) {
@@ -148,6 +169,15 @@ class NovaSalesSite
                         $b['data']['items'] = $this->moduleItems();
                         $changed = true;
                     }
+                    if (($b['type'] ?? null) === 'pricing') {
+                        foreach ($b['data']['plans'] ?? [] as $i => $plan) {
+                            $new = self::PLAN_FEATURES[$plan['product'] ?? ''] ?? null;
+                            if ($new && in_array($plan['features'] ?? null, self::OLD_PLAN_FEATURES, true)) {
+                                $b['data']['plans'][$i]['features'] = $new;
+                                $changed = true;
+                            }
+                        }
+                    }
                 }
                 unset($b);
                 if ($changed) {
@@ -158,6 +188,11 @@ class NovaSalesSite
 
             return ['products' => $added, 'pages' => $pages];
         });
+    }
+
+    private static function modulesLine(array $modules): string
+    {
+        return $modules ? '<li>Inklusive Module: '.e(collect($modules)->map(fn ($m) => Features::ALL[$m][0])->implode(', ')).'</li>' : '';
     }
 
     private function product(string $slug, array $data): int
@@ -285,7 +320,7 @@ class NovaSalesSite
                 self::block('modules', [
                     'eyebrow' => 'Modular', 'title' => 'Der Kern ist komplett. Module machen ihn persönlich.',
                     'intro' => 'Alles für eine professionelle Website ist von Anfang an dabei. Zusätzliche Module installieren Sie mit einem Klick aus dem Marktplatz im Backoffice.',
-                    'items' => (fn ($all) => [$all[0], $all[2], $all[4], $all[8], $all[9], $all[10]])($this->moduleItems()),
+                    'items' => collect($this->moduleItems())->whereIn('name', ['Seiten und Block-Editor', 'Online-Shop', 'Barrierefreiheit', 'KI-Assistent', 'Design Pro', 'KI-Sichtbarkeit'])->values()->all(),
                 ]),
                 self::block('cta', ['style' => 'light', 'title' => 'Alle Module im Überblick', 'text' => 'Sehen Sie, was im Kern enthalten ist, was kostenlos dazukommt und welche Erweiterungen es zu kaufen gibt.', 'button_label' => 'Zu den Modulen', 'button_url' => $url('module')]),
                 self::block('faq', ['eyebrow' => 'Gut zu wissen', 'title' => 'Häufige Fragen', 'items' => array_slice($this->faqItems($url), 0, 5)]),
@@ -384,8 +419,8 @@ class NovaSalesSite
                     'intro' => 'Kein Abo: Sie kaufen eine Lizenz und nutzen Ihre Version unbegrenzt. 12 Monate Updates sind inklusive.',
                     'plans' => [
                         ['name' => 'Start', 'product' => 'nova-cms-start', 'period' => 'einmalig', 'text' => 'Für eine Website', 'features' => ['1 Website', 'Alle Kernfunktionen inklusive Shop', 'Design-Vorlage „Klar“ mit eigener Farbe und Logo', 'KI-Assistent mit eigenem Schlüssel', '12 Monate Updates', 'Module einzeln dazubuchbar'], 'button_label' => 'In den Warenkorb', 'button_url' => $url('kontakt'), 'price' => '149 €'],
-                        ['name' => 'Business', 'product' => 'nova-cms-business', 'period' => 'einmalig', 'text' => 'Für Firma, Shop und mehr', 'features' => ['Bis zu 3 Websites', 'Alle Kernfunktionen inklusive Shop', 'Design Pro: alle Vorlagen, Effekte, Videos', 'WhatsApp-Anbindung', '12 Monate Updates', 'Bevorzugter Support'], 'button_label' => 'In den Warenkorb', 'button_url' => $url('kontakt'), 'price' => '349 €', 'highlight' => true],
-                        ['name' => 'Agentur', 'product' => 'nova-cms-agentur', 'period' => 'einmalig', 'text' => 'Für Webdesigner und Agenturen', 'features' => ['Bis zu 15 Kunden-Websites', 'Alle Kernfunktionen inklusive Shop', 'Design Pro, WhatsApp und Newsletter', 'Test- und Entwicklungsumgebungen frei', '12 Monate Updates', 'Bevorzugter Support'], 'button_label' => 'In den Warenkorb', 'button_url' => $url('kontakt'), 'price' => '899 €'],
+                        ['name' => 'Business', 'product' => 'nova-cms-business', 'period' => 'einmalig', 'text' => 'Für Firma, Shop und mehr', 'features' => self::PLAN_FEATURES['nova-cms-business'], 'button_label' => 'In den Warenkorb', 'button_url' => $url('kontakt'), 'price' => '349 €', 'highlight' => true],
+                        ['name' => 'Agentur', 'product' => 'nova-cms-agentur', 'period' => 'einmalig', 'text' => 'Für Webdesigner und Agenturen', 'features' => self::PLAN_FEATURES['nova-cms-agentur'], 'button_label' => 'In den Warenkorb', 'button_url' => $url('kontakt'), 'price' => '899 €'],
                     ],
                     'note' => 'Alle Lizenzen 30 Tage kostenlos testen. Test- und Entwicklungsumgebungen zählen nicht als Website.',
                 ]),
@@ -440,7 +475,9 @@ class NovaSalesSite
             ['Seiten und Block-Editor', 'Inhalte', '14 Bausteine, Texteditor mit HTML-Ansicht, Live-Vorschau, Versionen und Papierkorb.'],
             ['Menü-Verwaltung', 'Inhalte', 'Haupt- und Unterpunkte per Maus sortieren, eigene Links und Shop-Link.'],
             ['Online-Shop', 'Shop', 'Produkte, Warenkorb, Kasse, Bestellungen, PayPal, Stripe, Vorkasse und Rechnung.'],
-            ['SEO-Center', 'SEO', 'Analyse je Seite, Fokus-Suchbegriff, Wettbewerber-Check, Sitemap und Google-Vorschau.'],
+            ['SEO-Center', 'SEO', 'Analyse je Seite, Fokus-Suchbegriff, Weiterleitungen, Sitemap und Google-Vorschau.'],
+            ['Barrierefreiheit', 'Recht', 'Prüfung nach BFSG und WCAG mit Hinweisen, Erklärung zur Barrierefreiheit und volle Bedienung per Tastatur.'],
+            ['Suche und Wartungsmodus', 'Inhalte', 'Suche für Besucher, eigene Seite „Nicht gefunden“ und Wartungsmodus für Umbauten.'],
             ['KI-Assistent', 'KI', 'Texte verbessern, Beschreibungen und Bildtexte vorschlagen. Freie Wahl des KI-Anbieters.'],
             ['Sicherheitscenter', 'Sicherheit', 'Firewall, Zwei-Faktor-Anmeldung, Anmeldesperre und Prüfung der Programmdateien.'],
             ['Mediathek', 'Inhalte', 'Bilder und Videos hochladen, automatisch verkleinern und wiederverwenden.'],

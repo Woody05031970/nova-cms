@@ -37,6 +37,19 @@ class ContentAssistant
         return preg_replace('/^```(?:html)?\s*|\s*```$/', '', trim($out));
     }
 
+    /** Beitrag für Facebook und Instagram zu einer Seite oder einem Produkt. */
+    public function socialPost(string $title, string $text, ?string $url, string $tone = 'freundlich'): string
+    {
+        $system = $this->context()."\n\nDu schreibst Beiträge für die Facebook-Seite und das Instagram-Konto dieses Unternehmens. "
+            .'Regeln: Deutsch, '.$tone.', 300 bis 700 Zeichen, eine packende erste Zeile, kurze Absätze, höchstens drei passende Emojis, '
+            .'eine klare Handlungsaufforderung, am Ende drei bis fünf passende Hashtags. Erfinde keine Fakten wie Preise, Termine oder Rabatte. '
+            .'Antworte nur mit dem fertigen Beitrag, ohne Anführungszeichen und ohne Erklärung.';
+
+        $out = $this->ai->text($system, "Thema: {$title}\n".($url ? "Link: {$url}\n" : '')."\nInhalt:\n".mb_substr($text, 0, 5000), 3000);
+
+        return trim(preg_replace('/^```\w*\s*|\s*```$/', '', trim($out)), " \"'„“");
+    }
+
     /** Schlägt eine Beschreibung für Google vor (höchstens 160 Zeichen). */
     public function metaDescription(string $title, string $text): string
     {

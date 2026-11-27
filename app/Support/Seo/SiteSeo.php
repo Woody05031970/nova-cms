@@ -6,6 +6,7 @@ use App\Models\Page;
 use App\Models\Product;
 use App\Models\Setting;
 use App\Shop\ShopSettings;
+use App\Support\Geo\Geo;
 use Illuminate\Support\Str;
 
 /**
@@ -24,7 +25,8 @@ class SiteSeo
             return "User-agent: *\nDisallow: /\n";
         }
 
-        return "User-agent: *\nDisallow: /admin\nDisallow: /install\n\nSitemap: ".url('sitemap.xml')."\n";
+        return Geo::robotsLines()
+            ."User-agent: *\nDisallow: /admin\nDisallow: /install\n\nSitemap: ".url('sitemap.xml')."\n";
     }
 
     public function sitemap(): string

@@ -67,6 +67,8 @@
             <a href="{{ route('admin.pages.index') }}" class="text-sm text-slate-600 hover:text-slate-900">← Alle Seiten</a>
             @if ($page->isPublished())
                 <span class="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-medium text-emerald-700"><span class="size-1.5 rounded-full bg-emerald-500"></span>Online</span>
+            @elseif ($page->isScheduled())
+                <span class="inline-flex items-center gap-1.5 rounded-full bg-sky-50 px-2.5 py-1 text-xs font-medium text-sky-800" data-scheduled><span class="size-1.5 rounded-full bg-sky-500"></span>Geplant für {{ $page->published_at->format('d.m.Y, H:i') }} Uhr</span>
             @else
                 <span class="inline-flex items-center gap-1.5 rounded-full bg-slate-200/70 px-2.5 py-1 text-xs font-medium text-slate-600"><span class="size-1.5 rounded-full bg-slate-400"></span>Entwurf</span>
             @endif
@@ -221,6 +223,60 @@
                         </template>
                     </ul>
                 </section>
+
+                @if (! $page->isPublished())
+                    @php $planOn = \App\Licensing\Features::on('redaktionsplan'); @endphp
+                    <section class="nova-card p-5" aria-labelledby="plan-title">
+                        <h2 id="plan-title" class="flex items-center gap-2 font-semibold"><x-icon name="calendar" class="size-4 text-slate-500" /> Später veröffentlichen</h2>
+                        @if ($planOn)
+                            <p class="mt-1 text-xs text-slate-500">Die Seite geht zum gewählten Zeitpunkt automatisch online.</p>
+                            <label class="nova-label mt-3" for="publish_at">Datum und Uhrzeit</label>
+                            <input type="datetime-local" id="publish_at" name="publish_at" class="nova-input text-sm" min="{{ now()->addMinutes(5)->format('Y-m-d\TH:i') }}"
+                                   value="{{ old('publish_at', $page->isScheduled() ? $page->published_at->format('Y-m-d\TH:i') : '') }}" @error('publish_at') aria-invalid="true" aria-describedby="publish-at-error" @enderror>
+                            @error('publish_at')<p id="publish-at-error" class="mt-1 text-sm font-medium text-red-700">{{ $message }}</p>@enderror
+                            <div class="mt-3 flex flex-wrap gap-2">
+                                <button type="button" class="nova-btn-secondary py-2 text-sm" @click="submit('schedule')" data-schedule>{{ $page->isScheduled() ? 'Termin ändern' : 'Termin planen' }}</button>
+                                @if ($page->isScheduled())<button type="button" class="py-2 text-sm text-slate-600 hover:underline" @click="submit('unpublish')">Planung aufheben</button>@endif
+                            </div>
+                        @else
+                            <p class="mt-1 text-sm text-slate-600">Mit dem Modul „Redaktionsplan“ legen Sie fest, wann die Seite automatisch online geht. <a href="{{ route('admin.license') }}#funktionen" class="font-medium text-nova-700 hover:underline">Mehr erfahren</a></p>
+                        @endif
+                    </section>
+                @endif
+
+                @if (\App\Support\Social\SocialPublisher::on())
+                    @php $fbOn = \App\Support\Social\Meta::connected('facebook'); $igOn = \App\Support\Social\Meta::connected('instagram'); @endphp
+                    <section class="nova-card p-5" aria-labelledby="social-title" x-data="{ nets: @js(old('social_networks', [])), text: @js(old('social_text', '')), busy: false, msg: '' }">
+                        <h2 id="social-title" class="flex items-center gap-2 font-semibold"><x-icon name="share" class="size-4 text-slate-500" /> Bei Facebook und Instagram teilen</h2>
+                        @if (! $fbOn && ! $igOn)
+                            <p class="mt-1 text-sm text-slate-600">Verbinden Sie zuerst Ihre Facebook-Seite und Ihr Instagram-Konto. <a href="{{ route('admin.social') }}#verbindung" class="font-medium text-nova-700 hover:underline">Jetzt verbinden</a></p>
+                        @else
+                            <p class="mt-1 text-xs text-slate-500">{{ $page->isPublished() ? 'Der Beitrag geht beim Speichern raus.' : 'Der Beitrag geht raus, sobald die Seite online ist.' }}</p>
+                            <div class="mt-3 flex flex-wrap gap-4 text-sm">
+                                <label class="flex items-center gap-2"><input type="checkbox" name="social_networks[]" value="facebook" x-model="nets" class="accent-nova-600" @disabled(! $fbOn) data-social-facebook> Bei Facebook posten</label>
+                                <label class="flex items-center gap-2"><input type="checkbox" name="social_networks[]" value="instagram" x-model="nets" class="accent-nova-600" @disabled(! $igOn) data-social-instagram> Bei Instagram posten</label>
+                            </div>
+                            <div x-show="nets.length" class="mt-3">
+                                <div class="flex justify-between"><label class="nova-label" for="social_text">Text des Beitrags</label><span class="text-xs text-slate-500" x-text="text.length + '/2200'"></span></div>
+                                <textarea id="social_text" name="social_text" x-model="text" rows="6" maxlength="2200" class="nova-input text-sm" :required="nets.length > 0" @error('social_text') aria-invalid="true" @enderror></textarea>
+                                @error('social_text')<p class="mt-1 text-sm font-medium text-red-700">{{ $message }}</p>@enderror
+                                <button type="button" class="mt-1 inline-flex items-center gap-1 text-xs font-medium text-nova-700 hover:underline disabled:opacity-50" :disabled="busy"
+                                        @click="busy = true; msg = ''; fetch(@js(route('admin.social.suggest')), {method: 'POST', headers: {'Content-Type': 'application/json', 'Accept': 'application/json', 'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').content}, body: JSON.stringify({source: 'page:{{ $page->id }}'})}).then(r => r.json()).then(d => { if (d.text) text = d.text; else msg = d.message || ''; }).catch(() => msg = 'Keine Verbindung.').finally(() => busy = false)">
+                                    <x-icon name="sparkles" class="size-3.5" /><span x-text="busy ? 'Schreibe …' : 'Text vorschlagen'"></span>
+                                </button>
+                                <p x-show="msg" x-text="msg" class="mt-1 text-xs text-red-700"></p>
+                                @if ($igOn)<p class="mt-2 text-xs text-slate-500">Instagram nutzt das erste Bild der Seite. Ohne Bild wird nur bei Facebook gepostet.</p>@endif
+                            </div>
+                        @endif
+                        @if ($socialPosts->isNotEmpty())
+                            <ul class="mt-4 space-y-1 border-t border-slate-100 pt-3 text-xs text-slate-600">
+                                @foreach ($socialPosts as $sp)
+                                    <li>{{ $sp->networkName() }}: {{ ['pending' => 'geplant', 'sent' => 'veröffentlicht am '.$sp->sent_at?->format('d.m.Y, H:i'), 'failed' => 'fehlgeschlagen'][$sp->status] }}</li>
+                                @endforeach
+                            </ul>
+                        @endif
+                    </section>
+                @endif
 
                 <section class="nova-card space-y-3 p-5">
                     <h2 class="font-semibold">Optionen</h2>

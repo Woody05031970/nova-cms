@@ -6,6 +6,8 @@ use App\Http\Controllers\Admin\AiController;
 use App\Http\Controllers\Admin\ContactMessageController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\DesignController;
+use App\Http\Controllers\Admin\EditorialController;
+use App\Http\Controllers\Admin\GeoController;
 use App\Http\Controllers\Admin\Licensing\LicenseController;
 use App\Http\Controllers\Admin\Licensing\MarketplaceController;
 use App\Http\Controllers\Admin\Licensing\ServerController as LicenseServerController;
@@ -22,7 +24,10 @@ use App\Http\Controllers\Admin\SettingsController;
 use App\Http\Controllers\Admin\Shop\OrderController as ShopOrderController;
 use App\Http\Controllers\Admin\Shop\ProductController as ShopProductController;
 use App\Http\Controllers\Admin\Shop\ShopController as AdminShopController;
+use App\Http\Controllers\Admin\SocialController;
 use App\Http\Controllers\Admin\StarterController;
+use App\Http\Controllers\Admin\StatsController;
+use App\Http\Controllers\Admin\TurboController;
 use App\Http\Controllers\Admin\UploadController;
 use App\Http\Controllers\Admin\WhatsAppController;
 use App\Http\Controllers\Auth\LoginController;
@@ -52,6 +57,7 @@ Route::prefix('install')->name('install.')->group(function () {
 Route::get('/', [SiteController::class, 'home'])->name('home');
 Route::get('/robots.txt', [SeoFileController::class, 'robots'])->name('robots');
 Route::get('/suche', SiteSearchController::class)->middleware('throttle:60,1')->name('search');
+Route::get('/llms.txt', [SeoFileController::class, 'llms'])->name('llms');
 Route::get('/sitemap.xml', [SeoFileController::class, 'sitemap'])->name('sitemap');
 Route::post('/kontakt/nachricht', ContactController::class)->middleware('throttle:5,1')->name('contact.send');
 Route::middleware('feature:newsletter')->group(function () {
@@ -125,6 +131,26 @@ Route::middleware(['auth', 'admin', LicenseGate::class])->prefix('admin')->name(
         Route::post('/{campaign}/test', [NewsletterAdminController::class, 'test'])->name('test');
         Route::post('/{campaign}/senden', [NewsletterAdminController::class, 'sendBatch'])->name('send');
     });
+    Route::middleware('feature:social')->prefix('social-media')->name('social')->group(function () {
+        Route::get('/', [SocialController::class, 'index']);
+        Route::put('/verbindung', [SocialController::class, 'connect'])->middleware('throttle:10,1')->name('.connect');
+        Route::delete('/verbindung', [SocialController::class, 'disconnect'])->name('.disconnect');
+        Route::post('/vorschlag', [SocialController::class, 'suggest'])->middleware('throttle:30,1')->name('.suggest');
+        Route::post('/veroeffentlichen', [SocialController::class, 'publish'])->middleware('throttle:20,1')->name('.publish');
+        Route::post('/beitraege/{post}/erneut', [SocialController::class, 'retry'])->middleware('throttle:20,1')->name('.retry');
+    });
+    Route::middleware('feature:redaktionsplan')->prefix('redaktionsplan')->name('plan')->group(function () {
+        Route::get('/', [EditorialController::class, 'index']);
+        Route::post('/', [EditorialController::class, 'store'])->name('.store');
+        Route::put('/{item}', [EditorialController::class, 'update'])->name('.update');
+        Route::delete('/{item}', [EditorialController::class, 'destroy'])->name('.destroy');
+    });
+    Route::get('/statistik', StatsController::class)->middleware('feature:statistik')->name('stats');
+    Route::middleware('feature:turbo')->prefix('turbo')->name('turbo')->group(function () {
+        Route::get('/', [TurboController::class, 'index']);
+        Route::put('/', [TurboController::class, 'update'])->name('.update');
+        Route::delete('/', [TurboController::class, 'clear'])->name('.clear');
+    });
     Route::put('/menue', [MenuController::class, 'update'])->name('menu.update');
     Route::post('/seiten/live-vorschau', [PageController::class, 'livePreview'])->name('pages.live-preview');
     Route::post('/seiten', [PageController::class, 'store'])->name('pages.store');
@@ -158,11 +184,17 @@ Route::middleware(['auth', 'admin', LicenseGate::class])->prefix('admin')->name(
     Route::post('/seo/pruefen', [SeoController::class, 'analyse'])->middleware('throttle:120,1')->name('seo.analyse');
     Route::post('/seo/suchbegriffe', [SeoController::class, 'keywords'])->middleware('throttle:20,1')->name('seo.keywords');
     Route::post('/seo/vergleich', [SeoController::class, 'compare'])->middleware('throttle:10,1')->name('seo.compare');
-    Route::get('/seo/mitbewerber', [SeoToolsController::class, 'competitors'])->name('seo.competitors');
-    Route::post('/seo/mitbewerber', [SeoToolsController::class, 'addCompetitor'])->middleware('throttle:10,1')->name('seo.competitors.store');
-    Route::post('/seo/mitbewerber/{competitor}/aktualisieren', [SeoToolsController::class, 'refreshCompetitor'])->middleware('throttle:10,1')->name('seo.competitors.refresh');
-    Route::delete('/seo/mitbewerber/{competitor}', [SeoToolsController::class, 'removeCompetitor'])->name('seo.competitors.destroy');
-    Route::post('/seo/massnahmen', [SeoToolsController::class, 'toggleMeasure'])->name('seo.measures.toggle');
+    Route::middleware('feature:seo-pro')->group(function () {
+        Route::get('/seo/mitbewerber', [SeoToolsController::class, 'competitors'])->name('seo.competitors');
+        Route::post('/seo/mitbewerber', [SeoToolsController::class, 'addCompetitor'])->middleware('throttle:10,1')->name('seo.competitors.store');
+        Route::post('/seo/mitbewerber/{competitor}/aktualisieren', [SeoToolsController::class, 'refreshCompetitor'])->middleware('throttle:10,1')->name('seo.competitors.refresh');
+        Route::delete('/seo/mitbewerber/{competitor}', [SeoToolsController::class, 'removeCompetitor'])->name('seo.competitors.destroy');
+        Route::post('/seo/massnahmen', [SeoToolsController::class, 'toggleMeasure'])->name('seo.measures.toggle');
+    });
+    Route::middleware('feature:geo')->group(function () {
+        Route::get('/seo/ki-sichtbarkeit', [GeoController::class, 'index'])->name('geo');
+        Route::put('/seo/ki-sichtbarkeit', [GeoController::class, 'update'])->name('geo.update');
+    });
     Route::get('/seo/weiterleitungen', [SeoToolsController::class, 'redirects'])->name('seo.redirects');
     Route::post('/seo/weiterleitungen', [SeoToolsController::class, 'storeRedirect'])->name('seo.redirects.store');
     Route::delete('/seo/weiterleitungen/{redirect}', [SeoToolsController::class, 'destroyRedirect'])->name('seo.redirects.destroy');
