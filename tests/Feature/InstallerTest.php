@@ -2,8 +2,10 @@
 
 namespace Tests\Feature;
 
+use App\Models\Page;
 use App\Models\Setting;
 use App\Models\User;
+use App\Support\Starter\NovaSalesSite;
 use Tests\TestCase;
 
 class InstallerTest extends TestCase
@@ -63,5 +65,17 @@ class InstallerTest extends TestCase
         $this->post('/install/datenbank', [
             'driver' => 'mysql', 'host' => '127.0.0.1', 'port' => 1, 'database' => 'x', 'username' => 'y', 'password' => 'z',
         ])->assertSessionHasErrors(['database']);
+    }
+
+    public function test_installation_mit_verkaufswebsite(): void
+    {
+        $this->post('/install/datenbank', ['driver' => 'sqlite']);
+        $this->post('/install/website', [
+            'site_name' => 'Nova Vertrieb', 'name' => 'Detlev', 'email' => 'd@example.com',
+            'password' => 'geheim12345', 'password_confirmation' => 'geheim12345', 'starter' => 'nova-sales',
+        ])->assertSessionHasNoErrors()->assertRedirect(route('install.done'));
+
+        $this->assertTrue(NovaSalesSite::installed());
+        $this->assertTrue(Page::where('slug', 'preise')->exists());
     }
 }

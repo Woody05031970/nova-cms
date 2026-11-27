@@ -44,3 +44,33 @@ document.querySelectorAll('[data-video-consent]').forEach((box) => {
         box.replaceChildren(iframe);
     });
 });
+
+// Modul-Übersicht: Filter (Alle / Im Kern / Kostenlos / Kostenpflichtig) und Baukasten mit Summe
+const euro = new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' });
+document.querySelectorAll('[data-modules]').forEach((box) => {
+    const chips = [...box.querySelectorAll('[data-filter]')];
+    const cards = [...box.querySelectorAll('[data-kind]')];
+    chips.forEach((chip) =>
+        chip.addEventListener('click', () => {
+            const f = chip.dataset.filter;
+            chips.forEach((c) => {
+                c.classList.toggle('is-on', c === chip);
+                c.setAttribute('aria-pressed', String(c === chip));
+            });
+            cards.forEach((card) => (card.hidden = f !== 'all' && card.dataset.kind !== f));
+        }),
+    );
+
+    const form = box.querySelector('[data-builder]');
+    const bar = box.querySelector('[data-builder-bar]');
+    if (!form || !bar) return;
+    const update = () => {
+        const picked = [...form.querySelectorAll('input[name="products[]"]:checked')];
+        const sum = picked.reduce((s, i) => s + Number(i.closest('[data-price]')?.dataset.price || 0), 0);
+        bar.hidden = picked.length === 0;
+        bar.querySelector('[data-builder-count]').textContent = picked.length;
+        bar.querySelector('[data-builder-sum]').textContent = euro.format(sum / 100);
+    };
+    form.addEventListener('change', update);
+    update();
+});

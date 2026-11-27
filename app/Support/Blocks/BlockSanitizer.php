@@ -13,7 +13,10 @@ use Illuminate\Support\Str;
  */
 class BlockSanitizer
 {
-    public const TYPES = ['text', 'hero', 'image', 'video', 'slider', 'button', 'html'];
+    public const TYPES = ['text', 'hero', 'image', 'video', 'slider', 'button', 'features', 'pricing', 'modules', 'compare', 'faq', 'cta', 'contact', 'html'];
+
+    /** Symbole für Vorteils-Kacheln */
+    public const ICONS = ['sparkles', 'bolt', 'shield', 'cart', 'search', 'pages', 'menu', 'image', 'globe', 'layers', 'rocket', 'heart', 'users', 'chart', 'lock', 'clock', 'check', 'code', 'puzzle', 'key', 'eye', 'mail'];
 
     private const MAX_BLOCKS = 200;
 
@@ -64,7 +67,147 @@ class BlockSanitizer
             'image' => $this->mediaUrl($d['image'] ?? null),
             'button_label' => $this->str($d['button_label'] ?? '', 60),
             'button_url' => $this->linkUrl($d['button_url'] ?? null),
+            'variant' => ($d['variant'] ?? '') === 'tech' ? 'tech' : 'image',
+            'eyebrow' => $this->str($d['eyebrow'] ?? '', 80),
+            'button2_label' => $this->str($d['button2_label'] ?? '', 60),
+            'button2_url' => $this->linkUrl($d['button2_url'] ?? null),
         ];
+    }
+
+    private function cleanFeatures(array $d): array
+    {
+        $items = $this->items($d['items'] ?? null, 24, fn (array $i) => [
+            'icon' => in_array($i['icon'] ?? null, self::ICONS, true) ? $i['icon'] : 'sparkles',
+            'title' => $this->str($i['title'] ?? '', 120),
+            'text' => $this->str($i['text'] ?? '', 500),
+        ], fn ($i) => $i['title'] !== '' || $i['text'] !== '');
+
+        return [
+            ...$this->heading($d),
+            'style' => in_array($d['style'] ?? null, ['grid', 'steps', 'stats'], true) ? $d['style'] : 'grid',
+            'items' => $items,
+        ];
+    }
+
+    private function cleanPricing(array $d): array
+    {
+        $plans = $this->items($d['plans'] ?? null, 6, fn (array $p) => [
+            'name' => $this->str($p['name'] ?? '', 60),
+            'price' => $this->str($p['price'] ?? '', 30),
+            'period' => $this->str($p['period'] ?? '', 60),
+            'text' => $this->str($p['text'] ?? '', 300),
+            'features' => $this->lines($p['features'] ?? '', 20, 120),
+            'product' => $this->slug($p['product'] ?? null),
+            'button_label' => $this->str($p['button_label'] ?? '', 60),
+            'button_url' => $this->linkUrl($p['button_url'] ?? null),
+            'highlight' => (bool) ($p['highlight'] ?? false),
+        ], fn ($p) => $p['name'] !== '');
+
+        return [...$this->heading($d), 'plans' => $plans, 'note' => $this->str($d['note'] ?? '', 400)];
+    }
+
+    private function cleanModules(array $d): array
+    {
+        $items = $this->items($d['items'] ?? null, 60, fn (array $i) => [
+            'name' => $this->str($i['name'] ?? '', 80),
+            'text' => $this->str($i['text'] ?? '', 400),
+            'kind' => in_array($i['kind'] ?? null, ['core', 'free', 'paid'], true) ? $i['kind'] : 'core',
+            'category' => $this->str($i['category'] ?? '', 40),
+            'price' => $this->str($i['price'] ?? '', 30),
+            'product' => $this->slug($i['product'] ?? null),
+            'soon' => (bool) ($i['soon'] ?? false),
+        ], fn ($i) => $i['name'] !== '');
+
+        return [...$this->heading($d), 'items' => $items, 'builder' => (bool) ($d['builder'] ?? false)];
+    }
+
+    private function cleanCompare(array $d): array
+    {
+        $cell = fn ($v) => in_array($v, ['yes', 'no', 'partly'], true) ? $v : $this->str($v ?? '', 120);
+
+        return [
+            ...$this->heading($d),
+            'ours' => $this->str($d['ours'] ?? 'Nova CMS', 60),
+            'theirs' => $this->str($d['theirs'] ?? '', 60),
+            'rows' => $this->items($d['rows'] ?? null, 40, fn (array $r) => [
+                'label' => $this->str($r['label'] ?? '', 160),
+                'ours' => $cell($r['ours'] ?? ''),
+                'theirs' => $cell($r['theirs'] ?? ''),
+            ], fn ($r) => $r['label'] !== ''),
+            'note' => $this->str($d['note'] ?? '', 500),
+        ];
+    }
+
+    private function cleanFaq(array $d): array
+    {
+        return [
+            ...$this->heading($d),
+            'items' => $this->items($d['items'] ?? null, 60, fn (array $i) => [
+                'q' => $this->str($i['q'] ?? '', 200),
+                'a' => mb_substr(trim(strip_tags((string) ($i['a'] ?? ''))), 0, 2000),
+            ], fn ($i) => $i['q'] !== '' && $i['a'] !== ''),
+        ];
+    }
+
+    private function cleanCta(array $d): array
+    {
+        return [
+            'title' => $this->str($d['title'] ?? '', 160),
+            'text' => $this->str($d['text'] ?? '', 400),
+            'button_label' => $this->str($d['button_label'] ?? '', 60),
+            'button_url' => $this->linkUrl($d['button_url'] ?? null),
+            'button2_label' => $this->str($d['button2_label'] ?? '', 60),
+            'button2_url' => $this->linkUrl($d['button2_url'] ?? null),
+            'style' => ($d['style'] ?? '') === 'light' ? 'light' : 'dark',
+        ];
+    }
+
+    private function cleanContact(array $d): array
+    {
+        return [
+            ...$this->heading($d),
+            'button_label' => $this->str($d['button_label'] ?? '', 60) ?: 'Nachricht senden',
+            'success' => $this->str($d['success'] ?? '', 300),
+            'subjects' => $this->lines($d['subjects'] ?? '', 10, 80),
+        ];
+    }
+
+    /** Überschrift und Einleitung, die viele Blöcke gemeinsam haben */
+    private function heading(array $d): array
+    {
+        return ['eyebrow' => $this->str($d['eyebrow'] ?? '', 80), 'title' => $this->str($d['title'] ?? '', 160), 'intro' => $this->str($d['intro'] ?? '', 600)];
+    }
+
+    /**
+     * @param  callable(array): array  $map
+     * @param  callable(array): bool  $keep
+     * @return list<array<string, mixed>>
+     */
+    private function items(mixed $list, int $max, callable $map, callable $keep): array
+    {
+        $out = [];
+        foreach (array_slice(is_array($list) ? array_values($list) : [], 0, $max) as $item) {
+            if (is_array($item) && $keep($clean = $map($item))) {
+                $out[] = $clean;
+            }
+        }
+
+        return $out;
+    }
+
+    /** Mehrzeiliger Text als Liste, z. B. die Leistungen eines Pakets */
+    private function lines(mixed $v, int $max, int $len): array
+    {
+        $lines = is_array($v) ? $v : preg_split('/\r\n|\r|\n/', (string) $v);
+
+        return array_values(array_slice(array_filter(array_map(fn ($l) => $this->str($l, $len), $lines), fn ($l) => $l !== ''), 0, $max));
+    }
+
+    private function slug(mixed $v): ?string
+    {
+        $v = trim((string) $v);
+
+        return preg_match('/^[a-z0-9][a-z0-9\-]{0,119}$/', $v) ? $v : null;
     }
 
     private function cleanImage(array $d): array

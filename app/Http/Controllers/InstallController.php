@@ -9,6 +9,7 @@ use App\Support\Install\EnvWriter;
 use App\Support\Install\InstallState;
 use App\Support\Install\Requirements;
 use App\Support\Security\Scanner;
+use App\Support\Starter\NovaSalesSite;
 use App\Support\Update\AutoUpdate;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -104,6 +105,7 @@ class InstallController extends Controller
             'name' => ['required', 'string', 'max:120'],
             'email' => ['required', 'email', 'max:255'],
             'password' => ['required', 'confirmed', Password::min(10)->letters()->numbers()],
+            'starter' => ['nullable', 'in:empty,nova-sales'],
         ], [
             'site_name.required' => 'Wie soll Ihre Website heißen?',
             'password.confirmed' => 'Die beiden Passwörter stimmen nicht überein.',
@@ -123,6 +125,9 @@ class InstallController extends Controller
             ]);
             Setting::putMany(['site_name' => $data['site_name'], 'installed_at' => now()->toIso8601String()]);
             License::installId();
+            if (($data['starter'] ?? 'empty') === 'nova-sales') {
+                app(NovaSalesSite::class)->install();
+            }
 
             app(EnvWriter::class)->set([
                 'APP_NAME' => $data['site_name'],

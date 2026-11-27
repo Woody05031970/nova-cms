@@ -118,6 +118,20 @@ class PageAnalyzer
         return $this->analyze($page->only(['title', 'slug', 'meta_title', 'meta_description', 'focus_keyword', 'blocks', 'is_home', 'purpose']));
     }
 
+    /** Alle Texte eines Bausteins mit Listen (Vorteile, Pakete, Fragen …), ohne technische Felder */
+    public static function structuredText(array $d): string
+    {
+        $skip = ['icon', 'style', 'kind', 'product', 'button_url', 'button2_url', 'highlight', 'soon', 'builder', 'variant'];
+        $out = [];
+        array_walk_recursive($d, function ($v, $k) use (&$out, $skip) {
+            if (is_string($v) && $v !== '' && ! in_array($k, $skip, true) && ! in_array($v, ['yes', 'no', 'partly'], true)) {
+                $out[] = $v;
+            }
+        });
+
+        return implode('. ', $out);
+    }
+
     /** Lesbarer Text aller Blöcke, in der Reihenfolge auf der Seite. */
     public function text(array $blocks): string
     {
@@ -130,6 +144,7 @@ class PageAnalyzer
                 'image' => $d['caption'] ?? '',
                 'slider' => collect($d['slides'] ?? [])->pluck('caption')->implode(' '),
                 'button' => $d['label'] ?? '',
+                'features', 'pricing', 'modules', 'compare', 'faq', 'cta', 'contact' => self::structuredText($d),
                 default => '',
             };
         }

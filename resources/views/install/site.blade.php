@@ -31,6 +31,20 @@
                 <input class="nova-input" id="password_confirmation" name="password_confirmation" type="password" required autocomplete="new-password">
             </div>
         </div>
+        <hr class="border-slate-100">
+        <fieldset>
+            <legend class="nova-label">Womit möchten Sie starten?</legend>
+            <div class="grid gap-3 sm:grid-cols-2">
+                <label class="flex cursor-pointer gap-3 rounded-xl border border-slate-200 p-4 has-[:checked]:border-nova-600 has-[:checked]:bg-nova-50">
+                    <input type="radio" name="starter" value="empty" class="mt-1 accent-nova-600" @checked(old('starter', 'empty') === 'empty')>
+                    <span><span class="block font-medium">Eigene Website</span><span class="block text-sm text-slate-500">Sie beginnen mit einer leeren Website und wählen Seitenvorlagen nach Bedarf.</span></span>
+                </label>
+                <label class="flex cursor-pointer gap-3 rounded-xl border border-slate-200 p-4 has-[:checked]:border-nova-600 has-[:checked]:bg-nova-50">
+                    <input type="radio" name="starter" value="nova-sales" class="mt-1 accent-nova-600" @checked(old('starter') === 'nova-sales')>
+                    <span><span class="block font-medium">Verkaufswebsite für Nova CMS</span><span class="block text-sm text-slate-500">Für Nova-Händler: fertige Website mit Funktionen, Modulen, Preisen, Fragen, Kontakt und Shop für Lizenzen.</span></span>
+                </label>
+            </div>
+        </fieldset>
         <div class="flex items-center justify-between pt-2">
             <a href="{{ route('install.database') }}" class="text-sm text-slate-600 hover:text-slate-900">Zurück</a>
             <button class="nova-btn">Nova CMS installieren</button>

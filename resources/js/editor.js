@@ -21,6 +21,26 @@ const DEFAULTS = {
     video: () => ({ url: '', file: null, caption: '' }),
     slider: () => ({ slides: [], autoplay: true }),
     button: () => ({ label: 'Jetzt anfragen', url: '/kontakt', style: 'primary', align: 'left' }),
+    features: () => ({
+        eyebrow: '', title: 'Ihre Vorteile', intro: '', style: 'grid',
+        items: [
+            { icon: 'bolt', title: 'Schnell', text: 'Beschreiben Sie hier einen Vorteil in ein, zwei Sätzen.' },
+            { icon: 'heart', title: 'Persönlich', text: 'Was schätzen Ihre Kunden besonders?' },
+            { icon: 'shield', title: 'Zuverlässig', text: 'Worauf kann man sich bei Ihnen verlassen?' },
+        ],
+    }),
+    pricing: () => ({
+        eyebrow: '', title: 'Preise', intro: '', note: '',
+        plans: [
+            { name: 'Basis', price: '49 €', period: 'einmalig', text: '', features: ['Leistung 1', 'Leistung 2'], product: null, button_label: 'Anfragen', button_url: '/kontakt', highlight: false },
+            { name: 'Komfort', price: '99 €', period: 'einmalig', text: '', features: ['Alles aus Basis', 'Leistung 3'], product: null, button_label: 'Anfragen', button_url: '/kontakt', highlight: true },
+        ],
+    }),
+    modules: () => ({ eyebrow: '', title: 'Module', intro: '', builder: false, items: [{ name: 'Neues Modul', text: '', kind: 'free', category: '', price: '', product: null, soon: false }] }),
+    compare: () => ({ eyebrow: '', title: 'Im Vergleich', intro: '', ours: 'Wir', theirs: 'Andere', note: '', rows: [{ label: 'Merkmal', ours: 'yes', theirs: 'partly' }] }),
+    faq: () => ({ eyebrow: '', title: 'Häufige Fragen', intro: '', items: [{ q: 'Ihre Frage?', a: 'Ihre Antwort.' }] }),
+    cta: () => ({ title: 'Bereit für den nächsten Schritt?', text: '', button_label: 'Kontakt aufnehmen', button_url: '/kontakt', button2_label: '', button2_url: '', style: 'dark' }),
+    contact: () => ({ eyebrow: '', title: 'Schreiben Sie uns', intro: 'Wir antworten in der Regel innerhalb eines Werktags.', button_label: 'Nachricht senden', success: '', subjects: [] }),
     html: () => ({ code: '' }),
 };
 
@@ -52,6 +72,8 @@ Alpine.data('pageEditor', (cfg) => ({
     previewUrl2: cfg.livePreviewUrl,
     host: cfg.host,
     types: cfg.types,
+    products: cfg.products || [],
+    icons: cfg.icons || [],
     picker: null,
     dirty: false,
     error: '',
@@ -85,6 +107,21 @@ Alpine.data('pageEditor', (cfg) => ({
         });
     },
 
+    // Listen in Bausteinen (Vorteile, Pakete, Fragen …)
+    listAdd(list, item) {
+        list.push(item);
+    },
+    listMove(list, i, dir) {
+        const j = i + dir;
+        if (j < 0 || j >= list.length) return;
+        list.splice(j, 0, list.splice(i, 1)[0]);
+    },
+    listRemove(list, i) {
+        list.splice(i, 1);
+    },
+    typesIn(group) {
+        return Object.entries(this.types).filter(([, t]) => t.group === group);
+    },
     add(type, index) {
         const block = { id: uid(), type, data: DEFAULTS[type]() };
         this.blocks.splice(index, 0, block);

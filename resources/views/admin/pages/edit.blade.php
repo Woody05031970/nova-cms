@@ -5,13 +5,20 @@
 
 @php
     $types = [
-        'text' => ['label' => 'Text', 'description' => 'Absätze, Überschriften, Listen, Links', 'icon' => 'pages'],
-        'hero' => ['label' => 'Titelbild', 'description' => 'Großes Bild mit Überschrift und Knopf', 'icon' => 'sparkles'],
-        'image' => ['label' => 'Bild', 'description' => 'Ein Foto mit Bildunterschrift', 'icon' => 'image'],
-        'slider' => ['label' => 'Slider', 'description' => 'Mehrere Bilder zum Durchblättern', 'icon' => 'image'],
-        'video' => ['label' => 'Video', 'description' => 'YouTube, Vimeo oder eigene Datei', 'icon' => 'external'],
-        'button' => ['label' => 'Knopf', 'description' => 'Ein auffälliger Link, z. B. zum Kontakt', 'icon' => 'arrow'],
-        'html' => ['label' => 'HTML', 'description' => 'Eigener Code für Fortgeschrittene', 'icon' => 'settings'],
+        'text' => ['label' => 'Text', 'description' => 'Absätze, Überschriften, Listen, Tabellen', 'icon' => 'pages', 'group' => 'basis'],
+        'hero' => ['label' => 'Titelbild', 'description' => 'Großer Einstieg mit Überschrift und Knöpfen', 'icon' => 'sparkles', 'group' => 'basis'],
+        'image' => ['label' => 'Bild', 'description' => 'Ein Foto mit Bildunterschrift', 'icon' => 'image', 'group' => 'basis'],
+        'slider' => ['label' => 'Slider', 'description' => 'Mehrere Bilder zum Durchblättern', 'icon' => 'image', 'group' => 'basis'],
+        'video' => ['label' => 'Video', 'description' => 'YouTube, Vimeo oder eigene Datei', 'icon' => 'external', 'group' => 'basis'],
+        'button' => ['label' => 'Knopf', 'description' => 'Ein auffälliger Link, z. B. zum Kontakt', 'icon' => 'arrow', 'group' => 'basis'],
+        'features' => ['label' => 'Vorteile', 'description' => 'Kacheln mit Symbol, Schritte oder Kennzahlen', 'icon' => 'layers', 'group' => 'verkauf'],
+        'pricing' => ['label' => 'Preise', 'description' => 'Pakete nebeneinander, auf Wunsch mit Shop-Produkt', 'icon' => 'cart', 'group' => 'verkauf'],
+        'modules' => ['label' => 'Module', 'description' => 'Übersicht mit Filter: im Kern, kostenlos, kostenpflichtig', 'icon' => 'puzzle', 'group' => 'verkauf'],
+        'compare' => ['label' => 'Vergleich', 'description' => 'Tabelle: Sie im Vergleich zu anderen', 'icon' => 'chart', 'group' => 'verkauf'],
+        'faq' => ['label' => 'Häufige Fragen', 'description' => 'Aufklappbare Fragen, von Google lesbar', 'icon' => 'search', 'group' => 'verkauf'],
+        'cta' => ['label' => 'Aufruf', 'description' => 'Auffälliges Band mit Knöpfen', 'icon' => 'rocket', 'group' => 'verkauf'],
+        'contact' => ['label' => 'Kontaktformular', 'description' => 'Anfragen landen unter „Anfragen“ und per E-Mail', 'icon' => 'mail', 'group' => 'verkauf'],
+        'html' => ['label' => 'HTML', 'description' => 'Eigener Code für Fortgeschrittene', 'icon' => 'settings', 'group' => 'profi'],
     ];
     $cfg = [
         'blocks' => $page->blocks ?? [],
@@ -27,6 +34,8 @@
         'livePreviewUrl' => route('admin.pages.live-preview'),
         'host' => request()->getHost(),
         'types' => $types,
+        'icons' => \App\Support\Blocks\BlockSanitizer::ICONS,
+        'products' => \App\Models\Product::orderBy('name')->get(['slug', 'name', 'price_cents', 'is_active'])->map(fn ($p) => ['slug' => $p->slug, 'label' => $p->name.' · '.$p->price().($p->is_active ? '' : ' (ausgeblendet)')])->values(),
         'focusKeyword' => old('focus_keyword', $page->focus_keyword),
         'purpose' => $page->purpose,
         'seoUrl' => route('admin.seo.analyse'),
@@ -111,6 +120,7 @@
                             </header>
                             <div class="p-4">
                                 @include('admin.pages.partials.blocks')
+                                @include('admin.pages.partials.blocks-sales')
                             </div>
                         </section>
                     </div>

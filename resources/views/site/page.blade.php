@@ -28,14 +28,16 @@
 @section('content')
     @php
         $blocks = $page->blocks ?? [];
-        $startsWithHero = ($blocks[0]['type'] ?? null) === 'hero';
+        // Titelbild oder ein Baustein mit eigener Überschrift ersetzt die Seitenüberschrift
+        $startsWithHero = ($blocks[0]['type'] ?? null) === 'hero'
+            || (in_array($blocks[0]['type'] ?? null, ['features', 'pricing', 'modules', 'compare', 'faq', 'contact'], true) && ! empty($blocks[0]['data']['title']));
     @endphp
     @unless ($startsWithHero)
         <div class="mx-auto max-w-3xl px-4 pt-12 sm:px-6"><h1 class="text-4xl font-semibold tracking-tight sm:text-5xl">{{ $page->title }}</h1></div>
     @endunless
     <div class="pb-16">
         @foreach ($blocks as $block)
-            @includeIf('site.blocks.'.$block['type'], ['d' => $block['data'], 'first' => $loop->first])
+            @includeIf('site.blocks.'.$block['type'], ['d' => $block['data'], 'first' => $loop->first, 'blockId' => $block['id'] ?? null, 'pageId' => $page->id])
         @endforeach
     </div>
 @endsection
