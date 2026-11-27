@@ -11,6 +11,7 @@ use App\Ai\WebsiteWizard;
 use App\Http\Controllers\Controller;
 use App\Models\Page;
 use App\Models\Setting;
+use App\Support\Blocks\BlockSanitizer;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -176,7 +177,7 @@ class AiController extends Controller
         return $this->respond(fn () => ['description' => $assistant->metaDescription($data['title'], $data['text'])]);
     }
 
-    public function productText(Request $request, ContentAssistant $assistant, \App\Support\Blocks\BlockSanitizer $sanitizer): JsonResponse
+    public function productText(Request $request, ContentAssistant $assistant, BlockSanitizer $sanitizer): JsonResponse
     {
         $data = $request->validate([
             'name' => ['required', 'string', 'max:160'],

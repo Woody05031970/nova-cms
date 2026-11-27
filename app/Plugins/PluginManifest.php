@@ -16,6 +16,7 @@ final class PluginManifest
         public readonly ?string $description = null,
         public readonly ?string $author = null,
         public readonly ?string $requires = null,
+        public readonly bool $paid = false,
     ) {}
 
     public static function fromFile(string $path): self
@@ -64,6 +65,8 @@ final class PluginManifest
             description: isset($data['description']) ? mb_substr((string) $data['description'], 0, 500) : null,
             author: isset($data['author']) ? mb_substr((string) $data['author'], 0, 120) : null,
             requires: isset($data['requires']) ? (string) $data['requires'] : null,
+            // Kostenpflichtige Module aus dem Marktplatz: "license": "paid"
+            paid: ($data['license'] ?? null) === 'paid' || ($data['paid'] ?? false) === true,
         );
     }
 

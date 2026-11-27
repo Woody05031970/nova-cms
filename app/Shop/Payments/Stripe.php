@@ -3,6 +3,7 @@
 namespace App\Shop\Payments;
 
 use App\Models\Order;
+use App\Models\Setting;
 use App\Shop\ShopSettings;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
@@ -33,7 +34,7 @@ class Stripe implements PaymentMethod
 
     public function isAvailable(): bool
     {
-        return \App\Models\Setting::get('shop_pay_stripe') === '1' && ShopSettings::secret('shop_stripe_secret') !== null;
+        return Setting::get('shop_pay_stripe') === '1' && ShopSettings::secret('shop_stripe_secret') !== null;
     }
 
     public function start(Order $order): ?string

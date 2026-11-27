@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin\Shop;
 
 use App\Http\Controllers\Controller;
+use App\Licensing\LicenseServer;
 use App\Models\OrderItem;
 use App\Models\Product;
 use App\Shop\Money;
@@ -103,6 +104,16 @@ class ProductController extends Controller
         $data['images'] = array_values(array_filter(array_map(fn ($u) => $sanitizer->image($u), $data['images'] ?? [])));
         $data['is_active'] = $request->boolean('is_active');
         $data['sort'] = (int) ($data['sort'] ?? 0);
+        // Auf dem Lizenzserver: beim Kauf eine Lizenz ausgeben
+        if (LicenseServer::enabled()) {
+            $spec = [
+                'core' => $request->boolean('license_core'),
+                'modules' => array_values(array_filter((array) $request->input('license_modules', []), 'is_string')),
+                'max_domains' => max(1, min(1000, (int) $request->input('license_domains', 1))),
+                'update_months' => max(0, min(120, (int) $request->input('license_update_months', 12))),
+            ];
+            $data['license_spec'] = $spec['core'] || $spec['modules'] ? $spec : null;
+        }
         if (empty($data['base_quantity']) || empty($data['base_unit'])) {
             $data['base_quantity'] = $data['base_unit'] = null;
         }

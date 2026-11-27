@@ -2,6 +2,8 @@
 
 namespace Tests\Feature;
 
+use App\Ai\AiDriver;
+use App\Ai\AiManager;
 use App\Mail\OrderConfirmation;
 use App\Mail\OrderReceived;
 use App\Mail\OrderShipped;
@@ -360,8 +362,8 @@ class ShopTest extends TestCase
 
     public function test_ki_schreibt_produkttext(): void
     {
-        Setting::putMany(['ai_provider' => 'anthropic', 'ai_model' => 'claude-opus-5-5', 'ai_key' => \App\Ai\AiManager::encryptKey('k')]);
-        app(\App\Ai\AiManager::class)->fake(new class implements \App\Ai\AiDriver
+        Setting::putMany(['ai_provider' => 'anthropic', 'ai_model' => 'claude-opus-5-5', 'ai_key' => AiManager::encryptKey('k')]);
+        app(AiManager::class)->fake(new class implements AiDriver
         {
             public function complete(string $system, string $prompt, ?array $schema = null, int $maxTokens = 4000): string
             {

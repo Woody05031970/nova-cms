@@ -7,6 +7,7 @@ use App\Mail\OrderReceived;
 use App\Models\Order;
 use App\Models\Product;
 use App\Plugins\Hooks;
+use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
@@ -50,7 +51,7 @@ class Checkout
                         'small_business' => ShopSettings::smallBusiness(),
                         'terms_accepted_at' => now(),
                     ]);
-                } catch (\Illuminate\Database\UniqueConstraintViolationException) {
+                } catch (UniqueConstraintViolationException) {
                     // Gleichzeitige Bestellung hat die Nummer bekommen: neu versuchen
                 }
             }

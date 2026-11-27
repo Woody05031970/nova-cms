@@ -3,22 +3,28 @@
 use App\Http\Controllers\Admin\AccountController;
 use App\Http\Controllers\Admin\AiController;
 use App\Http\Controllers\Admin\DashboardController;
+use App\Http\Controllers\Admin\Licensing\LicenseController;
+use App\Http\Controllers\Admin\Licensing\MarketplaceController;
+use App\Http\Controllers\Admin\Licensing\ServerController as LicenseServerController;
 use App\Http\Controllers\Admin\MediaController;
 use App\Http\Controllers\Admin\PageController;
 use App\Http\Controllers\Admin\PluginController;
 use App\Http\Controllers\Admin\SecurityController;
+use App\Http\Controllers\Admin\SeoController;
+use App\Http\Controllers\Admin\SettingsController;
 use App\Http\Controllers\Admin\Shop\OrderController as ShopOrderController;
 use App\Http\Controllers\Admin\Shop\ProductController as ShopProductController;
 use App\Http\Controllers\Admin\Shop\ShopController as AdminShopController;
-use App\Http\Controllers\Admin\SeoController;
-use App\Http\Controllers\Admin\SettingsController;
 use App\Http\Controllers\Admin\UploadController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\InstallController;
+use App\Http\Controllers\LicenseApiController;
 use App\Http\Controllers\SeoFileController;
 use App\Http\Controllers\ShopController;
 use App\Http\Controllers\SiteController;
+use App\Http\Middleware\LicenseGate;
 use App\Http\Middleware\ShopEnabled;
+use Illuminate\Foundation\Http\Middleware\ValidateCsrfToken;
 use Illuminate\Support\Facades\Route;
 
 // Installations-Assistent (nur erreichbar, solange Nova CMS nicht installiert ist)
@@ -49,6 +55,16 @@ Route::middleware(ShopEnabled::class)->group(function () {
     Route::get('/bestellung/{token}/zahlung/{method}', [ShopController::class, 'paymentReturn'])->name('shop.payment.return');
 });
 
+// Schnittstelle des Lizenzservers (nur aktiv, wenn diese Installation Lizenzserver ist)
+Route::prefix('api/nova')->middleware('throttle:60,1')
+    ->withoutMiddleware([ValidateCsrfToken::class])
+    ->group(function () {
+        Route::post('/aktivieren', [LicenseApiController::class, 'activate']);
+        Route::post('/freigeben', [LicenseApiController::class, 'release']);
+        Route::post('/marktplatz', [LicenseApiController::class, 'catalog']);
+        Route::post('/marktplatz/{slug}', [LicenseApiController::class, 'download'])->where('slug', '[a-z0-9-]+');
+    });
+
 // Anmeldung
 Route::middleware('guest')->group(function () {
     Route::get('/admin/login', [LoginController::class, 'show'])->name('login');
@@ -59,7 +75,7 @@ Route::middleware('guest')->group(function () {
 Route::post('/admin/logout', [LoginController::class, 'logout'])->middleware('auth')->name('logout');
 
 // Verwaltung
-Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(function () {
+Route::middleware(['auth', 'admin', LicenseGate::class])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/', DashboardController::class)->name('dashboard');
 
     Route::get('/seiten', [PageController::class, 'index'])->name('pages.index');
@@ -128,6 +144,22 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::put('/einstellungen', [SettingsController::class, 'update'])->name('settings.update');
     Route::put('/einstellungen/email', [SettingsController::class, 'mail'])->name('settings.mail');
     Route::post('/einstellungen/email/test', [SettingsController::class, 'testMail'])->middleware('throttle:5,1')->name('settings.mail.test');
+
+    Route::get('/lizenz', [LicenseController::class, 'index'])->name('license');
+    Route::post('/lizenz', [LicenseController::class, 'store'])->middleware('throttle:10,1')->name('license.store');
+    Route::post('/lizenz/pruefen', [LicenseController::class, 'refresh'])->middleware('throttle:10,1')->name('license.refresh');
+    Route::delete('/lizenz', [LicenseController::class, 'destroy'])->name('license.destroy');
+
+    Route::get('/plugins/marktplatz', [MarketplaceController::class, 'index'])->name('plugins.market');
+    Route::post('/plugins/marktplatz/{slug}', [MarketplaceController::class, 'install'])->middleware('throttle:20,1')->where('slug', '[a-z0-9-]+')->name('plugins.market.install');
+
+    Route::get('/lizenzserver', [LicenseServerController::class, 'index'])->name('license-server');
+    Route::post('/lizenzserver/lizenzen', [LicenseServerController::class, 'store'])->name('license-server.store');
+    Route::get('/lizenzserver/lizenzen/{license}', [LicenseServerController::class, 'show'])->name('license-server.show');
+    Route::put('/lizenzserver/lizenzen/{license}', [LicenseServerController::class, 'update'])->name('license-server.update');
+    Route::delete('/lizenzserver/lizenzen/{license}/websites/{activation}', [LicenseServerController::class, 'releaseActivation'])->name('license-server.release');
+    Route::post('/lizenzserver/module', [LicenseServerController::class, 'uploadModule'])->name('license-server.modules.upload');
+    Route::put('/lizenzserver/module/{module}', [LicenseServerController::class, 'updateModule'])->name('license-server.modules.update');
 
     Route::get('/plugins', [PluginController::class, 'index'])->name('plugins');
     Route::post('/plugins', [PluginController::class, 'upload'])->name('plugins.upload');

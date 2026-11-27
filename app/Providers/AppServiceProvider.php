@@ -3,12 +3,23 @@
 namespace App\Providers;
 
 use App\Ai\AiManager;
+use App\Licensing\HttpTransport;
+use App\Licensing\License;
+use App\Licensing\LicenseIssuer;
+use App\Licensing\LicenseServer;
+use App\Licensing\LocalTransport;
+use App\Licensing\Transport;
 use App\Models\Media;
 use App\Models\Page;
 use App\Models\Setting;
+use App\Models\User;
 use App\Plugins\Hooks;
 use App\Plugins\PluginManager;
+use App\Shop\Payments\PaymentRegistry;
+use App\Shop\ShopSettings;
 use App\Support\Install\InstallState;
+use App\Support\Security\Scanner;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
 
@@ -16,6 +27,12 @@ class AppServiceProvider extends ServiceProvider
 {
     public function register(): void
     {
+        // Lizenzserver: auf dem Server selbst ohne Umweg über HTTP, sonst per HTTPS
+        $this->app->bind(Transport::class, fn ($app) => LicenseServer::enabled()
+            ? $app->make(LocalTransport::class)
+            : $app->make(HttpTransport::class));
+        $this->app->scoped(License::class);
+
         $this->app->singleton(Hooks::class);
         $this->app->singleton(PluginManager::class);
         $this->app->singleton(AiManager::class);
@@ -32,6 +49,12 @@ class AppServiceProvider extends ServiceProvider
         }
 
         $this->applyMailSettings();
+        // Auf dem Lizenzserver: Lizenzen für bezahlte Bestellungen ausgeben
+        $this->app->make(Hooks::class)->addAction('shop.order.paid', function ($order) {
+            if (LicenseServer::enabled()) {
+                $this->app->make(LicenseIssuer::class)->forOrder($order);
+            }
+        });
         $this->registerCoreHints();
         $this->app->make(PluginManager::class)->bootEnabled();
 
@@ -58,7 +81,7 @@ class AppServiceProvider extends ServiceProvider
                 'mail.mailers.smtp.port' => $port,
                 'mail.mailers.smtp.scheme' => $port === 465 ? 'smtps' : 'smtp',
                 'mail.mailers.smtp.username' => Setting::get('mail_user'),
-                'mail.mailers.smtp.password' => \App\Shop\ShopSettings::secret('mail_password'),
+                'mail.mailers.smtp.password' => ShopSettings::secret('mail_password'),
             ]);
         } elseif ($mode === 'sendmail') {
             config(['mail.default' => 'sendmail']);
@@ -106,7 +129,7 @@ class AppServiceProvider extends ServiceProvider
 
         // Shop: Pflichtangaben erst, wenn der Shop eingeschaltet ist (erst beim Anzeigen geprüft)
         $hooks->addFilter('dashboard.hints', function (array $hints) use ($pages) {
-            if (! \App\Shop\ShopSettings::enabled()) {
+            if (! ShopSettings::enabled()) {
                 return $hints;
             }
             foreach (['terms' => 'AGB', 'withdrawal' => 'Widerrufsbelehrung', 'shipping' => 'Seite „Versand und Zahlung“'] as $purpose => $label) {
@@ -114,7 +137,7 @@ class AppServiceProvider extends ServiceProvider
                     'check' => fn () => Page::published()->where('purpose', $purpose)->exists(), 'url' => $pages, 'area' => 'Shop'];
             }
             $hints[] = ['title' => 'Zahlungsart einrichten', 'help' => 'Ohne Zahlungsart kann niemand bestellen. Am einfachsten: Vorkasse mit Ihrer IBAN.',
-                'check' => fn () => app(\App\Shop\Payments\PaymentRegistry::class)->available() !== [], 'url' => url('admin/shop/einstellungen'), 'area' => 'Shop'];
+                'check' => fn () => app(PaymentRegistry::class)->available() !== [], 'url' => url('admin/shop/einstellungen'), 'area' => 'Shop'];
             $hints[] = ['title' => 'E-Mail-Versand einrichten', 'help' => 'Sonst erhalten Kunden keine Bestellbestätigung. Tragen Sie das Postfach Ihres Hosters ein.',
                 'check' => fn () => Setting::get('mail_mode') !== null, 'url' => url('admin/einstellungen'), 'area' => 'Shop'];
             $hints[] = ['title' => 'Steuernummer für Rechnungen eintragen', 'help' => 'Auf jeder Rechnung muss die USt-IdNr. oder die Steuernummer stehen.',
@@ -124,12 +147,12 @@ class AppServiceProvider extends ServiceProvider
         });
 
         $hooks->addHint('Zwei-Faktor-Anmeldung einrichten', 'Schützt Ihr Konto, selbst wenn jemand Ihr Passwort kennt. Dauert zwei Minuten mit einer App auf dem Handy.',
-            fn () => ! \App\Models\User::where('role', 'admin')->whereNull('two_factor_confirmed_at')->exists(), url('admin/konto'), 'Sicherheit');
+            fn () => ! User::where('role', 'admin')->whereNull('two_factor_confirmed_at')->exists(), url('admin/konto'), 'Sicherheit');
         $hooks->addHint('Sicherheits-Check durchführen', 'Nova CMS prüft Einstellungen und Dateien auf Schwachstellen. Am besten einmal im Monat.',
             function () {
-                $last = \App\Support\Security\Scanner::last();
+                $last = Scanner::last();
 
-                return $last && now()->diffInDays(\Carbon\Carbon::parse($last['at']), true) <= 30;
+                return $last && now()->diffInDays(Carbon::parse($last['at']), true) <= 30;
             }, url('admin/sicherheit'), 'Sicherheit');
     }
 }
