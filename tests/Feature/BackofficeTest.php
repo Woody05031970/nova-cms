@@ -8,8 +8,10 @@ use App\Models\Product;
 use App\Models\Setting;
 use App\Models\User;
 use App\Support\Blocks\BlockSanitizer;
+use App\Support\Update\AutoUpdate;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Schema;
 use Tests\TestCase;
 
 class BackofficeTest extends TestCase
@@ -146,5 +148,16 @@ class BackofficeTest extends TestCase
     {
         $this->actingAs($this->admin())->get('/admin')->assertOk()
             ->assertSee('id="palette"', false)->assertSee('Strg K')->assertSee('Inhalte')->assertSee('Menü');
+    }
+
+    public function test_update_spielt_datenbank_aenderungen_automatisch_ein(): void
+    {
+        @unlink(AutoUpdate::markerPath());
+        $this->assertNull(AutoUpdate::installedVersion());
+
+        $this->assertTrue(AutoUpdate::run());
+        $this->assertSame(config('nova.version'), AutoUpdate::installedVersion());
+        $this->assertTrue(Schema::hasTable('menu_items'));
+        @unlink(AutoUpdate::markerPath());
     }
 }

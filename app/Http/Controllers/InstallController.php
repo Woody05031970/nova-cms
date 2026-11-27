@@ -9,6 +9,7 @@ use App\Support\Install\EnvWriter;
 use App\Support\Install\InstallState;
 use App\Support\Install\Requirements;
 use App\Support\Security\Scanner;
+use App\Support\Update\AutoUpdate;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Artisan;
@@ -112,6 +113,7 @@ class InstallController extends Controller
         try {
             $this->configureDatabase($db);
             Artisan::call('migrate', ['--force' => true]);
+            AutoUpdate::remember();
 
             User::create([
                 'name' => $data['name'],
