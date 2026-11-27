@@ -1,10 +1,10 @@
 {
-  "_ai--92u3-NP.js": {
-    "file": "assets/ai--92u3-NP.js",
-    "name": "ai"
+  "_media-KTDrRNYx.js": {
+    "file": "assets/media-KTDrRNYx.js",
+    "name": "media"
   },
   "resources/css/app.css": {
-    "file": "assets/app-DAJ-5hJu.css",
+    "file": "assets/app-DlcxNNac.css",
     "name": "app",
     "names": [
       "app.css"
@@ -13,21 +13,21 @@
     "isEntry": true
   },
   "resources/js/app.js": {
-    "file": "assets/app-DSfvORy8.js",
+    "file": "assets/app-g-GuL01X.js",
     "name": "app",
     "src": "resources/js/app.js",
     "isEntry": true,
     "imports": [
-      "_ai--92u3-NP.js"
+      "_media-KTDrRNYx.js"
     ]
   },
   "resources/js/editor.js": {
-    "file": "assets/editor-ByH-V-4A.js",
+    "file": "assets/editor-DnPIslxE.js",
     "name": "editor",
     "src": "resources/js/editor.js",
     "isEntry": true,
     "imports": [
-      "_ai--92u3-NP.js"
+      "_media-KTDrRNYx.js"
     ]
   },
   "resources/js/site.js": {

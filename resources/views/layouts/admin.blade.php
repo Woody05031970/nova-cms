@@ -2,7 +2,7 @@
     $core = [
         ['label' => 'Dashboard', 'url' => route('admin.dashboard'), 'icon' => 'home', 'order' => 0, 'active' => 'admin.dashboard'],
         ['label' => 'Seiten', 'url' => route('admin.pages.index'), 'icon' => 'pages', 'order' => 10, 'active' => 'admin.pages.*'],
-        ['label' => 'Medien', 'url' => null, 'icon' => 'image', 'order' => 20, 'soon' => true],
+        ['label' => 'Medien', 'url' => route('admin.media.index'), 'icon' => 'image', 'order' => 20, 'active' => 'admin.media.*'],
         ['label' => 'KI-Assistent', 'url' => route('admin.ai'), 'icon' => 'sparkles', 'order' => 30, 'active' => 'admin.ai*'],
         ['label' => 'Shop', 'url' => null, 'icon' => 'cart', 'order' => 40, 'soon' => true],
         ['label' => 'SEO', 'url' => null, 'icon' => 'search', 'order' => 60, 'soon' => true],

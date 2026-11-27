@@ -50,6 +50,23 @@ class ContentAssistant
         return mb_strlen($out) > 160 ? rtrim(mb_substr($out, 0, 157)).'…' : $out;
     }
 
+    /** Schreibt eine Bildbeschreibung (Alternativtext) für Google und Screenreader. */
+    public function altText(string $data, string $mime): string
+    {
+        $driver = $this->ai->driver();
+        if (! $driver instanceof AiVision) {
+            throw new AiException('Der gewählte KI-Anbieter kann keine Bilder ansehen.');
+        }
+
+        $system = $this->context()."\n\nDu schreibst Bildbeschreibungen (Alternativtexte) für Websites. "
+            .'Regeln: Deutsch, ein Satz, höchstens 125 Zeichen, beschreibt sachlich, was zu sehen ist und was für die Website wichtig ist. '
+            .'Nicht mit „Bild von“ oder „Foto von“ beginnen. Keine Vermutungen über Namen von Personen. Antworte nur mit der Beschreibung.';
+
+        $out = trim(preg_replace('/\s+/', ' ', $driver->describeImage($system, 'Beschreibe dieses Bild.', $data, $mime)), " \"'„“");
+
+        return mb_strlen($out) > 200 ? rtrim(mb_substr($out, 0, 197)).'…' : $out;
+    }
+
     /**
      * Erzeugt die ersten Seiten einer Website.
      *

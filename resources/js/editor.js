@@ -4,6 +4,7 @@ import StarterKit from '@tiptap/starter-kit';
 import { EditorView, basicSetup } from 'codemirror';
 import { html as htmlLang } from '@codemirror/lang-html';
 import { aiPost, registerAi } from './ai.js';
+import { pickerMixin, registerMedia, uploadFile } from './media.js';
 
 const uid = () => Math.random().toString(36).slice(2, 12);
 
@@ -21,22 +22,11 @@ const csrf = () => document.querySelector('meta[name=csrf-token]').content;
 let AI = { enabled: false };
 
 async function upload(file, kind = 'image') {
-    const body = new FormData();
-    body.append('file', file);
-    body.append('kind', kind);
-    const res = await fetch('/admin/uploads', {
-        method: 'POST',
-        body,
-        headers: { 'X-CSRF-TOKEN': csrf(), Accept: 'application/json' },
-    });
-    const json = await res.json().catch(() => ({}));
-    if (!res.ok) {
-        throw new Error(json.errors?.file?.[0] || json.message || 'Hochladen fehlgeschlagen.');
-    }
-    return json.url;
+    return (await uploadFile(file, kind)).url;
 }
 
 Alpine.data('pageEditor', (cfg) => ({
+    ...pickerMixin(),
     ai: (AI = cfg.ai),
     aiBusy: false,
     aiNotice: '',
@@ -250,5 +240,6 @@ Alpine.data('codeEditor', (block) => {
 });
 
 registerAi(Alpine);
+registerMedia(Alpine);
 window.Alpine = Alpine;
 Alpine.start();

@@ -8,5 +8,7 @@
         Datei auswählen
         <input type="file" class="sr-only" accept="{{ $kind === 'video' ? 'video/mp4,video/webm' : 'image/*' }}" @change="uploadTo({{ $target }}, '{{ $key }}', $event, '{{ $kind }}')">
     </label>
+    <button type="button" class="text-sm font-medium text-nova-700 hover:underline" x-show="!{{ $target }}._uploading"
+            @click="pickInto({{ $target }}, '{{ $key }}', '{{ $kind }}', {{ isset($alt) ? "'".$alt."'" : 'null' }})">oder aus der Mediathek wählen</button>
     <p class="text-xs text-slate-400">{{ $hint }}</p>
 </div>

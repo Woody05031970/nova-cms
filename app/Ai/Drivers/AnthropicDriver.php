@@ -5,18 +5,22 @@ namespace App\Ai\Drivers;
 use Anthropic\Client;
 use Anthropic\Core\Exceptions\APIConnectionException;
 use Anthropic\Core\Exceptions\APIStatusException;
+use Anthropic\Messages\Base64ImageSource;
+use Anthropic\Messages\ImageBlockParam;
 use Anthropic\Messages\JSONOutputFormat;
 use Anthropic\Messages\OutputConfig;
+use Anthropic\Messages\TextBlockParam;
 use Anthropic\RequestOptions;
 use App\Ai\AiConfig;
 use App\Ai\AiDriver;
 use App\Ai\AiException;
+use App\Ai\AiVision;
 use Psr\Http\Client\ClientInterface;
 
 /**
  * Claude über das offizielle Anthropic-PHP-SDK.
  */
-class AnthropicDriver implements AiDriver
+class AnthropicDriver implements AiDriver, AiVision
 {
     /** Für Tests kann ein eigener HTTP-Client unter diesem Namen im Container hinterlegt werden. */
     public const TRANSPORT_BINDING = 'nova.ai.anthropic.transport';
@@ -24,6 +28,20 @@ class AnthropicDriver implements AiDriver
     public function __construct(private readonly AiConfig $config) {}
 
     public function complete(string $system, string $prompt, ?array $schema = null, int $maxTokens = 4000): string
+    {
+        return $this->send($system, $prompt, $schema, $maxTokens);
+    }
+
+    public function describeImage(string $system, string $instruction, string $data, string $mime): string
+    {
+        return $this->send($system, [
+            ImageBlockParam::with(source: Base64ImageSource::with(data: base64_encode($data), mediaType: $mime)),
+            TextBlockParam::with(text: $instruction),
+        ], null, 4000);
+    }
+
+    /** @param  string|list<mixed>  $content */
+    private function send(string $system, string|array $content, ?array $schema, int $maxTokens): string
     {
         $transport = app()->bound(self::TRANSPORT_BINDING) ? app(self::TRANSPORT_BINDING) : null;
 
@@ -41,7 +59,7 @@ class AnthropicDriver implements AiDriver
                 model: $this->config->model,
                 maxTokens: $maxTokens,
                 system: $system,
-                messages: [['role' => 'user', 'content' => $prompt]],
+                messages: [['role' => 'user', 'content' => $content]],
                 outputConfig: $schema ? OutputConfig::with(format: JSONOutputFormat::with(schema: $schema)) : null,
             );
         } catch (APIStatusException $e) {

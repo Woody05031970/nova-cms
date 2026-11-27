@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use App\Ai\AiManager;
+use App\Models\Media;
 use App\Models\Page;
 use App\Models\Setting;
 use App\Plugins\Hooks;
@@ -59,6 +60,9 @@ class AppServiceProvider extends ServiceProvider
 
         $hooks->addHint('KI-Anbieter einrichten', 'Dann schreibt die KI Texte, Google-Beschreibungen und Ihre ersten Seiten.',
             fn () => $this->app->make(AiManager::class)->isConfigured(), url('admin/ki'), 'KI');
+
+        $hooks->addHint('Bildbeschreibungen ergänzen', 'Bilder ohne Beschreibung sind für Google und blinde Besucher unsichtbar. Die KI kann sie für Sie schreiben.',
+            fn () => ! Media::where('kind', 'image')->where(fn ($q) => $q->whereNull('alt')->orWhere('alt', ''))->exists(), url('admin/medien'), 'SEO');
 
         $pages = url('admin/seiten');
         $hooks->addHint('Startseite veröffentlichen', 'Ohne Startseite sehen Besucher nur einen Platzhalter.',

@@ -35,6 +35,12 @@ abstract class TestCase extends BaseTestCase
         }
 
         parent::setUp();
+
+        // Hochgeladene Dateien landen im Sandbox-Ordner, nicht im echten public/.
+        $public = $this->sandbox.'/public';
+        mkdir($public);
+        symlink(base_path('public/build'), $public.'/build');
+        $this->app->usePublicPath($public);
     }
 
     protected function tearDown(): void
