@@ -1,7 +1,9 @@
 import Alpine from 'alpinejs';
 import { registerAi } from './ai.js';
+import { registerMedia } from './media.js';
 
 registerAi(Alpine);
+registerMedia(Alpine);
 
 Alpine.data('busyForm', () => ({
     busy: false,

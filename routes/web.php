@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Admin\AiController;
 use App\Http\Controllers\Admin\DashboardController;
+use App\Http\Controllers\Admin\MediaController;
 use App\Http\Controllers\Admin\PageController;
 use App\Http\Controllers\Admin\PluginController;
 use App\Http\Controllers\Admin\SettingsController;
@@ -43,6 +44,13 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::delete('/seiten/{page}', [PageController::class, 'destroy'])->name('pages.destroy');
     Route::post('/papierkorb/{id}', [PageController::class, 'restore'])->whereNumber('id')->name('pages.restore');
     Route::delete('/papierkorb/{id}', [PageController::class, 'forceDelete'])->whereNumber('id')->name('pages.force-delete');
+
+    Route::get('/medien', [MediaController::class, 'index'])->name('media.index');
+    Route::get('/medien/liste', [MediaController::class, 'list'])->name('media.list');
+    Route::get('/medien/{media}', [MediaController::class, 'show'])->name('media.show');
+    Route::patch('/medien/{media}', [MediaController::class, 'update'])->name('media.update');
+    Route::delete('/medien/{media}', [MediaController::class, 'destroy'])->name('media.destroy');
+    Route::post('/medien/{media}/beschreibung', [MediaController::class, 'describe'])->middleware('throttle:30,1')->name('media.describe');
 
     Route::post('/uploads', [UploadController::class, 'store'])->middleware('throttle:60,1')->name('uploads.store');
 

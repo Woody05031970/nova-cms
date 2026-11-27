@@ -75,7 +75,7 @@
                 <button type="button" class="absolute top-2 right-2 rounded-md bg-white/90 px-2 py-1 text-xs shadow" @click="block.data.url = null">Anderes Bild</button>
             </div>
         </template>
-        @include('admin.pages.partials.upload', ['target' => 'block.data', 'key' => 'url', 'kind' => 'image', 'hint' => 'JPG, PNG, WebP oder GIF, bis 10 MB'])
+        @include('admin.pages.partials.upload', ['target' => 'block.data', 'key' => 'url', 'kind' => 'image', 'alt' => 'alt', 'hint' => 'JPG, PNG, WebP oder GIF, bis 10 MB. Große Fotos werden automatisch verkleinert.'])
         <div class="grid gap-3 sm:grid-cols-[1fr_1fr_auto]">
             <div>
                 <label class="nova-label">Bildbeschreibung</label>
@@ -113,6 +113,7 @@
                 <span x-show="!block.data._uploading">+ Bilder hinzufügen</span>
                 <span x-show="block.data._uploading" class="text-nova-700">Wird hochgeladen …</span>
                 <input type="file" multiple accept="image/*" class="sr-only" @change="addSlides(block, $event)">
+                <button type="button" class="mt-1 text-xs font-medium text-nova-700 hover:underline" x-show="!block.data._uploading" @click.prevent="pickSlides(block)">aus der Mediathek</button>
             </label>
         </div>
         <label class="flex items-center gap-2 text-sm"><input type="checkbox" x-model="block.data.autoplay" class="accent-nova-600"> Automatisch weiterblättern</label>

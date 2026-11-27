@@ -170,6 +170,8 @@
         </div>
     </form>
 
+    @include('admin.media.picker')
+
     @foreach ($revisions as $rev)
         <form id="rev-{{ $rev->id }}" method="POST" action="{{ route('admin.pages.revisions.restore', [$page, $rev]) }}" class="hidden" @submit="if (!confirm('Den Stand vom {{ $rev->created_at->format('d.m.Y, H:i') }} Uhr wiederherstellen? Der aktuelle Stand bleibt als Version erhalten.')) $event.preventDefault(); else dirty = false">@csrf</form>
     @endforeach

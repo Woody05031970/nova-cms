@@ -5,23 +5,38 @@ namespace App\Ai\Drivers;
 use App\Ai\AiConfig;
 use App\Ai\AiDriver;
 use App\Ai\AiException;
+use App\Ai\AiVision;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Support\Facades\Http;
 
 /**
  * OpenAI und alle Dienste mit derselben Schnittstelle (Mistral, Ollama, OpenRouter, IONOS AI Model Hub …).
  */
-class OpenAiCompatibleDriver implements AiDriver
+class OpenAiCompatibleDriver implements AiDriver, AiVision
 {
     public function __construct(private readonly AiConfig $config) {}
 
     public function complete(string $system, string $prompt, ?array $schema = null, int $maxTokens = 4000): string
     {
+        return $this->send($system, $prompt, $schema, $maxTokens);
+    }
+
+    public function describeImage(string $system, string $instruction, string $data, string $mime): string
+    {
+        return $this->send($system, [
+            ['type' => 'image_url', 'image_url' => ['url' => 'data:'.$mime.';base64,'.base64_encode($data)]],
+            ['type' => 'text', 'text' => $instruction],
+        ], null, 4000);
+    }
+
+    /** @param  string|list<array<string, mixed>>  $content */
+    private function send(string $system, string|array $content, ?array $schema, int $maxTokens): string
+    {
         $body = [
             'model' => $this->config->model,
             'messages' => [
                 ['role' => 'system', 'content' => $system.($schema ? "\n\nAntworte ausschließlich mit JSON nach diesem Schema:\n".json_encode($schema, JSON_UNESCAPED_UNICODE) : '')],
-                ['role' => 'user', 'content' => $prompt],
+                ['role' => 'user', 'content' => $content],
             ],
         ];
 
