@@ -1,10 +1,12 @@
 <?php
 
+use App\Http\Controllers\Admin\AccountController;
 use App\Http\Controllers\Admin\AiController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\MediaController;
 use App\Http\Controllers\Admin\PageController;
 use App\Http\Controllers\Admin\PluginController;
+use App\Http\Controllers\Admin\SecurityController;
 use App\Http\Controllers\Admin\SeoController;
 use App\Http\Controllers\Admin\SettingsController;
 use App\Http\Controllers\Admin\UploadController;
@@ -32,6 +34,8 @@ Route::get('/sitemap.xml', [SeoFileController::class, 'sitemap'])->name('sitemap
 Route::middleware('guest')->group(function () {
     Route::get('/admin/login', [LoginController::class, 'show'])->name('login');
     Route::post('/admin/login', [LoginController::class, 'login'])->middleware('throttle:20,1')->name('login.attempt');
+    Route::get('/admin/login/code', [LoginController::class, 'twoFactorForm'])->name('login.two-factor');
+    Route::post('/admin/login/code', [LoginController::class, 'twoFactor'])->middleware('throttle:20,1')->name('login.two-factor.verify');
 });
 Route::post('/admin/logout', [LoginController::class, 'logout'])->middleware('auth')->name('logout');
 
@@ -71,6 +75,21 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::post('/seo/pruefen', [SeoController::class, 'analyse'])->middleware('throttle:120,1')->name('seo.analyse');
     Route::post('/seo/suchbegriffe', [SeoController::class, 'keywords'])->middleware('throttle:20,1')->name('seo.keywords');
     Route::post('/seo/vergleich', [SeoController::class, 'compare'])->middleware('throttle:10,1')->name('seo.compare');
+
+    Route::get('/sicherheit', [SecurityController::class, 'index'])->name('security');
+    Route::post('/sicherheit/pruefen', [SecurityController::class, 'scan'])->middleware('throttle:10,1')->name('security.scan');
+    Route::post('/sicherheit/beheben', [SecurityController::class, 'fix'])->name('security.fix');
+    Route::put('/sicherheit', [SecurityController::class, 'settings'])->name('security.settings');
+    Route::post('/sicherheit/sperren', [SecurityController::class, 'block'])->name('security.block');
+    Route::delete('/sicherheit/sperren/{blockedIp}', [SecurityController::class, 'unblock'])->name('security.unblock');
+
+    Route::get('/konto', [AccountController::class, 'edit'])->name('account');
+    Route::put('/konto', [AccountController::class, 'update'])->name('account.update');
+    Route::put('/konto/passwort', [AccountController::class, 'password'])->middleware('throttle:10,1')->name('account.password');
+    Route::post('/konto/zwei-faktor', [AccountController::class, 'startTwoFactor'])->name('account.2fa.start');
+    Route::post('/konto/zwei-faktor/bestaetigen', [AccountController::class, 'confirmTwoFactor'])->middleware('throttle:10,1')->name('account.2fa.confirm');
+    Route::post('/konto/zwei-faktor/notfall-codes', [AccountController::class, 'recoveryCodes'])->middleware('throttle:10,1')->name('account.2fa.recovery');
+    Route::delete('/konto/zwei-faktor', [AccountController::class, 'disableTwoFactor'])->middleware('throttle:10,1')->name('account.2fa.disable');
 
     Route::get('/einstellungen', [SettingsController::class, 'edit'])->name('settings');
     Route::put('/einstellungen', [SettingsController::class, 'update'])->name('settings.update');

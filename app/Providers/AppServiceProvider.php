@@ -74,5 +74,14 @@ class AppServiceProvider extends ServiceProvider
         $hooks->addHint('Beschreibungen für Google ergänzen', 'Jede veröffentlichte Seite braucht einen kurzen Text für die Suchergebnisse.',
             fn () => Page::published()->exists() && ! Page::published()->where(fn ($q) => $q->whereNull('meta_description')->orWhere('meta_description', ''))->exists(),
             $pages, 'SEO');
+
+        $hooks->addHint('Zwei-Faktor-Anmeldung einrichten', 'Schützt Ihr Konto, selbst wenn jemand Ihr Passwort kennt. Dauert zwei Minuten mit einer App auf dem Handy.',
+            fn () => ! \App\Models\User::where('role', 'admin')->whereNull('two_factor_confirmed_at')->exists(), url('admin/konto'), 'Sicherheit');
+        $hooks->addHint('Sicherheits-Check durchführen', 'Nova CMS prüft Einstellungen und Dateien auf Schwachstellen. Am besten einmal im Monat.',
+            function () {
+                $last = \App\Support\Security\Scanner::last();
+
+                return $last && now()->diffInDays(\Carbon\Carbon::parse($last['at']), true) <= 30;
+            }, url('admin/sicherheit'), 'Sicherheit');
     }
 }

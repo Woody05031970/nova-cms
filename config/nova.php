@@ -19,6 +19,9 @@ return [
     // Merkliste der aktiven Plugins, damit beim Seitenaufruf keine Datenbankabfrage nötig ist.
     'plugins_state' => env('NOVA_PLUGINS_STATE', storage_path('app/nova-plugins.json')),
 
+    // Fingerabdruck der Programmdateien für den Sicherheits-Check.
+    'core_hashes' => env('NOVA_CORE_HASHES', storage_path('app/nova-core-hashes.json')),
+
     // Maximale Größe eines Plugin-Pakets in Kilobyte.
     'plugin_max_kb' => 20480,
 

@@ -30,6 +30,7 @@ class MediaLibrary
         $name = $base.'-'.Str::lower(Str::random(6)).'.'.$file->guessExtension();
         $mime = (string) $file->getMimeType();
 
+        \App\Support\Security\Scanner::protectUploads();
         $file->move(public_path($dir), $name);
 
         return $this->register($dir.'/'.$name, $kind, $file->getClientOriginalName(), $mime, $userId);

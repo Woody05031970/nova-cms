@@ -127,6 +127,8 @@ class InstallController extends Controller
             ]);
 
             InstallState::markInstalled();
+            \App\Support\Security\Scanner::protectUploads();
+            \App\Support\Security\Scanner::storeHashes();
         } catch (Throwable $e) {
             report($e);
 

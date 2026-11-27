@@ -29,6 +29,7 @@ abstract class TestCase extends BaseTestCase
             'NOVA_PLUGINS_STATE' => $this->sandbox.'/plugins.json',
             'NOVA_ENV_PATH' => $this->sandbox.'/.env',
             'NOVA_SQLITE_PATH' => $this->sandbox.'/nova.sqlite',
+            'NOVA_CORE_HASHES' => $this->sandbox.'/core-hashes.json',
         ] as $key => $value) {
             putenv("$key=$value");
             $_ENV[$key] = $_SERVER[$key] = $value;
