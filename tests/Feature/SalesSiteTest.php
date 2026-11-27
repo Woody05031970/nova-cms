@@ -37,8 +37,10 @@ class SalesSiteTest extends TestCase
             $this->assertTrue(Page::where('slug', $slug)->published()->exists(), $slug);
         }
         $this->assertTrue(Page::where('purpose', 'imprint')->exists());
-        $this->assertSame(3, Product::active()->count());
-        $this->assertSame(6, Product::where('is_active', false)->count());
+        // 3 Lizenzen und 3 lieferbare Module (Design Pro, Newsletter, WhatsApp), 5 Module „bald verfügbar“
+        $this->assertSame(6, Product::active()->count());
+        $this->assertSame(5, Product::where('is_active', false)->count());
+        $this->assertSame(['design-pro', 'whatsapp'], Product::where('slug', 'nova-cms-business')->first()->license_spec['modules']);
         $this->assertTrue(Product::where('slug', 'nova-cms-business')->first()->license_spec['core']);
         $this->assertSame(['terminbuchung'], Product::where('slug', 'modul-terminbuchung')->first()->license_spec['modules']);
 
@@ -63,10 +65,10 @@ class SalesSiteTest extends TestCase
         $this->get('/preise')->assertOk()->assertSee('149,00 €')->assertSee('349,00 €')->assertSee('Beliebteste Wahl')
             ->assertSee(route('shop.cart.add'), false)->assertSee('Fragen zu Lizenz und Preisen');
         $this->get('/module')->assertOk()->assertSee('Im Kern enthalten')->assertSee('Kostenloses Modul')
-            ->assertSee('Bald verfügbar')->assertSee('data-filter="paid"', false)->assertDontSee('data-builder ', false);
+            ->assertSee('Bald verfügbar')->assertSee('data-filter="paid"', false);
         $this->get('/vergleich')->assertOk()->assertSee('Klassisches CMS (Grundinstallation)')->assertSee('Angaben ohne Gewähr');
         $this->get('/kontakt')->assertOk()->assertSee('Beratung zu Lizenzen')->assertSee('name="consent"', false);
-        $this->get('/shop')->assertOk()->assertSee('Nova CMS Agentur')->assertDontSee('Modul: Newsletter');
+        $this->get('/shop')->assertOk()->assertSee('Nova CMS Agentur')->assertSee('Newsletter')->assertDontSee('Terminbuchung');
     }
 
     public function test_modul_baukasten_legt_mehrere_produkte_in_den_warenkorb(): void

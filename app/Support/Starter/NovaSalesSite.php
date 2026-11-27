@@ -2,6 +2,7 @@
 
 namespace App\Support\Starter;
 
+use App\Licensing\Features;
 use App\Models\MenuItem;
 use App\Models\Page;
 use App\Models\Product;
@@ -37,15 +38,20 @@ class NovaSalesSite
 
     /** Lizenzpakete: Adresse => Angaben */
     public const LICENSES = [
-        'nova-cms-start' => ['Nova CMS Start', 14900, 1, 'Für eine Website, z. B. Ihr Unternehmen oder Ihren Verein.'],
-        'nova-cms-business' => ['Nova CMS Business', 34900, 3, 'Für bis zu drei Websites, z. B. Firma, Shop und Kampagnenseite.'],
-        'nova-cms-agentur' => ['Nova CMS Agentur', 89900, 15, 'Für Webdesigner und Agenturen mit bis zu 15 Kunden-Websites.'],
+        'nova-cms-start' => ['Nova CMS Start', 14900, 1, 'Für eine Website, z. B. Ihr Unternehmen oder Ihren Verein.', []],
+        'nova-cms-business' => ['Nova CMS Business', 34900, 3, 'Für bis zu drei Websites, z. B. Firma, Shop und Kampagnenseite.', ['design-pro', 'whatsapp']],
+        'nova-cms-agentur' => ['Nova CMS Agentur', 89900, 15, 'Für Webdesigner und Agenturen mit bis zu 15 Kunden-Websites.', ['design-pro', 'whatsapp', 'newsletter']],
     ];
 
-    /** Vorgeschlagene kostenpflichtige Module: Adresse => [Name, Preis in Cent, Bereich, Beschreibung] */
+    /**
+     * Kostenpflichtige Module: Adresse => [Name, Preis in Cent, Bereich, Beschreibung, verfügbar]
+     * Verfügbare Module sind in Nova eingebaut und werden mit dem Lizenzschlüssel freigeschaltet.
+     */
     public const PAID_MODULES = [
+        'modul-design-pro' => ['Design Pro', 4900, 'Design', 'Alle sechs Design-Vorlagen, eigene Akzentfarbe und Schrift, Einblend-Effekte und Hintergrundvideos mit Farbschleier.', true],
+        'modul-newsletter' => ['Newsletter', 6900, 'Marketing', 'Anmeldung mit Double-Opt-in, Abonnentenverwaltung, Newsletter im Design Ihrer Website und Versand über Ihren eigenen E-Mail-Server.', true],
+        'modul-whatsapp' => ['WhatsApp', 2900, 'Marketing', 'Chat-Knopf auf jeder Seite und „Frage per WhatsApp stellen“ bei Produkten. Datenschutzfreundlich ohne fremde Skripte.', true],
         'modul-terminbuchung' => ['Terminbuchung', 7900, 'Service', 'Kunden buchen freie Termine direkt auf Ihrer Website, mit Bestätigung und Erinnerung per E-Mail.'],
-        'modul-newsletter' => ['Newsletter', 6900, 'Marketing', 'Anmeldung mit Double-Opt-in, Vorlagen im Nova-Design und Versand über Ihren eigenen E-Mail-Server.'],
         'modul-mehrsprachigkeit' => ['Mehrsprachigkeit', 9900, 'Inhalte', 'Jede Seite in mehreren Sprachen, mit Sprachumschalter und KI-Übersetzungsvorschlag.'],
         'modul-gutscheine' => ['Gutscheine und Rabatte', 4900, 'Shop', 'Rabattcodes, Geschenkgutscheine und zeitlich begrenzte Aktionen für Ihren Shop.'],
         'modul-mitgliederbereich' => ['Mitgliederbereich', 8900, 'Inhalte', 'Geschützte Seiten und Downloads für angemeldete Kunden oder Vereinsmitglieder.'],
@@ -82,30 +88,75 @@ class NovaSalesSite
     {
         $count = 0;
         $taxRate = 19;
-        foreach (self::LICENSES as $slug => [$name, $cents, $domains, $text]) {
+        foreach (self::LICENSES as $slug => [$name, $cents, $domains, $text, $modules]) {
             $count += $this->product($slug, [
                 'name' => $name, 'sku' => strtoupper(str_replace('nova-cms-', 'NOVA-', $slug)), 'price_cents' => $cents, 'tax_rate' => $taxRate,
                 'short_description' => $text,
                 'description' => '<p>'.e($text).'</p><ul><li>Alle Kernfunktionen: Seiten, Menü, Medien, Shop, SEO, Sicherheit und KI-Assistent</li>'
+                    .($modules ? '<li>Inklusive Module: '.e(collect($modules)->map(fn ($m) => Features::ALL[$m][0])->implode(', ')).'</li>' : '')
                     .'<li>Gültig für '.$domains.' '.($domains === 1 ? 'Website' : 'Websites').' (Test- und Entwicklungsumgebungen zählen nicht mit)</li>'
                     .'<li>12 Monate Updates inklusive, danach läuft Ihre Version unbegrenzt weiter</li>'
                     .'<li>Lizenzschlüssel kommt nach Zahlungseingang automatisch per E-Mail</li></ul>',
                 'is_active' => true,
-                'license_spec' => ['core' => true, 'modules' => [], 'max_domains' => $domains, 'update_months' => 12],
+                'license_spec' => ['core' => true, 'modules' => $modules, 'max_domains' => $domains, 'update_months' => 12],
             ]);
         }
-        foreach (self::PAID_MODULES as $slug => [$name, $cents, $area, $text]) {
+        foreach (self::PAID_MODULES as $slug => $m) {
+            [$name, $cents, $area, $text] = $m;
+            $available = $m[4] ?? false;
             $count += $this->product($slug, [
                 'name' => 'Modul: '.$name, 'sku' => strtoupper(Str::limit(str_replace('modul-', 'MOD-', $slug), 20, '')), 'price_cents' => $cents, 'tax_rate' => $taxRate,
                 'short_description' => $text,
-                'description' => '<p>'.e($text).'</p><p>Einmal kaufen, für alle Websites Ihrer Nova-Lizenz nutzen. Installation im Backoffice unter Plugins › Marktplatz.</p>',
-                // Erst einschalten, wenn das Modul im Marktplatz bereitsteht
-                'is_active' => false,
+                'description' => '<p>'.e($text).'</p>'.($available
+                    ? '<p>Das Modul ist in Nova eingebaut. Nach dem Kauf erhalten Sie einen Lizenzschlüssel; eintragen unter „Lizenz“, und die Funktion ist sofort da.</p>'
+                    : '<p>Einmal kaufen, für Ihre Nova-Lizenz nutzen. Installation im Backoffice unter Plugins › Marktplatz.</p>'),
+                // Geplante Module erst einschalten, wenn sie im Marktplatz bereitstehen
+                'is_active' => $available,
                 'license_spec' => ['core' => false, 'modules' => [str_replace('modul-', '', $slug)], 'max_domains' => 1, 'update_months' => 12],
             ]);
         }
 
         return $count;
+    }
+
+    /**
+     * Bringt eine früher eingerichtete Verkaufswebsite auf den neuen Stand: fehlende Produkte,
+     * Module in den Lizenzpaketen, eingebaute Module zum Kauf freischalten und die Modulübersicht.
+     *
+     * @return array{products: int, pages: int}
+     */
+    public function refresh(): array
+    {
+        return DB::transaction(function () {
+            $added = $this->products();
+            foreach (self::LICENSES as $slug => [, , $domains, , $modules]) {
+                $p = Product::where('slug', $slug)->first();
+                $p?->update(['license_spec' => ['modules' => $modules] + ($p->license_spec ?? ['core' => true, 'max_domains' => $domains, 'update_months' => 12])]);
+            }
+            foreach (self::PAID_MODULES as $slug => $m) {
+                if ($m[4] ?? false) {
+                    Product::where('slug', $slug)->update(['is_active' => true]);
+                }
+            }
+            $pages = 0;
+            foreach (Page::all() as $page) {
+                $blocks = $page->blocks ?? [];
+                $changed = false;
+                foreach ($blocks as &$b) {
+                    if (($b['type'] ?? null) === 'modules' && ! empty($b['data']['builder'])) {
+                        $b['data']['items'] = $this->moduleItems();
+                        $changed = true;
+                    }
+                }
+                unset($b);
+                if ($changed) {
+                    $page->update(['blocks' => app(BlockSanitizer::class)->clean($blocks)]);
+                    $pages++;
+                }
+            }
+
+            return ['products' => $added, 'pages' => $pages];
+        });
     }
 
     private function product(string $slug, array $data): int
@@ -331,9 +382,9 @@ class NovaSalesSite
                     'eyebrow' => 'Preise', 'title' => 'Einmal kaufen. Dauerhaft nutzen.',
                     'intro' => 'Kein Abo: Sie kaufen eine Lizenz und nutzen Ihre Version unbegrenzt. 12 Monate Updates sind inklusive.',
                     'plans' => [
-                        ['name' => 'Start', 'product' => 'nova-cms-start', 'period' => 'einmalig', 'text' => 'Für eine Website', 'features' => ['1 Website', 'Alle Kernfunktionen inklusive Shop', 'KI-Assistent mit eigenem Schlüssel', '12 Monate Updates', 'Support per E-Mail'], 'button_label' => 'In den Warenkorb', 'button_url' => $url('kontakt'), 'price' => '149 €'],
-                        ['name' => 'Business', 'product' => 'nova-cms-business', 'period' => 'einmalig', 'text' => 'Für Firma, Shop und mehr', 'features' => ['Bis zu 3 Websites', 'Alle Kernfunktionen inklusive Shop', 'KI-Assistent mit eigenem Schlüssel', '12 Monate Updates', 'Bevorzugter Support'], 'button_label' => 'In den Warenkorb', 'button_url' => $url('kontakt'), 'price' => '349 €', 'highlight' => true],
-                        ['name' => 'Agentur', 'product' => 'nova-cms-agentur', 'period' => 'einmalig', 'text' => 'Für Webdesigner und Agenturen', 'features' => ['Bis zu 15 Kunden-Websites', 'Alle Kernfunktionen inklusive Shop', 'Test- und Entwicklungsumgebungen frei', '12 Monate Updates', 'Bevorzugter Support'], 'button_label' => 'In den Warenkorb', 'button_url' => $url('kontakt'), 'price' => '899 €'],
+                        ['name' => 'Start', 'product' => 'nova-cms-start', 'period' => 'einmalig', 'text' => 'Für eine Website', 'features' => ['1 Website', 'Alle Kernfunktionen inklusive Shop', 'Design-Vorlage „Klar“ mit eigener Farbe und Logo', 'KI-Assistent mit eigenem Schlüssel', '12 Monate Updates', 'Module einzeln dazubuchbar'], 'button_label' => 'In den Warenkorb', 'button_url' => $url('kontakt'), 'price' => '149 €'],
+                        ['name' => 'Business', 'product' => 'nova-cms-business', 'period' => 'einmalig', 'text' => 'Für Firma, Shop und mehr', 'features' => ['Bis zu 3 Websites', 'Alle Kernfunktionen inklusive Shop', 'Design Pro: alle Vorlagen, Effekte, Videos', 'WhatsApp-Anbindung', '12 Monate Updates', 'Bevorzugter Support'], 'button_label' => 'In den Warenkorb', 'button_url' => $url('kontakt'), 'price' => '349 €', 'highlight' => true],
+                        ['name' => 'Agentur', 'product' => 'nova-cms-agentur', 'period' => 'einmalig', 'text' => 'Für Webdesigner und Agenturen', 'features' => ['Bis zu 15 Kunden-Websites', 'Alle Kernfunktionen inklusive Shop', 'Design Pro, WhatsApp und Newsletter', 'Test- und Entwicklungsumgebungen frei', '12 Monate Updates', 'Bevorzugter Support'], 'button_label' => 'In den Warenkorb', 'button_url' => $url('kontakt'), 'price' => '899 €'],
                     ],
                     'note' => 'Alle Lizenzen 30 Tage kostenlos testen. Test- und Entwicklungsumgebungen zählen nicht als Website.',
                 ]),
@@ -396,9 +447,10 @@ class NovaSalesSite
         ];
         $items = array_map(fn ($c) => ['name' => $c[0], 'category' => $c[1], 'text' => $c[2], 'kind' => 'core'], $core);
         $items[] = ['name' => 'Öffnungszeiten', 'category' => 'Inhalte', 'text' => 'Öffnungszeiten an einer Stelle pflegen. Das Dashboard erinnert Sie, wenn sie fehlen.', 'kind' => 'free'];
-        foreach (self::PAID_MODULES as $slug => [$name, $cents, $area, $text]) {
+        foreach (self::PAID_MODULES as $slug => $m) {
+            [$name, $cents, $area, $text] = $m;
             $items[] = ['name' => $name, 'category' => $area, 'text' => $text, 'kind' => 'paid', 'product' => $slug,
-                'price' => number_format($cents / 100, 2, ',', '.').' €', 'soon' => true];
+                'price' => number_format($cents / 100, 2, ',', '.').' €', 'soon' => ! ($m[4] ?? false)];
         }
 
         return $items;

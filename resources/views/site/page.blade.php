@@ -37,7 +37,7 @@
     @endunless
     <div class="pb-16">
         @foreach ($blocks as $block)
-            @includeIf('site.blocks.'.$block['type'], ['d' => $block['data'], 'first' => $loop->first, 'blockId' => $block['id'] ?? null, 'pageId' => $page->id])
+            <div @unless($loop->first) data-reveal @endunless>@includeIf('site.blocks.'.$block['type'], ['d' => $block['data'], 'first' => $loop->first, 'blockId' => $block['id'] ?? null, 'pageId' => $page->id])</div>
         @endforeach
     </div>
 @endsection

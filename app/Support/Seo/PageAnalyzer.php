@@ -144,7 +144,7 @@ class PageAnalyzer
                 'image' => $d['caption'] ?? '',
                 'slider' => collect($d['slides'] ?? [])->pluck('caption')->implode(' '),
                 'button' => $d['label'] ?? '',
-                'features', 'pricing', 'modules', 'compare', 'faq', 'cta', 'contact' => self::structuredText($d),
+                'features', 'pricing', 'modules', 'compare', 'faq', 'cta', 'contact', 'newsletter' => self::structuredText($d),
                 default => '',
             };
         }

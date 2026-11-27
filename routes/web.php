@@ -4,11 +4,13 @@ use App\Http\Controllers\Admin\AccountController;
 use App\Http\Controllers\Admin\AiController;
 use App\Http\Controllers\Admin\ContactMessageController;
 use App\Http\Controllers\Admin\DashboardController;
+use App\Http\Controllers\Admin\DesignController;
 use App\Http\Controllers\Admin\Licensing\LicenseController;
 use App\Http\Controllers\Admin\Licensing\MarketplaceController;
 use App\Http\Controllers\Admin\Licensing\ServerController as LicenseServerController;
 use App\Http\Controllers\Admin\MediaController;
 use App\Http\Controllers\Admin\MenuController;
+use App\Http\Controllers\Admin\NewsletterAdminController;
 use App\Http\Controllers\Admin\PageController;
 use App\Http\Controllers\Admin\PluginController;
 use App\Http\Controllers\Admin\SearchController;
@@ -20,10 +22,12 @@ use App\Http\Controllers\Admin\Shop\ProductController as ShopProductController;
 use App\Http\Controllers\Admin\Shop\ShopController as AdminShopController;
 use App\Http\Controllers\Admin\StarterController;
 use App\Http\Controllers\Admin\UploadController;
+use App\Http\Controllers\Admin\WhatsAppController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\ContactController;
 use App\Http\Controllers\InstallController;
 use App\Http\Controllers\LicenseApiController;
+use App\Http\Controllers\NewsletterController;
 use App\Http\Controllers\SeoFileController;
 use App\Http\Controllers\ShopController;
 use App\Http\Controllers\SiteController;
@@ -46,6 +50,13 @@ Route::get('/', [SiteController::class, 'home'])->name('home');
 Route::get('/robots.txt', [SeoFileController::class, 'robots'])->name('robots');
 Route::get('/sitemap.xml', [SeoFileController::class, 'sitemap'])->name('sitemap');
 Route::post('/kontakt/nachricht', ContactController::class)->middleware('throttle:5,1')->name('contact.send');
+Route::middleware('feature:newsletter')->group(function () {
+    Route::post('/newsletter/anmelden', [NewsletterController::class, 'subscribe'])->middleware('throttle:5,1')->name('newsletter.subscribe');
+    Route::get('/newsletter/bestaetigen/{token}', [NewsletterController::class, 'confirm'])->name('newsletter.confirm');
+});
+// Abmelden geht immer, auch wenn das Modul später wegfällt
+Route::get('/newsletter/abmelden/{token}', [NewsletterController::class, 'unsubscribeForm'])->name('newsletter.unsubscribe');
+Route::post('/newsletter/abmelden/{token}', [NewsletterController::class, 'unsubscribe'])->name('newsletter.unsubscribe.do');
 
 // Shop
 Route::middleware(ShopEnabled::class)->group(function () {
@@ -91,6 +102,25 @@ Route::middleware(['auth', 'admin', LicenseGate::class])->prefix('admin')->name(
     Route::patch('/anfragen/{message}', [ContactMessageController::class, 'read'])->name('messages.read');
     Route::delete('/anfragen/{message}', [ContactMessageController::class, 'destroy'])->name('messages.destroy');
     Route::post('/startinhalt', [StarterController::class, 'store'])->name('starter.store');
+    Route::post('/startinhalt/aktualisieren', [StarterController::class, 'update'])->name('starter.update');
+    Route::get('/design', [DesignController::class, 'index'])->name('design');
+    Route::put('/design', [DesignController::class, 'update'])->name('design.update');
+    Route::middleware('feature:whatsapp')->group(function () {
+        Route::get('/whatsapp', [WhatsAppController::class, 'index'])->name('whatsapp');
+        Route::put('/whatsapp', [WhatsAppController::class, 'update'])->name('whatsapp.update');
+    });
+    Route::middleware('feature:newsletter')->prefix('newsletter')->name('newsletter.')->group(function () {
+        Route::get('/', [NewsletterAdminController::class, 'index'])->name('index');
+        Route::get('/abonnenten.csv', [NewsletterAdminController::class, 'export'])->name('export');
+        Route::delete('/abonnenten/{subscriber}', [NewsletterAdminController::class, 'destroySubscriber'])->name('subscribers.destroy');
+        Route::get('/neu', [NewsletterAdminController::class, 'create'])->name('create');
+        Route::post('/', [NewsletterAdminController::class, 'store'])->name('store');
+        Route::get('/{campaign}', [NewsletterAdminController::class, 'edit'])->name('edit');
+        Route::put('/{campaign}', [NewsletterAdminController::class, 'update'])->name('update');
+        Route::delete('/{campaign}', [NewsletterAdminController::class, 'destroy'])->name('destroy');
+        Route::post('/{campaign}/test', [NewsletterAdminController::class, 'test'])->name('test');
+        Route::post('/{campaign}/senden', [NewsletterAdminController::class, 'sendBatch'])->name('send');
+    });
     Route::put('/menue', [MenuController::class, 'update'])->name('menu.update');
     Route::post('/seiten/live-vorschau', [PageController::class, 'livePreview'])->name('pages.live-preview');
     Route::post('/seiten', [PageController::class, 'store'])->name('pages.store');

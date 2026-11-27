@@ -99,9 +99,11 @@
         <div class="space-y-3">
             <div>
                 <label class="nova-label">Aussehen</label>
-                <div class="grid grid-cols-2 gap-2">
+                <div class="grid grid-cols-3 gap-2">
                     <button type="button" class="rounded-lg border px-3 py-2 text-left text-sm" :class="(block.data.variant || 'image') === 'image' ? 'border-nova-600 bg-nova-50 text-nova-800' : 'border-slate-200 hover:bg-slate-50'" @click="block.data.variant = 'image'"><strong class="block">Bild</strong><span class="text-xs text-slate-500">Foto im Hintergrund</span></button>
-                    <button type="button" class="rounded-lg border px-3 py-2 text-left text-sm" :class="block.data.variant === 'tech' ? 'border-nova-600 bg-nova-50 text-nova-800' : 'border-slate-200 hover:bg-slate-50'" @click="block.data.variant = 'tech'"><strong class="block">Technik</strong><span class="text-xs text-slate-500">Dunkel, mit Bild daneben</span></button>
+                    <button type="button" class="rounded-lg border px-3 py-2 text-left text-sm" :class="block.data.variant === 'tech' ? 'border-nova-600 bg-nova-50 text-nova-800' : 'border-slate-200 hover:bg-slate-50'" @click="block.data.variant = 'tech'"><strong class="block">Technik</strong><span class="text-xs text-slate-500">Dunkel, Bild daneben</span></button>
+                    <button type="button" class="relative rounded-lg border px-3 py-2 text-left text-sm" :class="block.data.variant === 'video' ? 'border-nova-600 bg-nova-50 text-nova-800' : 'border-slate-200 hover:bg-slate-50'" @click="block.data.variant = 'video'; block.data.opacity ??= 55; block.data.overlay ??= 'dark'; block.data.height ??= 'tall'" data-hero-video><strong class="block">Video</strong><span class="text-xs text-slate-500">Film im Hintergrund</span>
+                        <span x-show="!features['design-pro']" class="absolute top-1.5 right-1.5 rounded bg-amber-100 px-1 text-[10px] font-semibold text-amber-800">Pro</span></button>
                 </div>
             </div>
             <div><label class="nova-label">Kleine Zeile darüber (optional)</label><input class="nova-input" x-model="block.data.eyebrow" maxlength="80" placeholder="z. B. Neu: Version 2"></div>
@@ -115,7 +117,31 @@
             </div>
         </div>
         <div>
-            <label class="nova-label" x-text="block.data.variant === 'tech' ? 'Bild rechts (optional)' : 'Hintergrundbild'"></label>
+            <template x-if="block.data.variant === 'video'">
+                <div class="mb-5 space-y-3 rounded-xl border border-nova-200 bg-nova-50/50 p-3">
+                    <p x-show="!features['design-pro']" class="rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-900">Hintergrundvideos gehören zu „Design Pro“. Ohne dieses Modul zeigt die Website die Technik-Variante.</p>
+                    <label class="nova-label">Hintergrundvideo</label>
+                    <template x-if="block.data.video">
+                        <div class="relative overflow-hidden rounded-lg"><video :src="block.data.video" muted autoplay loop playsinline class="aspect-video w-full object-cover"></video>
+                            <button type="button" class="absolute top-2 right-2 rounded-md bg-white/90 px-2 py-1 text-xs shadow" @click="block.data.video = null">Ändern</button></div>
+                    </template>
+                    @include('admin.pages.partials.upload', ['target' => 'block.data', 'key' => 'video', 'kind' => 'video', 'hint' => 'MP4, am besten 10 bis 30 Sekunden ohne Ton und unter 15 MB. Läuft stumm in Dauerschleife.'])
+                    <div class="grid grid-cols-2 gap-3">
+                        <div><label class="nova-label">Farbschleier</label>
+                            <select class="nova-input" x-model="block.data.overlay"><option value="dark">Dunkel</option><option value="brand">In Ihrer Farbe</option><option value="light">Hell</option></select></div>
+                        <div><label class="nova-label">Höhe</label>
+                            <select class="nova-input" x-model="block.data.height"><option value="normal">Normal</option><option value="tall">Hoch</option><option value="full">Ganzer Bildschirm</option></select></div>
+                        <div class="col-span-2"><label class="nova-label">Deckkraft des Schleiers: <span x-text="(block.data.opacity ?? 55) + ' %'"></span></label>
+                            <input type="range" min="0" max="90" step="5" x-model.number="block.data.opacity" class="w-full accent-nova-600"></div>
+                        <div class="col-span-2"><label class="nova-label">Text</label>
+                            <div class="flex gap-2">
+                                <button type="button" class="rounded-lg border px-3 py-1.5 text-sm" :class="(block.data.align || 'left') === 'left' ? 'border-nova-600 bg-white text-nova-800' : 'border-slate-200'" @click="block.data.align = 'left'">Links</button>
+                                <button type="button" class="rounded-lg border px-3 py-1.5 text-sm" :class="block.data.align === 'center' ? 'border-nova-600 bg-white text-nova-800' : 'border-slate-200'" @click="block.data.align = 'center'">Mittig</button>
+                            </div></div>
+                    </div>
+                </div>
+            </template>
+            <label class="nova-label" x-text="block.data.variant === 'tech' ? 'Bild rechts (optional)' : (block.data.variant === 'video' ? 'Standbild, solange das Video lädt (optional)' : 'Hintergrundbild')"></label>
             <p x-show="block.data.variant === 'tech' && !block.data.image" class="mb-2 text-xs text-slate-500">Ohne eigenes Bild zeigt Nova eine gezeichnete Ansicht der Verwaltung.</p>
             <template x-if="block.data.image">
                 <div class="relative overflow-hidden rounded-lg">

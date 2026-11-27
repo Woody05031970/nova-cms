@@ -59,6 +59,12 @@
                 @else
                     <p class="mt-4 text-sm font-medium text-red-700">Zurzeit ausverkauft</p>
                 @endif
+                @if ($waLink = \App\Support\WhatsApp::productLink($product->name, $product->url()))
+                    <a href="{{ $waLink }}" target="_blank" rel="noopener" class="mt-3 inline-flex w-full items-center justify-center gap-2 rounded-lg border border-[#25d366]/40 bg-[#25d366]/10 px-4 py-2.5 text-sm font-semibold text-[#128c4a] hover:bg-[#25d366]/20" data-whatsapp-product>
+                        <svg class="size-5" viewBox="0 0 32 32" fill="currentColor" aria-hidden="true"><path d="M16 3a13 13 0 0 0-11.2 19.6L3 29l6.6-1.7A13 13 0 1 0 16 3zm0 23.7a10.7 10.7 0 0 1-5.5-1.5l-.4-.2-3.9 1 1-3.8-.2-.4A10.7 10.7 0 1 1 16 26.7z"/></svg>
+                        Frage per WhatsApp stellen
+                    </a>
+                @endif
                 @if ($product->sku)<p class="mt-4 text-xs text-slate-500">Artikelnummer: {{ $product->sku }}</p>@endif
 
                 @if ($product->description)

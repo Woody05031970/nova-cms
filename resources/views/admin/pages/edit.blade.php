@@ -17,6 +17,7 @@
         'compare' => ['label' => 'Vergleich', 'description' => 'Tabelle: Sie im Vergleich zu anderen', 'icon' => 'chart', 'group' => 'verkauf'],
         'faq' => ['label' => 'Häufige Fragen', 'description' => 'Aufklappbare Fragen, von Google lesbar', 'icon' => 'search', 'group' => 'verkauf'],
         'cta' => ['label' => 'Aufruf', 'description' => 'Auffälliges Band mit Knöpfen', 'icon' => 'rocket', 'group' => 'verkauf'],
+        'newsletter' => ['label' => 'Newsletter', 'description' => 'Anmeldung mit Bestätigung per E-Mail', 'icon' => 'mail', 'group' => 'verkauf'],
         'contact' => ['label' => 'Kontaktformular', 'description' => 'Anfragen landen unter „Anfragen“ und per E-Mail', 'icon' => 'mail', 'group' => 'verkauf'],
         'html' => ['label' => 'HTML', 'description' => 'Eigener Code für Fortgeschrittene', 'icon' => 'settings', 'group' => 'profi'],
     ];
@@ -35,6 +36,7 @@
         'host' => request()->getHost(),
         'types' => $types,
         'icons' => \App\Support\Blocks\BlockSanitizer::ICONS,
+        'features' => collect(app(\App\Licensing\Features::class)->overview())->map(fn ($f) => $f['enabled']),
         'products' => \App\Models\Product::orderBy('name')->get(['slug', 'name', 'price_cents', 'is_active'])->map(fn ($p) => ['slug' => $p->slug, 'label' => $p->name.' · '.$p->price().($p->is_active ? '' : ' (ausgeblendet)')])->values(),
         'focusKeyword' => old('focus_keyword', $page->focus_keyword),
         'purpose' => $page->purpose,

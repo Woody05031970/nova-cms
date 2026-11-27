@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use App\Ai\AiManager;
+use App\Licensing\Features;
 use App\Licensing\HttpTransport;
 use App\Licensing\License;
 use App\Licensing\LicenseIssuer;
@@ -32,6 +33,7 @@ class AppServiceProvider extends ServiceProvider
             ? $app->make(LocalTransport::class)
             : $app->make(HttpTransport::class));
         $this->app->scoped(License::class);
+        $this->app->scoped(Features::class);
 
         $this->app->singleton(Hooks::class);
         $this->app->singleton(PluginManager::class);

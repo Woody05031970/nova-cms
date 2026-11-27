@@ -19,6 +19,10 @@ class PageTemplates
         return [
             'leer' => ['label' => 'Leere Seite', 'description' => 'Sie starten mit einem Textblock.', 'icon' => 'pages'],
             'start' => ['label' => 'Startseite', 'description' => 'Titelbild, Begrüßung und Kontakt-Knopf.', 'icon' => 'home'],
+            'landing' => ['label' => 'Landingpage mit Video', 'description' => 'Video im Hintergrund, Vorteile, Fragen und Aufruf.', 'icon' => 'rocket'],
+            'aktion' => ['label' => 'Aktion ankündigen', 'description' => 'Angebot oder Veranstaltung mit Countdown-Gefühl.', 'icon' => 'bolt'],
+            'leistungen' => ['label' => 'Leistungen und Preise', 'description' => 'Schritte, Pakete und häufige Fragen.', 'icon' => 'layers'],
+            'newsletter' => ['label' => 'Newsletter-Seite', 'description' => 'Gründe fürs Abonnieren und Anmeldeformular.', 'icon' => 'mail'],
             'ueber' => ['label' => 'Über uns', 'description' => 'Wer Sie sind und was Sie auszeichnet.', 'icon' => 'sparkles'],
             'kontakt' => ['label' => 'Kontakt', 'description' => 'Adresse, Telefon und E-Mail aus Ihrem Firmenprofil.', 'icon' => 'clock'],
             'impressum' => ['label' => 'Impressum', 'description' => 'Wird aus Ihrem Firmenprofil befüllt.', 'icon' => 'shield'],
@@ -68,6 +72,57 @@ class PageTemplates
                         'image' => null, 'button_label' => 'Kontakt aufnehmen', 'button_url' => '/kontakt',
                     ]],
                     $text('<h2>Willkommen</h2><p>Erzählen Sie hier in zwei, drei Sätzen, was Sie anbieten und warum Kunden zu Ihnen kommen sollten.</p>'),
+                ],
+            ],
+            'landing' => [
+                'title' => 'Landingpage',
+                'show_in_menu' => false,
+                'blocks' => [
+                    ['id' => $id(), 'type' => 'hero', 'data' => ['variant' => 'video', 'eyebrow' => 'Neu', 'title' => 'Ihre Botschaft in einem Satz', 'text' => 'Laden Sie im Baustein „Titelbild“ ein kurzes Video hoch. Es läuft stumm im Hintergrund, der Farbschleier hält den Text gut lesbar.', 'button_label' => 'Jetzt anfragen', 'button_url' => '/kontakt', 'button2_label' => 'Mehr erfahren', 'button2_url' => '#vorteile', 'overlay' => 'dark', 'opacity' => 55, 'height' => 'full', 'align' => 'center', 'image' => null, 'video' => null]],
+                    ['id' => $id(), 'type' => 'features', 'data' => ['eyebrow' => 'Darum wir', 'title' => 'Drei gute Gründe', 'intro' => '', 'style' => 'grid', 'items' => [
+                        ['icon' => 'bolt', 'title' => 'Schnell', 'text' => 'Was geht bei Ihnen schneller als anderswo?'],
+                        ['icon' => 'heart', 'title' => 'Persönlich', 'text' => 'Was schätzen Ihre Kunden besonders?'],
+                        ['icon' => 'shield', 'title' => 'Zuverlässig', 'text' => 'Worauf kann man sich bei Ihnen verlassen?'],
+                    ]]],
+                    ['id' => $id(), 'type' => 'faq', 'data' => ['eyebrow' => '', 'title' => 'Gut zu wissen', 'intro' => '', 'items' => [['q' => 'Eine häufige Frage?', 'a' => 'Die passende Antwort.'], ['q' => 'Noch eine Frage?', 'a' => 'Noch eine Antwort.']]]],
+                    ['id' => $id(), 'type' => 'cta', 'data' => ['title' => 'Bereit?', 'text' => 'Wir freuen uns auf Ihre Nachricht.', 'button_label' => 'Kontakt aufnehmen', 'button_url' => '/kontakt', 'style' => 'dark']],
+                ],
+            ],
+            'aktion' => [
+                'title' => 'Aktion',
+                'show_in_menu' => false,
+                'blocks' => [
+                    ['id' => $id(), 'type' => 'hero', 'data' => ['variant' => 'video', 'eyebrow' => 'Nur bis Sonntag', 'title' => '20 % auf alles', 'text' => 'Beschreiben Sie Ihre Aktion in einem Satz: was, für wen, bis wann.', 'button_label' => 'Zum Angebot', 'button_url' => '/shop', 'overlay' => 'brand', 'opacity' => 60, 'height' => 'tall', 'align' => 'center', 'image' => null, 'video' => null]],
+                    ['id' => $id(), 'type' => 'features', 'data' => ['eyebrow' => '', 'title' => 'So einfach geht es', 'intro' => '', 'style' => 'steps', 'items' => [
+                        ['title' => 'Aussuchen', 'text' => 'Wählen Sie Ihr Lieblingsprodukt.'], ['title' => 'Code eingeben', 'text' => 'Nennen Sie bei der Bestellung das Stichwort.'], ['title' => 'Sparen', 'text' => 'Der Rabatt wird sofort abgezogen.'],
+                    ]]],
+                    ['id' => $id(), 'type' => 'newsletter', 'data' => ['eyebrow' => 'Keine Aktion mehr verpassen', 'title' => 'Erfahren Sie es zuerst', 'intro' => 'Abonnieren Sie unseren Newsletter, dann sind Sie bei der nächsten Aktion als Erste dabei.', 'button_label' => 'Abonnieren', 'ask_name' => false, 'style' => 'dark']],
+                ],
+            ],
+            'leistungen' => [
+                'title' => 'Leistungen',
+                'blocks' => [
+                    ['id' => $id(), 'type' => 'hero', 'data' => ['variant' => 'tech', 'eyebrow' => 'Leistungen', 'title' => 'Was wir für Sie tun', 'text' => 'Ein Satz, der Ihr Angebot auf den Punkt bringt.', 'button_label' => 'Angebot anfragen', 'button_url' => '/kontakt', 'image' => null]],
+                    ['id' => $id(), 'type' => 'features', 'data' => ['eyebrow' => 'Ablauf', 'title' => 'So arbeiten wir', 'intro' => '', 'style' => 'steps', 'items' => [
+                        ['title' => 'Kennenlernen', 'text' => 'Wir besprechen Ihre Wünsche.'], ['title' => 'Angebot', 'text' => 'Sie erhalten ein klares Angebot.'], ['title' => 'Umsetzung', 'text' => 'Wir legen los, Sie lehnen sich zurück.'],
+                    ]]],
+                    ['id' => $id(), 'type' => 'pricing', 'data' => ['eyebrow' => 'Preise', 'title' => 'Pakete', 'intro' => '', 'note' => 'Alle Preise inklusive Mehrwertsteuer.', 'plans' => [
+                        ['name' => 'Basis', 'price' => '99 €', 'period' => 'einmalig', 'text' => 'Für den Einstieg', 'features' => ['Leistung 1', 'Leistung 2'], 'button_label' => 'Anfragen', 'button_url' => '/kontakt', 'highlight' => false],
+                        ['name' => 'Komfort', 'price' => '199 €', 'period' => 'einmalig', 'text' => 'Am beliebtesten', 'features' => ['Alles aus Basis', 'Leistung 3', 'Leistung 4'], 'button_label' => 'Anfragen', 'button_url' => '/kontakt', 'highlight' => true],
+                        ['name' => 'Premium', 'price' => '349 €', 'period' => 'einmalig', 'text' => 'Rundum sorglos', 'features' => ['Alles aus Komfort', 'Persönliche Betreuung'], 'button_label' => 'Anfragen', 'button_url' => '/kontakt', 'highlight' => false],
+                    ]]],
+                    ['id' => $id(), 'type' => 'faq', 'data' => ['eyebrow' => '', 'title' => 'Häufige Fragen', 'intro' => '', 'items' => [['q' => 'Wie schnell geht es los?', 'a' => 'In der Regel innerhalb einer Woche.']]]],
+                ],
+            ],
+            'newsletter' => [
+                'title' => 'Newsletter',
+                'blocks' => [
+                    ['id' => $id(), 'type' => 'features', 'data' => ['eyebrow' => 'Newsletter', 'title' => 'Darum lohnt sich unser Newsletter', 'intro' => 'Etwa einmal im Monat, kein Spam, jederzeit abbestellbar.', 'style' => 'grid', 'items' => [
+                        ['icon' => 'bolt', 'title' => 'Aktionen zuerst', 'text' => 'Abonnenten erfahren von Angeboten vor allen anderen.'],
+                        ['icon' => 'sparkles', 'title' => 'Neuigkeiten', 'text' => 'Neue Produkte und Termine direkt in Ihr Postfach.'],
+                        ['icon' => 'heart', 'title' => 'Tipps', 'text' => 'Praktische Ideen rund um unser Angebot.'],
+                    ]]],
+                    ['id' => $id(), 'type' => 'newsletter', 'data' => ['eyebrow' => '', 'title' => 'Jetzt kostenlos abonnieren', 'intro' => 'Nach der Anmeldung schicken wir Ihnen eine E-Mail zur Bestätigung.', 'button_label' => 'Abonnieren', 'ask_name' => true, 'style' => 'dark']],
                 ],
             ],
             'ueber' => [

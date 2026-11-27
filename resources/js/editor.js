@@ -41,6 +41,7 @@ const DEFAULTS = {
     faq: () => ({ eyebrow: '', title: 'Häufige Fragen', intro: '', items: [{ q: 'Ihre Frage?', a: 'Ihre Antwort.' }] }),
     cta: () => ({ title: 'Bereit für den nächsten Schritt?', text: '', button_label: 'Kontakt aufnehmen', button_url: '/kontakt', button2_label: '', button2_url: '', style: 'dark' }),
     contact: () => ({ eyebrow: '', title: 'Schreiben Sie uns', intro: 'Wir antworten in der Regel innerhalb eines Werktags.', button_label: 'Nachricht senden', success: '', subjects: [] }),
+    newsletter: () => ({ eyebrow: 'Newsletter', title: 'Nichts mehr verpassen', intro: 'Neuigkeiten, Aktionen und Tipps, etwa einmal im Monat. Abmeldung jederzeit.', button_label: 'Abonnieren', ask_name: false, style: 'dark' }),
     html: () => ({ code: '' }),
 };
 
@@ -74,6 +75,7 @@ Alpine.data('pageEditor', (cfg) => ({
     types: cfg.types,
     products: cfg.products || [],
     icons: cfg.icons || [],
+    features: cfg.features || {},
     picker: null,
     dirty: false,
     error: '',

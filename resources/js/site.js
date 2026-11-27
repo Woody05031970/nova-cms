@@ -74,3 +74,35 @@ document.querySelectorAll('[data-modules]').forEach((box) => {
     form.addEventListener('change', update);
     update();
 });
+
+// Einblend-Effekte: Abschnitte erscheinen, sobald sie ins Bild scrollen
+(() => {
+    const body = document.body;
+    if (!body.matches('[data-anim]:not([data-anim="none"])') || !('IntersectionObserver' in window)) return;
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    const items = [...document.querySelectorAll('[data-reveal]')];
+    const io = new IntersectionObserver(
+        (entries) =>
+            entries.forEach((e) => {
+                if (e.isIntersecting) {
+                    e.target.classList.add('is-visible');
+                    io.unobserve(e.target);
+                }
+            }),
+        { rootMargin: '0px 0px -8% 0px', threshold: 0.08 },
+    );
+    // Was beim Laden schon sichtbar ist, bleibt sofort sichtbar
+    items.forEach((el) => {
+        if (el.getBoundingClientRect().top < window.innerHeight * 0.92) el.classList.add('is-visible');
+        else io.observe(el);
+    });
+    body.classList.add('js-reveal');
+})();
+
+// Hintergrundvideos: bei „weniger Bewegung“ anhalten
+document.querySelectorAll('video[data-bg-video]').forEach((v) => {
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        v.removeAttribute('autoplay');
+        v.pause();
+    }
+});

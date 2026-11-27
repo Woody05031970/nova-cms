@@ -13,7 +13,7 @@ use Illuminate\Support\Str;
  */
 class BlockSanitizer
 {
-    public const TYPES = ['text', 'hero', 'image', 'video', 'slider', 'button', 'features', 'pricing', 'modules', 'compare', 'faq', 'cta', 'contact', 'html'];
+    public const TYPES = ['text', 'hero', 'image', 'video', 'slider', 'button', 'features', 'pricing', 'modules', 'compare', 'faq', 'cta', 'contact', 'newsletter', 'html'];
 
     /** Symbole für Vorteils-Kacheln */
     public const ICONS = ['sparkles', 'bolt', 'shield', 'cart', 'search', 'pages', 'menu', 'image', 'globe', 'layers', 'rocket', 'heart', 'users', 'chart', 'lock', 'clock', 'check', 'code', 'puzzle', 'key', 'eye', 'mail'];
@@ -67,7 +67,12 @@ class BlockSanitizer
             'image' => $this->mediaUrl($d['image'] ?? null),
             'button_label' => $this->str($d['button_label'] ?? '', 60),
             'button_url' => $this->linkUrl($d['button_url'] ?? null),
-            'variant' => ($d['variant'] ?? '') === 'tech' ? 'tech' : 'image',
+            'variant' => in_array($d['variant'] ?? null, ['tech', 'video'], true) ? $d['variant'] : 'image',
+            'video' => $this->mediaUrl($d['video'] ?? null),
+            'overlay' => in_array($d['overlay'] ?? null, ['dark', 'brand', 'light'], true) ? $d['overlay'] : 'dark',
+            'opacity' => max(0, min(90, (int) ($d['opacity'] ?? 55))),
+            'height' => in_array($d['height'] ?? null, ['normal', 'tall', 'full'], true) ? $d['height'] : 'tall',
+            'align' => ($d['align'] ?? '') === 'center' ? 'center' : 'left',
             'eyebrow' => $this->str($d['eyebrow'] ?? '', 80),
             'button2_label' => $this->str($d['button2_label'] ?? '', 60),
             'button2_url' => $this->linkUrl($d['button2_url'] ?? null),
@@ -169,6 +174,16 @@ class BlockSanitizer
             'button_label' => $this->str($d['button_label'] ?? '', 60) ?: 'Nachricht senden',
             'success' => $this->str($d['success'] ?? '', 300),
             'subjects' => $this->lines($d['subjects'] ?? '', 10, 80),
+        ];
+    }
+
+    private function cleanNewsletter(array $d): array
+    {
+        return [
+            ...$this->heading($d),
+            'button_label' => $this->str($d['button_label'] ?? '', 40) ?: 'Abonnieren',
+            'ask_name' => (bool) ($d['ask_name'] ?? false),
+            'style' => ($d['style'] ?? '') === 'light' ? 'light' : 'dark',
         ];
     }
 

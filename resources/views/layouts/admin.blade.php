@@ -5,6 +5,9 @@
         ['label' => 'Menü', 'url' => route('admin.menu'), 'icon' => 'menu', 'order' => 12, 'active' => 'admin.menu*', 'group' => 'Inhalte'],
         ['label' => 'Medien', 'url' => route('admin.media.index'), 'icon' => 'image', 'order' => 20, 'active' => 'admin.media.*', 'group' => 'Inhalte'],
         ['label' => 'Anfragen', 'url' => route('admin.messages'), 'icon' => 'inbox', 'order' => 25, 'active' => 'admin.messages*', 'group' => 'Inhalte', 'badge' => \App\Models\ContactMessage::unread() ?: null],
+        ['label' => 'Design', 'url' => route('admin.design'), 'icon' => 'palette', 'order' => 22, 'active' => 'admin.design*', 'group' => 'Inhalte'],
+        ['label' => 'Newsletter', 'url' => route('admin.newsletter.index'), 'icon' => 'mail', 'order' => 50, 'active' => 'admin.newsletter.*', 'group' => 'Wachstum', 'locked' => ! \App\Licensing\Features::on('newsletter')],
+        ['label' => 'WhatsApp', 'url' => route('admin.whatsapp'), 'icon' => 'chat', 'order' => 55, 'active' => 'admin.whatsapp*', 'group' => 'Wachstum', 'locked' => ! \App\Licensing\Features::on('whatsapp')],
         ['label' => 'KI-Assistent', 'url' => route('admin.ai'), 'icon' => 'sparkles', 'order' => 30, 'active' => 'admin.ai*', 'group' => 'Wachstum'],
         ['label' => 'Shop', 'url' => route('admin.shop.index'), 'icon' => 'cart', 'order' => 40, 'active' => 'admin.shop.*', 'group' => 'Wachstum'],
         ['label' => 'SEO', 'url' => route('admin.seo'), 'icon' => 'search', 'order' => 60, 'active' => 'admin.seo*', 'group' => 'Wachstum'],
@@ -29,6 +32,7 @@
         ['label' => 'Neue Seite anlegen', 'url' => route('admin.pages.index').'#neu', 'group' => 'Aktionen'],
         ['label' => 'Bilder hochladen', 'url' => route('admin.media.index'), 'group' => 'Aktionen'],
         ['label' => 'Menü sortieren', 'url' => route('admin.menu'), 'group' => 'Aktionen'],
+        ['label' => 'Farben, Vorlage und Logo ändern', 'url' => route('admin.design'), 'group' => 'Aktionen'],
         ['label' => 'Sicherheits-Check starten', 'url' => route('admin.security'), 'group' => 'Aktionen'],
         ['label' => 'Mein Konto und Passwort', 'url' => route('admin.account'), 'group' => 'Aktionen'],
         ['label' => 'Zwei-Faktor-Anmeldung', 'url' => route('admin.account').'#zwei-faktor', 'group' => 'Aktionen'],
@@ -77,6 +81,7 @@
                                     ]) @if($isActive($item)) aria-current="page" @endif>
                                         <x-icon :name="$item['icon']" class="size-[18px] {{ $isActive($item) ? 'text-nova-300' : 'text-slate-500 group-hover:text-slate-300' }}" />
                                         {{ $item['label'] }}
+                                        @if (! empty($item['locked']))<x-icon name="lock" class="ml-auto size-3.5 text-slate-500" />@endif
                                         @if (! empty($item['badge']))<span class="ml-auto rounded-full bg-nova-500 px-1.5 py-0.5 font-mono text-[10px] font-semibold text-white">{{ $item['badge'] }}</span>@endif
                                     </a>
                                 @endif

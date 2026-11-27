@@ -186,3 +186,18 @@
         <p class="text-xs text-slate-500">Anfragen finden Sie in der Verwaltung unter „Anfragen“. Eine Kopie geht an die Kontakt-E-Mail aus Ihrem Firmenprofil. Mit Spam-Schutz, ganz ohne Rätselbilder.</p>
     </div>
 </template>
+
+{{-- NEWSLETTER --}}
+<template x-if="block.type === 'newsletter'">
+    <div class="space-y-4">
+        <p x-show="!features.newsletter" class="rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-900">Das Modul „Newsletter“ ist in Ihrer Lizenz nicht enthalten. Der Baustein wird auf der Website erst angezeigt, wenn es freigeschaltet ist.</p>
+        {!! $heading !!}
+        <div class="grid gap-3 sm:grid-cols-3">
+            <div><label class="nova-label">Knopf-Text</label><input class="nova-input" x-model="block.data.button_label" maxlength="40"></div>
+            <div><label class="nova-label">Aussehen</label>
+                <select class="nova-input" x-model="block.data.style"><option value="dark">Dunkel (Technik)</option><option value="light">Hell</option></select></div>
+            <label class="flex items-center gap-2 pt-6 text-sm"><input type="checkbox" x-model="block.data.ask_name" class="accent-nova-600"> Vorname abfragen</label>
+        </div>
+        <p class="text-xs text-slate-500">Neue Abonnenten bekommen eine E-Mail mit Bestätigungslink (Double-Opt-in). Erst danach erhalten sie Newsletter. Verwaltung und Versand unter „Newsletter“.</p>
+    </div>
+</template>
