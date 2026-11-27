@@ -24,11 +24,20 @@
         'siteName' => $siteName,
         'host' => request()->getHost(),
         'types' => $types,
+        'ai' => [
+            'enabled' => app(\App\Ai\AiManager::class)->isConfigured(),
+            'setupUrl' => route('admin.ai'),
+            'rewriteUrl' => route('admin.ai.rewrite'),
+            'descriptionUrl' => route('admin.ai.description'),
+            'actions' => collect(\App\Ai\ContentAssistant::ACTIONS)->map(fn ($a) => $a[0]),
+        ],
     ];
 @endphp
 
 @section('content')
-<div x-data="pageEditor(@js($cfg))" x-cloak>
+<div x-data="pageEditor(@js($cfg))" x-cloak
+     @ai-error="error = $event.detail; window.scrollTo({top: 0, behavior: 'smooth'})"
+     @ai-done="error = ''; aiNotice = 'Text von der KI überarbeitet. Gefällt es nicht? Mit ↶ machen Sie es rückgängig.'; setTimeout(() => aiNotice = '', 6000)">
     <form x-ref="form" method="POST" action="{{ route('admin.pages.update', $page) }}" @submit="dirty = false">
         @csrf @method('PUT')
         <input type="hidden" name="blocks" :value="JSON.stringify(blocks.map(({id, type, data}) => ({id, type, data})))">
@@ -56,6 +65,7 @@
         </div>
 
         <div x-show="error" x-text="error" class="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-900" role="alert"></div>
+        <div x-show="aiNotice" x-transition x-text="aiNotice" class="fixed right-4 bottom-4 z-30 max-w-sm rounded-lg bg-slate-900 px-4 py-3 text-sm text-white shadow-lg" role="status"></div>
 
         <div class="grid gap-8 lg:grid-cols-[minmax(0,1fr)_320px]">
             {{-- Inhalt --}}
@@ -116,7 +126,14 @@
                         <div>
                             <div class="flex justify-between"><label class="nova-label" for="meta_description">Beschreibung für Google</label><span class="text-xs" :class="counterClass(metaDescription.length, 70, 160)" x-text="metaDescription.length + '/160'"></span></div>
                             <textarea id="meta_description" name="meta_description" x-model="metaDescription" rows="4" maxlength="320" class="nova-input text-sm" placeholder="Ein bis zwei Sätze, die neugierig machen."></textarea>
-                            <button type="button" @click="descriptionFromText()" class="mt-1 text-xs font-medium text-nova-700 hover:underline">Aus dem Seitentext übernehmen</button>
+                            <div class="mt-1 flex flex-wrap gap-x-4 gap-y-1">
+                                <template x-if="ai.enabled">
+                                    <button type="button" @click="descriptionWithAi()" :disabled="aiBusy" class="inline-flex items-center gap-1 text-xs font-medium text-nova-700 hover:underline disabled:opacity-50">
+                                        <x-icon name="sparkles" class="size-3.5" /><span x-text="aiBusy ? 'KI schreibt …' : 'Mit KI vorschlagen'"></span>
+                                    </button>
+                                </template>
+                                <button type="button" @click="descriptionFromText()" class="text-xs font-medium text-slate-600 hover:underline">Aus dem Seitentext übernehmen</button>
+                            </div>
                         </div>
                         <div x-show="!isHome">
                             <label class="nova-label" for="slug">Adresse der Seite</label>

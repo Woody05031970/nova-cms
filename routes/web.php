@@ -1,10 +1,11 @@
 <?php
 
+use App\Http\Controllers\Admin\AiController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\PageController;
-use App\Http\Controllers\Admin\UploadController;
 use App\Http\Controllers\Admin\PluginController;
 use App\Http\Controllers\Admin\SettingsController;
+use App\Http\Controllers\Admin\UploadController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\InstallController;
 use App\Http\Controllers\SiteController;
@@ -44,6 +45,14 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::delete('/papierkorb/{id}', [PageController::class, 'forceDelete'])->whereNumber('id')->name('pages.force-delete');
 
     Route::post('/uploads', [UploadController::class, 'store'])->middleware('throttle:60,1')->name('uploads.store');
+
+    Route::get('/ki', [AiController::class, 'index'])->name('ai');
+    Route::put('/ki', [AiController::class, 'update'])->name('ai.update');
+    Route::post('/ki/test', [AiController::class, 'test'])->middleware('throttle:10,1')->name('ai.test');
+    Route::get('/ki/assistent', [AiController::class, 'wizard'])->name('ai.wizard');
+    Route::post('/ki/assistent', [AiController::class, 'runWizard'])->middleware('throttle:5,1')->name('ai.wizard.run');
+    Route::post('/ki/text', [AiController::class, 'rewrite'])->middleware('throttle:30,1')->name('ai.rewrite');
+    Route::post('/ki/beschreibung', [AiController::class, 'description'])->middleware('throttle:30,1')->name('ai.description');
 
     Route::get('/einstellungen', [SettingsController::class, 'edit'])->name('settings');
     Route::put('/einstellungen', [SettingsController::class, 'update'])->name('settings.update');

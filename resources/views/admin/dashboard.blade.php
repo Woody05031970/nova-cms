@@ -79,13 +79,15 @@
         </div>
     @endif
 
-    <section class="mt-6 rounded-xl border border-dashed border-nova-200 bg-nova-50/60 p-6">
-        <div class="flex items-start gap-3">
-            <x-icon name="sparkles" class="size-6 shrink-0 text-nova-600" />
-            <div>
-                <h2 class="font-semibold text-nova-900">Demnächst: Ihre Website mit KI erstellen</h2>
-                <p class="mt-1 text-sm text-slate-700">Im nächsten Ausbauschritt beantworten Sie ein paar Fragen zu Ihrem Angebot, und die KI schlägt Seiten, Texte und Bilder vor. Je vollständiger Ihr Firmenprofil, desto besser die Vorschläge.</p>
-            </div>
+    @php $aiReady = app(\App\Ai\AiManager::class)->isConfigured(); @endphp
+    <section class="mt-6 flex flex-col gap-4 rounded-xl border border-nova-200 bg-nova-50/60 p-6 sm:flex-row sm:items-center">
+        <x-icon name="sparkles" class="size-6 shrink-0 text-nova-600" />
+        <div class="flex-1">
+            <h2 class="font-semibold text-nova-900">{{ $aiReady ? 'Lassen Sie die KI Ihre ersten Seiten schreiben' : 'Ihre Website mit KI erstellen' }}</h2>
+            <p class="mt-1 text-sm text-slate-700">{{ $aiReady
+                ? 'Beantworten Sie ein paar Fragen zu Ihrem Angebot. Die KI schreibt daraus Entwürfe für Startseite, Leistungen und mehr.'
+                : 'Verbinden Sie Nova CMS mit einer KI Ihrer Wahl, z. B. Claude, ChatGPT oder Mistral. Dann schreibt und verbessert sie Texte für Sie.' }}</p>
         </div>
+        <a href="{{ $aiReady ? route('admin.ai.wizard') : route('admin.ai') }}" class="nova-btn shrink-0">{{ $aiReady ? 'Website-Assistent starten' : 'KI einrichten' }}</a>
     </section>
 @endsection

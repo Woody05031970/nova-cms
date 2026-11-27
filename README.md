@@ -6,6 +6,9 @@ Modulares, KI-gestütztes Content-Management-System für Laien. Selbst gehostet 
 
 - Schritt 1 (Grundgerüst): Web-Installer, Anmeldung, Dashboard mit Website-Gesundheit, Firmenprofil, Plugin-Verwaltung.
 - Schritt 2 (Seiten): Seiten aus Vorlagen anlegen (Startseite, Über uns, Kontakt, Impressum, Datenschutz), Block-Editor mit Text (WYSIWYG), Titelbild, Bild, Slider, Video (YouTube/Vimeo erst nach Klick), Knopf und HTML; Entwürfe, Versionen, Papierkorb, Google-Vorschau, öffentliche Website mit Menü und Footer.
+- Schritt 3 (KI): freie Wahl des KI-Anbieters (Claude über das offizielle Anthropic-PHP-SDK, ChatGPT, Gemini, Mistral, eigener Ollama-Server oder jeder OpenAI-kompatible Dienst), API-Schlüssel verschlüsselt gespeichert, Verbindungstest, Website-Assistent (schreibt die ersten Seiten als Entwurf), KI im Text-Editor (verbessern, kürzen, ausführlicher, Tonfall, Rechtschreibung, Englisch) und Google-Beschreibung per KI.
+
+Plugins können über den Filter `ai.providers` weitere KI-Anbieter ergänzen (`App\Ai\ProviderCatalog`).
 
 Hochgeladene Bilder und Videos liegen in `public/uploads/` (funktioniert ohne Symlinks auf jedem Webspace).
 

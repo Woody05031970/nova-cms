@@ -1,0 +1,1 @@
+import{n as e,r as t}from"./ai--92u3-NP.js";e(t),t.data(`busyForm`,()=>({busy:!1,seconds:0,start(){this.busy=!0,setInterval(()=>this.seconds++,1e3)}})),window.Alpine=t,t.start();
