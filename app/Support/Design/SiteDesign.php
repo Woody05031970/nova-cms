@@ -137,4 +137,18 @@ class SiteDesign
 
         return (0.299 * $r + 0.587 * $g + 0.114 * $b) > 170;
     }
+
+    /** Kontrastverhältnis nach WCAG 2.1 (1 bis 21). Für normalen Text sind mindestens 4,5 nötig. */
+    public static function contrast(string $a, string $b): float
+    {
+        $lum = function (string $hex): float {
+            $c = array_map(fn ($v) => $v / 255, sscanf($hex, '#%02x%02x%02x'));
+            $c = array_map(fn ($v) => $v <= 0.03928 ? $v / 12.92 : (($v + 0.055) / 1.055) ** 2.4, $c);
+
+            return 0.2126 * $c[0] + 0.7152 * $c[1] + 0.0722 * $c[2];
+        };
+        [$l1, $l2] = [$lum($a), $lum($b)];
+
+        return round((max($l1, $l2) + 0.05) / (min($l1, $l2) + 0.05), 2);
+    }
 }

@@ -106,3 +106,65 @@ document.querySelectorAll('video[data-bg-video]').forEach((v) => {
         v.pause();
     }
 });
+
+// Menü auf Handy und Tablet: öffnet über die ganze Breite, schließt mit Esc, Unterpunkte zum Aufklappen
+(() => {
+    const toggle = document.querySelector('[data-menu-toggle]');
+    const menu = document.querySelector('[data-mobile-menu]');
+    if (!toggle || !menu) return;
+    const label = toggle.querySelector('[data-menu-label]');
+    const setOpen = (open, focusBack = false) => {
+        toggle.setAttribute('aria-expanded', String(open));
+        label.textContent = open ? 'Menü schließen' : 'Menü öffnen';
+        menu.hidden = !open;
+        document.documentElement.classList.toggle('nova-menu-open', open);
+        if (open) menu.querySelector('ul a')?.focus();
+        else if (focusBack) toggle.focus();
+    };
+    toggle.addEventListener('click', () => setOpen(toggle.getAttribute('aria-expanded') !== 'true'));
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && toggle.getAttribute('aria-expanded') === 'true') setOpen(false, true);
+    });
+    // Wird das Fenster breit genug für das normale Menü, schließt das Handy-Menü
+    window.matchMedia('(min-width: 1024px)').addEventListener('change', (e) => e.matches && setOpen(false));
+    menu.querySelectorAll('[data-submenu-toggle]').forEach((btn) =>
+        btn.addEventListener('click', () => {
+            const open = btn.getAttribute('aria-expanded') !== 'true';
+            btn.setAttribute('aria-expanded', String(open));
+            document.getElementById(btn.getAttribute('aria-controls')).hidden = !open;
+        }),
+    );
+})();
+
+// Untermenüs am Computer: Esc schließt das geöffnete Untermenü
+document.querySelectorAll('[data-has-submenu]').forEach((box) =>
+    box.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') document.activeElement?.blur();
+    }),
+);
+
+// Formularfehler: Felder als ungültig markieren, Meldung verknüpfen und das erste Feld fokussieren
+(() => {
+    const data = document.getElementById('nova-form-errors');
+    if (!data) return;
+    let errors = {};
+    try { errors = JSON.parse(data.textContent); } catch { return; }
+    let first = null;
+    Object.entries(errors).forEach(([name, messages]) => {
+        document.querySelectorAll(`[name="${CSS.escape(name)}"], [name="${CSS.escape(name)}[]"]`).forEach((field) => {
+            if (field.type === 'hidden') return;
+            field.setAttribute('aria-invalid', 'true');
+            const id = `${field.id || name}-fehler`;
+            if (!document.getElementById(id)) {
+                const p = document.createElement('p');
+                p.id = id;
+                p.className = 'mt-1 text-sm font-medium text-red-700';
+                p.textContent = messages[0];
+                (field.closest('label') || field).insertAdjacentElement('afterend', p);
+            }
+            field.setAttribute('aria-describedby', [field.getAttribute('aria-describedby'), id].filter(Boolean).join(' '));
+            first ??= field;
+        });
+    });
+    first?.focus();
+})();

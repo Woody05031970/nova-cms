@@ -30,6 +30,7 @@ class PageTemplates
             'agb' => ['label' => 'AGB (Shop)', 'description' => 'Allgemeine Geschäftsbedingungen für Ihren Online-Shop.', 'icon' => 'cart'],
             'widerruf' => ['label' => 'Widerrufsbelehrung (Shop)', 'description' => 'Gesetzliches Muster mit Widerrufsformular.', 'icon' => 'cart'],
             'versand' => ['label' => 'Versand und Zahlung (Shop)', 'description' => 'Aus Ihren Shop-Einstellungen befüllt.', 'icon' => 'cart'],
+            'barrierefreiheit' => ['label' => 'Erklärung zur Barrierefreiheit', 'description' => 'Pflichtangaben nach dem Barrierefreiheitsstärkungsgesetz (BFSG).', 'icon' => 'shield'],
         ];
     }
 
@@ -190,7 +191,32 @@ class PageTemplates
                 'show_in_menu' => false,
                 'blocks' => [$text(self::shippingText())],
             ],
+            'barrierefreiheit' => [
+                'title' => 'Erklärung zur Barrierefreiheit',
+                'purpose' => 'accessibility',
+                'show_in_menu' => false,
+                'blocks' => [$text(self::accessibilityText($name, $address, $contact, $missing))],
+            ],
             default => ['title' => 'Neue Seite', 'blocks' => [$text('<p></p>')]],
         };
+    }
+
+    /** Erklärung nach BFSG § 14 und Anlage 3, vorbefüllt mit dem, was Nova CMS von Haus aus leistet. */
+    public static function accessibilityText(string $name, string $address, string $contact, string $missing): string
+    {
+        return '<h2>Unser Ziel</h2><p>'.$name.' möchte, dass alle Menschen diese Website und unseren Online-Shop nutzen können, auch mit Seh-, Hör- oder motorischen Einschränkungen. Grundlage sind das Barrierefreiheitsstärkungsgesetz (BFSG) und die Web-Richtlinien WCAG 2.1 Stufe AA (EN 301 549).</p>'
+            .'<h2>Stand der Barrierefreiheit</h2><p>Diese Website ist <strong>weitgehend barrierefrei</strong>. Stand dieser Erklärung: '.now()->format('d.m.Y').'.</p>'
+            .'<h2>So unterstützt Sie diese Website</h2><ul>'
+            .'<li>Alle Seiten lassen sich vollständig mit der Tastatur bedienen. Ein Link „Zum Inhalt springen“ führt direkt zum Hauptinhalt, der Fokus ist immer deutlich sichtbar.</li>'
+            .'<li>Überschriften, Menüs und Bereiche sind so ausgezeichnet, dass Screenreader sie vorlesen und Sie gezielt springen können.</li>'
+            .'<li>Bilder haben Textbeschreibungen, Formularfelder sind beschriftet und Fehlermeldungen werden vorgelesen.</li>'
+            .'<li>Texte lassen sich auf 200 % vergrößern, die Darstellung passt sich Smartphone, Tablet und Computer an.</li>'
+            .'<li>Bewegungen und Hintergrundvideos werden angehalten, wenn Sie in Ihrem Gerät „Bewegung reduzieren“ eingestellt haben.</li>'
+            .'<li>Externe Videos werden erst nach Ihrem Klick geladen.</li>'
+            .'</ul>'
+            .'<h2>Bekannte Einschränkungen</h2><p>[Bitte ergänzen, falls zutreffend, z. B.: Ältere PDF-Dokumente sind noch nicht barrierefrei. Videos haben noch keine Untertitel. Wir arbeiten daran.]</p>'
+            .'<h2>Barriere melden</h2><p>Ist Ihnen eine Barriere aufgefallen, oder benötigen Sie Inhalte in einer anderen Form? Schreiben Sie uns, wir antworten so schnell wie möglich:<br>'.$name.'<br>'.($address ?: $missing).'<br>'.($contact ?: $missing).'</p>'
+            .'<h2>Zuständige Marktüberwachungsbehörde</h2><p>Wenn Sie mit unserer Antwort nicht zufrieden sind, können Sie sich an die Marktüberwachungsstelle der Länder für die Barrierefreiheit von Produkten und Dienstleistungen (MLBF) in Magdeburg wenden.</p>'
+            .'<p><em>Hinweis: Diese Vorlage ersetzt keine Rechtsberatung. Kleinstunternehmen mit weniger als 10 Beschäftigten und höchstens 2 Mio. Euro Jahresumsatz sind bei Dienstleistungen von den BFSG-Pflichten ausgenommen. Prüfen Sie die Angaben mit dem Barrierefreiheits-Check in der Verwaltung.</em></p>';
     }
 }

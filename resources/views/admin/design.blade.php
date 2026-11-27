@@ -58,15 +58,19 @@
                 <h2 class="font-semibold">Farben</h2>
                 <div class="grid gap-4 sm:grid-cols-2">
                     <div>
-                        <label class="nova-label">Hauptfarbe</label>
-                        <div class="flex items-center gap-2"><input type="color" name="brand" x-model="s.brand" class="h-10 w-14 cursor-pointer rounded-lg border border-slate-200 bg-white p-1"><input class="nova-input font-mono" x-model="s.brand" maxlength="7"></div>
+                        <label class="nova-label" for="brand-hex">Hauptfarbe</label>
+                        <div class="flex items-center gap-2"><input type="color" name="brand" x-model="s.brand" class="h-10 w-14 cursor-pointer rounded-lg border border-slate-200 bg-white p-1" aria-label="Hauptfarbe auswählen"><input id="brand-hex" class="nova-input font-mono" x-model="s.brand" maxlength="7"></div>
+                        <p class="mt-2 flex items-center gap-1.5 text-xs" :class="contrast(s.brand) >= 4.5 ? 'text-emerald-700' : 'text-red-700'" aria-live="polite" data-contrast>
+                            <span class="inline-flex h-5 items-center rounded px-1.5 font-semibold text-white" :style="'background:' + s.brand" aria-hidden="true">Aa</span>
+                            <span x-text="contrast(s.brand) >= 4.5 ? 'Gut lesbar (Kontrast ' + contrast(s.brand).toFixed(1).replace('.', ',') + ' : 1)' : 'Zu hell für weiße Schrift (Kontrast ' + contrast(s.brand).toFixed(1).replace('.', ',') + ' : 1, nötig sind 4,5). Bitte dunkler wählen.'"></span>
+                        </p>
                         <div class="mt-2 flex flex-wrap gap-1.5">
                             <template x-for="c in ['#5a37f5','#0369a1','#15803d','#b91c1c','#c2410c','#be185d','#0f766e','#111827']"><button type="button" class="size-6 rounded-full ring-2 ring-white shadow" :style="'background:' + c" @click="s.brand = c" :title="c"></button></template>
                         </div>
                     </div>
                     <div :class="!pro && 'opacity-60'">
                         <label class="nova-label">Akzentfarbe für Verläufe <span x-show="!pro" class="rounded bg-amber-100 px-1.5 text-[10px] font-semibold text-amber-800">Pro</span></label>
-                        <div class="flex items-center gap-2"><input type="color" name="accent" x-model="s.accent" :disabled="!pro" class="h-10 w-14 cursor-pointer rounded-lg border border-slate-200 bg-white p-1"><input class="nova-input font-mono" x-model="s.accent" :disabled="!pro" maxlength="7"></div>
+                        <div class="flex items-center gap-2"><input type="color" name="accent" x-model="s.accent" :disabled="!pro" class="h-10 w-14 cursor-pointer rounded-lg border border-slate-200 bg-white p-1"><input class="nova-input font-mono" x-model="s.accent" :disabled="!pro" maxlength="7" aria-label="Akzentfarbe als Farbcode"></div>
                     </div>
                 </div>
             </section>
@@ -159,6 +163,13 @@
         Alpine.data('designEditor', (cfg) => ({
             s: { ...cfg.state, show_name: !!cfg.state.show_name, heading_font: cfg.state.heading_font || '' },
             themes: cfg.themes, pro: cfg.pro, logoPreview: cfg.logo, removeLogo: false, loading: true, scale: 0.5, timer: null,
+            // Kontrast weißer Schrift auf der Farbe nach WCAG 2.1
+            contrast(hex) {
+                if (!/^#[0-9a-f]{6}$/i.test(hex || '')) return 21;
+                const l = [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16) / 255).map((v) => (v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4));
+                const lum = 0.2126 * l[0] + 0.7152 * l[1] + 0.0722 * l[2];
+                return 1.05 / (lum + 0.05);
+            },
             init() {
                 const fit = () => (this.scale = Math.min(1, this.$refs.box.clientWidth / 1280));
                 new ResizeObserver(fit).observe(this.$refs.box); fit();

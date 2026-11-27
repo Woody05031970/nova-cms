@@ -37,6 +37,11 @@ class Page extends Model
             if ($page->wasRecentlyCreated || $page->wasChanged('show_in_menu')) {
                 $page->show_in_menu ? MenuItem::addPage($page) : MenuItem::removePage($page);
             }
+            // Neue Adresse einer veröffentlichten Seite: alte Links und Google-Treffer leiten weiter
+            $previous = $page->getPrevious();
+            if (isset($previous['slug']) && $page->wasChanged('slug') && ($previous['status'] ?? $page->status) === 'published' && ! $page->is_home) {
+                Redirect::remember('/'.$previous['slug'], '/'.$page->slug);
+            }
         });
     }
 

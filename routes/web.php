@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Admin\AccessibilityController;
 use App\Http\Controllers\Admin\AccountController;
 use App\Http\Controllers\Admin\AiController;
 use App\Http\Controllers\Admin\ContactMessageController;
@@ -16,6 +17,7 @@ use App\Http\Controllers\Admin\PluginController;
 use App\Http\Controllers\Admin\SearchController;
 use App\Http\Controllers\Admin\SecurityController;
 use App\Http\Controllers\Admin\SeoController;
+use App\Http\Controllers\Admin\SeoToolsController;
 use App\Http\Controllers\Admin\SettingsController;
 use App\Http\Controllers\Admin\Shop\OrderController as ShopOrderController;
 use App\Http\Controllers\Admin\Shop\ProductController as ShopProductController;
@@ -28,6 +30,7 @@ use App\Http\Controllers\ContactController;
 use App\Http\Controllers\InstallController;
 use App\Http\Controllers\LicenseApiController;
 use App\Http\Controllers\NewsletterController;
+use App\Http\Controllers\SearchController as SiteSearchController;
 use App\Http\Controllers\SeoFileController;
 use App\Http\Controllers\ShopController;
 use App\Http\Controllers\SiteController;
@@ -48,6 +51,7 @@ Route::prefix('install')->name('install.')->group(function () {
 
 Route::get('/', [SiteController::class, 'home'])->name('home');
 Route::get('/robots.txt', [SeoFileController::class, 'robots'])->name('robots');
+Route::get('/suche', SiteSearchController::class)->middleware('throttle:60,1')->name('search');
 Route::get('/sitemap.xml', [SeoFileController::class, 'sitemap'])->name('sitemap');
 Route::post('/kontakt/nachricht', ContactController::class)->middleware('throttle:5,1')->name('contact.send');
 Route::middleware('feature:newsletter')->group(function () {
@@ -154,6 +158,15 @@ Route::middleware(['auth', 'admin', LicenseGate::class])->prefix('admin')->name(
     Route::post('/seo/pruefen', [SeoController::class, 'analyse'])->middleware('throttle:120,1')->name('seo.analyse');
     Route::post('/seo/suchbegriffe', [SeoController::class, 'keywords'])->middleware('throttle:20,1')->name('seo.keywords');
     Route::post('/seo/vergleich', [SeoController::class, 'compare'])->middleware('throttle:10,1')->name('seo.compare');
+    Route::get('/seo/mitbewerber', [SeoToolsController::class, 'competitors'])->name('seo.competitors');
+    Route::post('/seo/mitbewerber', [SeoToolsController::class, 'addCompetitor'])->middleware('throttle:10,1')->name('seo.competitors.store');
+    Route::post('/seo/mitbewerber/{competitor}/aktualisieren', [SeoToolsController::class, 'refreshCompetitor'])->middleware('throttle:10,1')->name('seo.competitors.refresh');
+    Route::delete('/seo/mitbewerber/{competitor}', [SeoToolsController::class, 'removeCompetitor'])->name('seo.competitors.destroy');
+    Route::post('/seo/massnahmen', [SeoToolsController::class, 'toggleMeasure'])->name('seo.measures.toggle');
+    Route::get('/seo/weiterleitungen', [SeoToolsController::class, 'redirects'])->name('seo.redirects');
+    Route::post('/seo/weiterleitungen', [SeoToolsController::class, 'storeRedirect'])->name('seo.redirects.store');
+    Route::delete('/seo/weiterleitungen/{redirect}', [SeoToolsController::class, 'destroyRedirect'])->name('seo.redirects.destroy');
+    Route::delete('/seo/nicht-gefunden', [SeoToolsController::class, 'clearNotFound'])->name('seo.notfound.clear');
 
     Route::get('/shop', [AdminShopController::class, 'index'])->name('shop.index');
     Route::get('/shop/einstellungen', [AdminShopController::class, 'settings'])->name('shop.settings');
@@ -169,6 +182,8 @@ Route::middleware(['auth', 'admin', LicenseGate::class])->prefix('admin')->name(
     Route::get('/shop/bestellungen/{order}/rechnung', [ShopOrderController::class, 'invoice'])->name('shop.orders.invoice');
     Route::post('/ki/produkt', [AiController::class, 'productText'])->middleware('throttle:30,1')->name('ai.product');
 
+    Route::get('/barrierefreiheit', [AccessibilityController::class, 'index'])->name('accessibility');
+    Route::post('/barrierefreiheit/erklaerung', [AccessibilityController::class, 'statement'])->name('accessibility.statement');
     Route::get('/sicherheit', [SecurityController::class, 'index'])->name('security');
     Route::post('/sicherheit/pruefen', [SecurityController::class, 'scan'])->middleware('throttle:10,1')->name('security.scan');
     Route::post('/sicherheit/beheben', [SecurityController::class, 'fix'])->name('security.fix');
@@ -186,6 +201,7 @@ Route::middleware(['auth', 'admin', LicenseGate::class])->prefix('admin')->name(
 
     Route::get('/einstellungen', [SettingsController::class, 'edit'])->name('settings');
     Route::put('/einstellungen', [SettingsController::class, 'update'])->name('settings.update');
+    Route::put('/einstellungen/website', [SettingsController::class, 'website'])->name('settings.website');
     Route::put('/einstellungen/email', [SettingsController::class, 'mail'])->name('settings.mail');
     Route::post('/einstellungen/email/test', [SettingsController::class, 'testMail'])->middleware('throttle:5,1')->name('settings.mail.test');
 

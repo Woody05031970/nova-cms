@@ -129,6 +129,7 @@ class NovaSalesSite
     {
         return DB::transaction(function () {
             $added = $this->products();
+            $this->legalPages(); // z. B. die Erklärung zur Barrierefreiheit aus Version 0.5
             foreach (self::LICENSES as $slug => [, , $domains, , $modules]) {
                 $p = Product::where('slug', $slug)->first();
                 $p?->update(['license_spec' => ['modules' => $modules] + ($p->license_spec ?? ['core' => true, 'max_domains' => $domains, 'update_months' => 12])]);
@@ -216,7 +217,7 @@ class NovaSalesSite
     /** Rechtstexte aus den Vorlagen, sofern es sie noch nicht gibt */
     private function legalPages(): void
     {
-        foreach (['impressum', 'datenschutz', 'agb', 'widerruf'] as $tpl) {
+        foreach (['impressum', 'datenschutz', 'agb', 'widerruf', 'barrierefreiheit'] as $tpl) {
             $data = PageTemplates::make($tpl);
             if (Page::where('purpose', $data['purpose'])->exists()) {
                 continue;

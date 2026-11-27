@@ -23,7 +23,7 @@
     "name": "sortable.esm"
   },
   "resources/css/app.css": {
-    "file": "assets/app-DKSy6phF.css",
+    "file": "assets/app-CioXrkGp.css",
     "name": "app",
     "names": [
       "app.css"
@@ -32,7 +32,7 @@
     "isEntry": true
   },
   "resources/js/admin.js": {
-    "file": "assets/admin-B0-RYlvE.js",
+    "file": "assets/admin-hiLN5jda.js",
     "name": "admin",
     "src": "resources/js/admin.js",
     "isEntry": true
@@ -83,7 +83,7 @@
     ]
   },
   "resources/js/site.js": {
-    "file": "assets/site-B7WOsT4F.js",
+    "file": "assets/site-DGdv4leZ.js",
     "name": "site",
     "src": "resources/js/site.js",
     "isEntry": true

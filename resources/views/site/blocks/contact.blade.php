@@ -14,7 +14,7 @@
                 <input type="hidden" name="page" value="{{ $pageId ?? '' }}">
                 <input type="hidden" name="_t" value="{{ encrypt(now()->getTimestamp()) }}">
                 <div class="hidden" aria-hidden="true"><label>Website <input name="website" tabindex="-1" autocomplete="off"></label></div>
-                @if ($errors->has('contact'))<p class="rounded-lg bg-red-50 px-4 py-3 text-sm text-red-800 sm:col-span-2">{{ $errors->first('contact') }}</p>@endif
+                @if ($errors->has('contact'))<p class="rounded-lg bg-red-50 px-4 py-3 text-sm text-red-800 sm:col-span-2" role="alert">{{ $errors->first('contact') }}</p>@endif
                 <div>
                     <label class="nova-label" for="c-name">Ihr Name</label>
                     <input class="nova-input" id="c-name" name="name" required maxlength="120" autocomplete="name" value="{{ old('name') }}">
@@ -34,7 +34,6 @@
                 <div class="sm:col-span-2">
                     <label class="nova-label" for="c-message">Ihre Nachricht</label>
                     <textarea class="nova-input" id="c-message" name="message" rows="5" required maxlength="5000">{{ old('message') }}</textarea>
-                    @error('message')<p class="mt-1 text-sm text-red-700">{{ $message }}</p>@enderror
                 </div>
                 <label class="flex items-start gap-2 text-sm text-slate-600 sm:col-span-2">
                     <input type="checkbox" name="consent" value="1" required class="mt-1 accent-nova-600">

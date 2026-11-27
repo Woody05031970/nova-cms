@@ -54,6 +54,27 @@
         <div class="flex justify-end"><button class="nova-btn">Speichern</button></div>
     </form>
 
+    <form method="POST" action="{{ route('admin.settings.website') }}" class="nova-card mt-8 space-y-5" id="website">
+        @csrf @method('PUT')
+        <div>
+            <h2 class="text-base font-semibold">Website</h2>
+            <p class="mt-1 text-sm text-slate-500">Wartungsmodus für Umbauten und die Suchfunktion für Ihre Besucher.</p>
+        </div>
+        <label class="flex items-start gap-3">
+            <input type="checkbox" name="maintenance_mode" value="1" class="mt-1 size-4 accent-nova-600" @checked(\App\Models\Setting::get('maintenance_mode') === '1')>
+            <span><span class="font-medium">Wartungsmodus</span><span class="block text-sm text-slate-500">Besucher sehen „Wir sind gleich zurück“. Google erfährt, dass die Pause nur kurz ist. Angemeldete Administratoren sehen die Website wie gewohnt.</span></span>
+        </label>
+        <div>
+            <label class="nova-label" for="maintenance_message">Hinweis für Besucher (optional)</label>
+            <input class="nova-input" id="maintenance_message" name="maintenance_message" maxlength="300" value="{{ \App\Models\Setting::get('maintenance_message') }}" placeholder="Wir bauen gerade um und sind in Kürze wieder für Sie da.">
+        </div>
+        <label class="flex items-start gap-3">
+            <input type="checkbox" name="site_search" value="1" class="mt-1 size-4 accent-nova-600" @checked(\App\Models\Setting::get('site_search', '1') === '1')>
+            <span><span class="font-medium">Suche auf der Website anzeigen</span><span class="block text-sm text-slate-500">Lupe in der Kopfzeile und Suchfeld im Handy-Menü. Durchsucht Seiten und Produkte.</span></span>
+        </label>
+        <div class="flex justify-end"><button class="nova-btn" data-save-website>Speichern</button></div>
+    </form>
+
     <form method="POST" action="{{ route('admin.settings.mail') }}" class="nova-card mt-8 space-y-5" x-data="{ mode: @js(old('mail_mode', $mail['mail_mode'] ?? '')) }">
         @csrf @method('PUT')
         <div>
