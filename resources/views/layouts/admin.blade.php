@@ -1,7 +1,7 @@
 @php
     $core = [
         ['label' => 'Dashboard', 'url' => route('admin.dashboard'), 'icon' => 'home', 'order' => 0, 'active' => 'admin.dashboard'],
-        ['label' => 'Seiten', 'url' => null, 'icon' => 'pages', 'order' => 10, 'soon' => true],
+        ['label' => 'Seiten', 'url' => route('admin.pages.index'), 'icon' => 'pages', 'order' => 10, 'active' => 'admin.pages.*'],
         ['label' => 'Medien', 'url' => null, 'icon' => 'image', 'order' => 20, 'soon' => true],
         ['label' => 'KI-Assistent', 'url' => null, 'icon' => 'sparkles', 'order' => 30, 'soon' => true],
         ['label' => 'Shop', 'url' => null, 'icon' => 'cart', 'order' => 40, 'soon' => true],
@@ -22,8 +22,10 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="robots" content="noindex">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title', 'Verwaltung') · {{ $siteName }}</title>
     @vite(['resources/css/app.css'])
+    @stack('head')
 </head>
 <body class="min-h-screen bg-slate-50 font-sans text-slate-900 antialiased">
     <div class="lg:flex">
@@ -75,7 +77,7 @@
         </aside>
 
         <main class="min-w-0 flex-1 px-4 py-8 sm:px-8 lg:px-10">
-            <div class="mx-auto max-w-5xl">
+            <div class="mx-auto @yield('width', 'max-w-5xl')">
                 <x-alerts />
                 @yield('content')
             </div>

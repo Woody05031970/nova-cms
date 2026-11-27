@@ -26,3 +26,4 @@ Homestead.yaml
 Thumbs.db
 /plugins/*
 !/plugins/.gitkeep
+/public/uploads

@@ -1,11 +1,13 @@
 <?php
 
 use App\Http\Controllers\Admin\DashboardController;
+use App\Http\Controllers\Admin\PageController;
+use App\Http\Controllers\Admin\UploadController;
 use App\Http\Controllers\Admin\PluginController;
 use App\Http\Controllers\Admin\SettingsController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\InstallController;
-use App\Models\Setting;
+use App\Http\Controllers\SiteController;
 use Illuminate\Support\Facades\Route;
 
 // Installations-Assistent (nur erreichbar, solange Nova CMS nicht installiert ist)
@@ -18,10 +20,7 @@ Route::prefix('install')->name('install.')->group(function () {
     Route::get('/fertig', [InstallController::class, 'done'])->name('done');
 });
 
-// Öffentliche Website (wird in Schritt 2 durch echte Seiten ersetzt)
-Route::get('/', fn () => view('site.home', [
-    'tagline' => Setting::get('tagline'),
-]))->name('home');
+Route::get('/', [SiteController::class, 'home'])->name('home');
 
 // Anmeldung
 Route::middleware('guest')->group(function () {
@@ -34,6 +33,18 @@ Route::post('/admin/logout', [LoginController::class, 'logout'])->middleware('au
 Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/', DashboardController::class)->name('dashboard');
 
+    Route::get('/seiten', [PageController::class, 'index'])->name('pages.index');
+    Route::post('/seiten', [PageController::class, 'store'])->name('pages.store');
+    Route::get('/seiten/{page}', [PageController::class, 'edit'])->name('pages.edit');
+    Route::put('/seiten/{page}', [PageController::class, 'update'])->name('pages.update');
+    Route::get('/seiten/{page}/vorschau', [PageController::class, 'preview'])->name('pages.preview');
+    Route::post('/seiten/{page}/versionen/{revision}', [PageController::class, 'restoreRevision'])->name('pages.revisions.restore');
+    Route::delete('/seiten/{page}', [PageController::class, 'destroy'])->name('pages.destroy');
+    Route::post('/papierkorb/{id}', [PageController::class, 'restore'])->whereNumber('id')->name('pages.restore');
+    Route::delete('/papierkorb/{id}', [PageController::class, 'forceDelete'])->whereNumber('id')->name('pages.force-delete');
+
+    Route::post('/uploads', [UploadController::class, 'store'])->middleware('throttle:60,1')->name('uploads.store');
+
     Route::get('/einstellungen', [SettingsController::class, 'edit'])->name('settings');
     Route::put('/einstellungen', [SettingsController::class, 'update'])->name('settings.update');
 
@@ -43,3 +54,8 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::post('/plugins/{slug}/deaktivieren', [PluginController::class, 'deactivate'])->name('plugins.deactivate');
     Route::delete('/plugins/{slug}', [PluginController::class, 'destroy'])->name('plugins.destroy');
 });
+
+// Öffentliche Seiten, z. B. /ueber-uns. Muss als letzte Route stehen.
+Route::get('/{slug}', [SiteController::class, 'show'])
+    ->where('slug', '[a-z0-9]+(?:-[a-z0-9]+)*')
+    ->name('page.show');

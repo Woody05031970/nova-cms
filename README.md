@@ -2,7 +2,12 @@
 
 Modulares, KI-gestütztes Content-Management-System für Laien. Selbst gehostet auf normalem Webspace (z. B. IONOS, Strato), erweiterbar über Plugins.
 
-**Stand:** Schritt 1 (Grundgerüst): Web-Installer, Anmeldung, Dashboard mit Website-Gesundheit, Firmenprofil, Plugin-Verwaltung.
+**Stand:**
+
+- Schritt 1 (Grundgerüst): Web-Installer, Anmeldung, Dashboard mit Website-Gesundheit, Firmenprofil, Plugin-Verwaltung.
+- Schritt 2 (Seiten): Seiten aus Vorlagen anlegen (Startseite, Über uns, Kontakt, Impressum, Datenschutz), Block-Editor mit Text (WYSIWYG), Titelbild, Bild, Slider, Video (YouTube/Vimeo erst nach Klick), Knopf und HTML; Entwürfe, Versionen, Papierkorb, Google-Vorschau, öffentliche Website mit Menü und Footer.
+
+Hochgeladene Bilder und Videos liegen in `public/uploads/` (funktioniert ohne Symlinks auf jedem Webspace).
 
 ## Installation auf einem Webspace
 

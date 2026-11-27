@@ -37,3 +37,28 @@
         @apply rounded-xl border border-slate-200 bg-white p-6 shadow-xs;
     }
 }
+
+[x-cloak] { display: none !important; }
+
+/* Formatierter Text (Editor und Website) */
+.nova-prose { @apply text-slate-800 leading-relaxed; }
+.nova-prose > * + * { @apply mt-4; }
+.nova-prose h2 { @apply text-2xl font-semibold tracking-tight text-slate-900; }
+.nova-prose h3 { @apply text-xl font-semibold text-slate-900; }
+.nova-prose h4 { @apply text-lg font-semibold text-slate-900; }
+.nova-prose a { @apply text-nova-700 underline underline-offset-2; }
+.nova-prose ul { @apply list-disc pl-6; }
+.nova-prose ol { @apply list-decimal pl-6; }
+.nova-prose li > p { @apply m-0; }
+.nova-prose blockquote { @apply border-l-4 border-nova-200 pl-4 text-slate-600 italic; }
+.nova-prose code { @apply rounded bg-slate-100 px-1 py-0.5 text-sm; }
+.nova-prose pre { @apply overflow-x-auto rounded-lg bg-slate-900 p-4 text-sm text-slate-100; }
+.nova-prose hr { @apply border-slate-200; }
+.ProseMirror p.is-editor-empty:first-child::before { content: attr(data-placeholder); @apply pointer-events-none float-left h-0 text-slate-400; }
+.cm-editor { max-height: 420px; }
+.cm-editor.cm-focused { outline: none; }
+
+/* Slider auf der Website */
+.nova-slider-track { scroll-snap-type: x mandatory; scrollbar-width: none; }
+.nova-slider-track::-webkit-scrollbar { display: none; }
+.nova-slider-track > * { scroll-snap-align: start; }

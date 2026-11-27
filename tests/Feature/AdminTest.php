@@ -59,7 +59,7 @@ class AdminTest extends TestCase
             ->assertOk()
             ->assertSee('Website-Gesundheit')
             ->assertSee('Kurzbeschreibung ergänzen')
-            ->assertSee('1 von 5 Punkten erledigt');
+            ->assertSee('1 von 9 Punkten erledigt');
     }
 
     public function test_einstellungen_speichern_erhoeht_den_gesundheitswert(): void
@@ -72,7 +72,7 @@ class AdminTest extends TestCase
             'phone' => '0221 123', 'contact_email' => 'info@example.com',
         ])->assertSessionHasNoErrors();
 
-        $this->actingAs($admin)->get('/admin')->assertSee('Alles erledigt')->assertSee('100');
+        $this->actingAs($admin)->get('/admin')->assertDontSee('Kurzbeschreibung ergänzen')->assertSee('5 von 9 Punkten erledigt');
         $this->get('/')->assertSee('Bäckerei Müller')->assertSee('Brot seit 1952');
     }
 }
