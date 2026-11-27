@@ -10,11 +10,14 @@
     $env = $base.'/.env';
     $example = $base.'/.env.example';
 
-    if (file_exists($env) || ! file_exists($example)) {
+    if (file_exists($env)) {
         return;
     }
 
-    $content = file_get_contents($example);
+    // Fehlt die Vorlage (manche FTP-Programme lassen Dateien mit Punkt weg), reicht eine Grundeinstellung
+    $content = file_exists($example) ? file_get_contents($example)
+        : "APP_NAME=\"Nova CMS\"\nAPP_ENV=production\nAPP_KEY=\nAPP_DEBUG=false\nAPP_URL=http://localhost\nAPP_LOCALE=de\nAPP_FALLBACK_LOCALE=de\n"
+        ."LOG_CHANNEL=stack\nLOG_STACK=single\nLOG_LEVEL=error\nDB_CONNECTION=sqlite\nSESSION_DRIVER=file\nCACHE_STORE=file\nQUEUE_CONNECTION=sync\nMAIL_MAILER=log\n";
     $key = 'base64:'.base64_encode(random_bytes(32));
     $content = preg_replace('/^APP_KEY=.*$/m', 'APP_KEY='.$key, $content);
 
