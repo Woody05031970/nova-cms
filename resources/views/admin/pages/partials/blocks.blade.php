@@ -20,6 +20,23 @@
             <span class="mx-1 w-px bg-slate-200"></span>
             <button type="button" class="{{ $tb }} text-slate-500" @click="run('undo')" title="Rückgängig">↶</button>
             <button type="button" class="{{ $tb }} text-slate-500" @click="run('redo')" title="Wiederholen">↷</button>
+            <div class="relative ml-auto" @click.outside="aiOpen = false" @keydown.escape="aiOpen = false">
+                <template x-if="ai.enabled">
+                    <button type="button" class="inline-flex items-center gap-1 rounded-md bg-nova-50 px-2.5 py-1 text-sm font-medium text-nova-700 hover:bg-nova-100 disabled:opacity-60"
+                            @click="aiOpen = !aiOpen" :disabled="aiBusy" :aria-expanded="aiOpen" title="Text mit KI bearbeiten. Markieren Sie vorher etwas, wird nur die Markierung bearbeitet.">
+                        <x-icon name="sparkles" class="size-4" ::class="aiBusy && 'animate-pulse'" /><span x-text="aiBusy ? 'KI arbeitet …' : 'KI'"></span>
+                    </button>
+                </template>
+                <template x-if="!ai.enabled">
+                    <a :href="ai.setupUrl" class="inline-flex items-center gap-1 rounded-md px-2.5 py-1 text-sm text-slate-500 hover:bg-slate-100" title="KI-Anbieter einrichten, um Texte verbessern zu lassen"><x-icon name="sparkles" class="size-4" />KI einrichten</a>
+                </template>
+                <div x-show="aiOpen" x-transition.origin.top.right class="absolute right-0 z-30 mt-1 w-56 rounded-lg border border-slate-200 bg-white py-1 shadow-lg" role="menu">
+                    <p class="px-3 pt-1 pb-2 text-xs text-slate-500">Gilt für die Markierung oder den ganzen Block.</p>
+                    <template x-for="(label, key) in ai.actions" :key="key">
+                        <button type="button" role="menuitem" class="block w-full px-3 py-1.5 text-left text-sm hover:bg-nova-50 hover:text-nova-700" @mousedown.prevent @click="aiRun(key)" x-text="label"></button>
+                    </template>
+                </div>
+            </div>
         </div>
         <div x-ref="ed"></div>
     </div>

@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Ai\AiManager;
 use App\Models\Page;
 use App\Models\Setting;
 use App\Plugins\Hooks;
@@ -16,6 +17,7 @@ class AppServiceProvider extends ServiceProvider
     {
         $this->app->singleton(Hooks::class);
         $this->app->singleton(PluginManager::class);
+        $this->app->singleton(AiManager::class);
 
         if (InstallState::isInstalled()) {
             $this->app->make(PluginManager::class)->registerEnabled();
@@ -54,6 +56,9 @@ class AppServiceProvider extends ServiceProvider
             fn () => Setting::get('contact_email') !== null && Setting::get('phone') !== null, $profile, 'Rechtliches');
         $hooks->addHint('Branche angeben', 'Damit kann die KI später passende Seiten und Texte vorschlagen.',
             fn () => Setting::get('industry') !== null, $profile, 'KI');
+
+        $hooks->addHint('KI-Anbieter einrichten', 'Dann schreibt die KI Texte, Google-Beschreibungen und Ihre ersten Seiten.',
+            fn () => $this->app->make(AiManager::class)->isConfigured(), url('admin/ki'), 'KI');
 
         $pages = url('admin/seiten');
         $hooks->addHint('Startseite veröffentlichen', 'Ohne Startseite sehen Besucher nur einen Platzhalter.',

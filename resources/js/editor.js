@@ -3,6 +3,7 @@ import { Editor } from '@tiptap/core';
 import StarterKit from '@tiptap/starter-kit';
 import { EditorView, basicSetup } from 'codemirror';
 import { html as htmlLang } from '@codemirror/lang-html';
+import { aiPost, registerAi } from './ai.js';
 
 const uid = () => Math.random().toString(36).slice(2, 12);
 
@@ -17,6 +18,7 @@ const DEFAULTS = {
 };
 
 const csrf = () => document.querySelector('meta[name=csrf-token]').content;
+let AI = { enabled: false };
 
 async function upload(file, kind = 'image') {
     const body = new FormData();
@@ -35,6 +37,9 @@ async function upload(file, kind = 'image') {
 }
 
 Alpine.data('pageEditor', (cfg) => ({
+    ai: (AI = cfg.ai),
+    aiBusy: false,
+    aiNotice: '',
     blocks: cfg.blocks.length ? cfg.blocks : [{ id: uid(), type: 'text', data: DEFAULTS.text() }],
     title: cfg.title,
     slug: cfg.slug,
@@ -128,6 +133,27 @@ Alpine.data('pageEditor', (cfg) => ({
         const clean = text.replace(/\s+/g, ' ').trim();
         this.metaDescription = clean.length > 155 ? clean.slice(0, 152).replace(/\s+\S*$/, '') + ' …' : clean;
     },
+    pageText() {
+        const div = document.createElement('div');
+        div.innerHTML = this.blocks.map((b) => {
+            if (b.type === 'text') return b.data.html.replace(/<\/(p|h\d|li|blockquote)>/g, '$& ');
+            if (b.type === 'hero') return `<p>${b.data.title || ''}. ${b.data.text || ''}</p>`;
+            return '';
+        }).join(' ');
+        return div.textContent.replace(/\s+/g, ' ').trim();
+    },
+    async descriptionWithAi() {
+        this.error = '';
+        this.aiBusy = true;
+        try {
+            const json = await aiPost(this.ai.descriptionUrl, { title: this.metaTitle || this.title, text: this.pageText() });
+            this.metaDescription = json.description;
+        } catch (e) {
+            this.error = e.message;
+        } finally {
+            this.aiBusy = false;
+        }
+    },
     counterClass(len, min, max) {
         if (len === 0) return 'text-slate-400';
         return len < min || len > max ? 'text-amber-600' : 'text-emerald-600';
@@ -169,6 +195,32 @@ Alpine.data('richText', (block) => {
         run(cmd, ...args) {
             editor.chain().focus()[cmd](...args).run();
         },
+        aiOpen: false,
+        aiBusy: false,
+        async aiRun(action) {
+            this.aiOpen = false;
+            const { from, to, empty } = editor.state.selection;
+            // Mit Markierung wird nur der markierte Text bearbeitet, sonst der ganze Block.
+            const input = empty ? editor.getHTML() : editor.state.doc.textBetween(from, to, '\n');
+            if (!input.replace(/<[^>]*>/g, '').trim()) {
+                this.$dispatch('ai-error', 'Dieser Block ist noch leer. Schreiben Sie zuerst ein paar Worte.');
+                return;
+            }
+            this.aiBusy = true;
+            editor.setEditable(false);
+            try {
+                const json = await aiPost(AI.rewriteUrl, { action, html: input });
+                editor.setEditable(true);
+                if (empty) editor.chain().focus().setContent(json.html, { emitUpdate: true }).run();
+                else editor.chain().focus().insertContentAt({ from, to }, json.html).run();
+                this.$dispatch('ai-done');
+            } catch (e) {
+                this.$dispatch('ai-error', e.message);
+            } finally {
+                editor.setEditable(true);
+                this.aiBusy = false;
+            }
+        },
         link() {
             const prev = editor.getAttributes('link').href || '';
             const url = window.prompt('Wohin soll der Link führen? (z. B. /kontakt oder https://…)', prev);
@@ -197,5 +249,6 @@ Alpine.data('codeEditor', (block) => {
     };
 });
 
+registerAi(Alpine);
 window.Alpine = Alpine;
 Alpine.start();
