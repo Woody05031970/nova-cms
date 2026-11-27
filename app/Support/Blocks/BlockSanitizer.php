@@ -160,11 +160,18 @@ class BlockSanitizer
         if ($this->purifier === null) {
             $config = HTMLPurifier_Config::createDefault();
             $config->set('Cache.SerializerPath', storage_path('framework/cache'));
-            $config->set('HTML.Allowed', 'p,br,strong,b,em,i,u,s,a[href|target|rel],ul,ol,li,h2,h3,h4,blockquote,code,pre,hr');
+            $config->set('HTML.Allowed', 'p[style],br,strong,b,em,i,u,s,mark,sub,sup,a[href|target|rel],ul,ol,li,h2[style],h3[style],h4[style],blockquote,code,pre,hr,'
+                .'img[src|alt|width|height],table,colgroup,col,thead,tbody,tr,th[colspan|rowspan|style],td[colspan|rowspan|style]');
+            $config->set('CSS.AllowedProperties', ['text-align']);
+            $config->set('HTML.DefinitionID', 'nova-text');
+            $config->set('HTML.DefinitionRev', 2);
             $config->set('Attr.AllowedFrameTargets', ['_blank']);
             $config->set('HTML.TargetBlank', false);
             $config->set('URI.AllowedSchemes', ['http' => true, 'https' => true, 'mailto' => true, 'tel' => true]);
             $config->set('AutoFormat.RemoveEmpty', true);
+            if ($def = $config->maybeGetRawHTMLDefinition()) {
+                $def->addElement('mark', 'Inline', 'Inline', 'Common'); // Textmarker
+            }
             $this->purifier = new HTMLPurifier($config);
         }
 

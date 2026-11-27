@@ -1,5 +1,5 @@
 @php
-    $menu = \App\Models\Page::published()->where('show_in_menu', true)->orderByDesc('is_home')->orderBy('menu_order')->orderBy('title')->get(['id', 'title', 'slug', 'is_home']);
+    $menu = \App\Support\Menu\SiteMenu::tree();
     $legalOrder = ['imprint', 'privacy', 'terms', 'withdrawal', 'shipping'];
     $legal = \App\Models\Page::published()->whereIn('purpose', $legalOrder)->get(['title', 'slug', 'is_home', 'purpose'])
         ->sortBy(fn ($p) => array_search($p->purpose, $legalOrder))->values();
@@ -24,27 +24,41 @@
         <div class="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-4 sm:px-6">
             <a href="{{ route('home') }}" class="text-lg font-semibold tracking-tight">{{ $siteName }}</a>
             <div class="flex items-center gap-1">
-            @if ($menu->isNotEmpty() || $shopOn)
-                <details class="relative sm:hidden">
+            @if ($menu)
+                <details class="relative sm:hidden" data-mobile-menu>
                     <summary class="cursor-pointer list-none rounded-md p-2 text-slate-700 hover:bg-slate-100" aria-label="Menü">
                         <svg class="size-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
                     </summary>
-                    <nav class="absolute right-0 z-30 mt-2 w-56 rounded-xl border border-slate-200 bg-white p-2 shadow-lg" aria-label="Hauptmenü">
+                    <nav class="absolute right-0 z-30 mt-2 w-64 rounded-xl border border-slate-200 bg-white p-2 shadow-lg" aria-label="Hauptmenü">
                         @foreach ($menu as $item)
-                            <a href="{{ $item->url() }}" class="block rounded-lg px-3 py-2 text-sm hover:bg-slate-50">{{ $item->title }}</a>
+                            <a href="{{ $item['url'] }}" @if($item['new_tab']) target="_blank" rel="noopener" @endif @class(['block rounded-lg px-3 py-2 text-sm hover:bg-slate-50', 'font-semibold text-nova-700' => $item['active']])>{{ $item['label'] }}</a>
+                            @foreach ($item['children'] as $child)
+                                <a href="{{ $child['url'] }}" @if($child['new_tab']) target="_blank" rel="noopener" @endif @class(['ml-3 block rounded-lg border-l border-slate-200 px-3 py-1.5 text-sm text-slate-600 hover:bg-slate-50', 'font-semibold text-nova-700' => $child['active']])>{{ $child['label'] }}</a>
+                            @endforeach
                         @endforeach
-                        @if ($shopOn)<a href="{{ route('shop.index') }}" class="block rounded-lg px-3 py-2 text-sm hover:bg-slate-50">Shop</a>@endif
                     </nav>
                 </details>
-                <nav class="hidden gap-1 sm:flex" aria-label="Hauptmenü">
+                <nav class="hidden items-center gap-1 sm:flex" aria-label="Hauptmenü">
                     @foreach ($menu as $item)
-                        @php $active = $item->is_home ? $current === '/' : $current === $item->slug; @endphp
-                        <a href="{{ $item->url() }}" @class(['rounded-lg px-3 py-2 text-sm font-medium', 'text-nova-700 bg-nova-50' => $active, 'text-slate-700 hover:bg-slate-50' => ! $active]) @if($active) aria-current="page" @endif>{{ $item->title }}</a>
+                        @php $cls = ['inline-flex items-center gap-1 rounded-lg px-3 py-2 text-sm font-medium', 'text-nova-700 bg-nova-50' => $item['active'], 'text-slate-700 hover:bg-slate-50' => ! $item['active']]; @endphp
+                        @if ($item['children'])
+                            <div class="group relative" data-has-submenu>
+                                <a href="{{ $item['url'] }}" @if($item['new_tab']) target="_blank" rel="noopener" @endif @class($cls) aria-haspopup="true" @if($item['active']) aria-current="page" @endif>
+                                    {{ $item['label'] }}
+                                    <svg class="size-3.5 opacity-60 transition group-hover:rotate-180" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path d="M5.2 7.5a.75.75 0 0 1 1.06 0L10 11.2l3.74-3.7a.75.75 0 1 1 1.06 1.06l-4.27 4.24a.75.75 0 0 1-1.06 0L5.2 8.56a.75.75 0 0 1 0-1.06Z"/></svg>
+                                </a>
+                                <div class="invisible absolute left-0 z-30 pt-2 opacity-0 transition group-focus-within:visible group-focus-within:opacity-100 group-hover:visible group-hover:opacity-100">
+                                    <div class="min-w-52 rounded-xl border border-slate-200 bg-white p-1.5 shadow-lg">
+                                        @foreach ($item['children'] as $child)
+                                            <a href="{{ $child['url'] }}" @if($child['new_tab']) target="_blank" rel="noopener" @endif @class(['block rounded-lg px-3 py-2 text-sm', 'bg-nova-50 font-medium text-nova-700' => $child['active'], 'text-slate-700 hover:bg-slate-50' => ! $child['active']])>{{ $child['label'] }}</a>
+                                        @endforeach
+                                    </div>
+                                </div>
+                            </div>
+                        @else
+                            <a href="{{ $item['url'] }}" @if($item['new_tab']) target="_blank" rel="noopener" @endif @class($cls) @if($item['active']) aria-current="page" @endif>{{ $item['label'] }}</a>
+                        @endif
                     @endforeach
-                    @if ($shopOn)
-                        @php $active = str_starts_with($current, 'shop'); @endphp
-                        <a href="{{ route('shop.index') }}" @class(['rounded-lg px-3 py-2 text-sm font-medium', 'text-nova-700 bg-nova-50' => $active, 'text-slate-700 hover:bg-slate-50' => ! $active])>Shop</a>
-                    @endif
                 </nav>
             @endif
             @if ($shopOn)

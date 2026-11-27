@@ -8,6 +8,7 @@ use App\Models\PageRevision;
 use App\Support\Pages\PageTemplates;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 use Illuminate\View\View;
@@ -133,6 +134,24 @@ class PageController extends Controller
     public function preview(Page $page): View
     {
         return view('site.page', ['page' => $page, 'preview' => true]);
+    }
+
+    /** Live-Vorschau im Editor: zeigt den aktuellen, noch nicht gespeicherten Stand. Speichert nichts. */
+    public function livePreview(Request $request): Response
+    {
+        $data = $request->validate([
+            'page' => ['required', 'integer', 'exists:pages,id'],
+            'title' => ['nullable', 'string', 'max:160'],
+            'blocks' => ['required', 'json'],
+        ]);
+        $page = Page::findOrFail($data['page'])->replicate();
+        $page->id = (int) $data['page'];
+        $page->exists = false;
+        $page->title = $data['title'] ?: $page->title;
+        $page->blocks = Page::cleanBlocks(json_decode($data['blocks'], true) ?: []);
+
+        return response()->view('site.page', ['page' => $page, 'preview' => true, 'live' => true])
+            ->header('X-Robots-Tag', 'noindex');
     }
 
     public function destroy(Page $page): RedirectResponse

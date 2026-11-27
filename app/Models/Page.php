@@ -29,6 +29,16 @@ class Page extends Model
         ];
     }
 
+    protected static function booted(): void
+    {
+        // "Im Menü anzeigen" und die Menüverwaltung bleiben im Einklang
+        static::saved(function (Page $page) {
+            if ($page->wasRecentlyCreated || $page->wasChanged('show_in_menu')) {
+                $page->show_in_menu ? MenuItem::addPage($page) : MenuItem::removePage($page);
+            }
+        });
+    }
+
     public function revisions(): HasMany
     {
         return $this->hasMany(PageRevision::class)->latest('id');

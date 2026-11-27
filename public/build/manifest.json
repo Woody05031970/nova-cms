@@ -1,21 +1,29 @@
 {
-  "_dist-B1OC92Vx.js": {
-    "file": "assets/dist-B1OC92Vx.js",
+  "_dist-zlegaCcd.js": {
+    "file": "assets/dist-zlegaCcd.js",
     "name": "dist"
   },
-  "_media-KTDrRNYx.js": {
-    "file": "assets/media-KTDrRNYx.js",
+  "_media-CUdFIE3A.js": {
+    "file": "assets/media-CUdFIE3A.js",
     "name": "media"
   },
-  "_seo-DYdTW-yD.js": {
-    "file": "assets/seo-DYdTW-yD.js",
+  "_module.esm-stJ4KnaK.js": {
+    "file": "assets/module.esm-stJ4KnaK.js",
+    "name": "module.esm"
+  },
+  "_seo-B-Uc-z_r.js": {
+    "file": "assets/seo-B-Uc-z_r.js",
     "name": "seo",
     "imports": [
-      "_media-KTDrRNYx.js"
+      "_media-CUdFIE3A.js"
     ]
   },
+  "_sortable.esm-BRxt44hw.js": {
+    "file": "assets/sortable.esm-BRxt44hw.js",
+    "name": "sortable.esm"
+  },
   "resources/css/app.css": {
-    "file": "assets/app-HDSUoZvR.css",
+    "file": "assets/app-qeDUgGMV.css",
     "name": "app",
     "names": [
       "app.css"
@@ -23,35 +31,55 @@
     "src": "resources/css/app.css",
     "isEntry": true
   },
+  "resources/js/admin.js": {
+    "file": "assets/admin-B0-RYlvE.js",
+    "name": "admin",
+    "src": "resources/js/admin.js",
+    "isEntry": true
+  },
   "resources/js/app.js": {
-    "file": "assets/app-CCVWgpAb.js",
+    "file": "assets/app-CcBRkxUH.js",
     "name": "app",
     "src": "resources/js/app.js",
     "isEntry": true,
     "imports": [
-      "_media-KTDrRNYx.js",
-      "_seo-DYdTW-yD.js"
+      "_module.esm-stJ4KnaK.js",
+      "_media-CUdFIE3A.js",
+      "_seo-B-Uc-z_r.js"
     ]
   },
   "resources/js/editor.js": {
-    "file": "assets/editor-FiJxO0HW.js",
+    "file": "assets/editor-DXSK2q0C.js",
     "name": "editor",
     "src": "resources/js/editor.js",
     "isEntry": true,
     "imports": [
-      "_media-KTDrRNYx.js",
-      "_dist-B1OC92Vx.js",
-      "_seo-DYdTW-yD.js"
+      "_module.esm-stJ4KnaK.js",
+      "_dist-zlegaCcd.js",
+      "_sortable.esm-BRxt44hw.js",
+      "_media-CUdFIE3A.js",
+      "_seo-B-Uc-z_r.js"
+    ]
+  },
+  "resources/js/menu.js": {
+    "file": "assets/menu-eZGetlea.js",
+    "name": "menu",
+    "src": "resources/js/menu.js",
+    "isEntry": true,
+    "imports": [
+      "_module.esm-stJ4KnaK.js",
+      "_sortable.esm-BRxt44hw.js"
     ]
   },
   "resources/js/product.js": {
-    "file": "assets/product-BUeM-uoP.js",
+    "file": "assets/product-jOTbDz0a.js",
     "name": "product",
     "src": "resources/js/product.js",
     "isEntry": true,
     "imports": [
-      "_media-KTDrRNYx.js",
-      "_dist-B1OC92Vx.js"
+      "_module.esm-stJ4KnaK.js",
+      "_dist-zlegaCcd.js",
+      "_media-CUdFIE3A.js"
     ]
   },
   "resources/js/site.js": {
