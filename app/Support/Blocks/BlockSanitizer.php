@@ -39,6 +39,18 @@ class BlockSanitizer
         return $out;
     }
 
+    /** Bereinigtes HTML für Texte außerhalb von Blöcken (z. B. Produktbeschreibungen) */
+    public function html(string $html): string
+    {
+        return $this->purify($html);
+    }
+
+    /** Nur Bilder aus der eigenen Mediathek oder sichere Adressen */
+    public function image(?string $url): ?string
+    {
+        return $this->mediaUrl($url);
+    }
+
     private function cleanText(array $d): array
     {
         return ['html' => $this->purify((string) ($d['html'] ?? ''))];

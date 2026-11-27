@@ -51,6 +51,30 @@ class ContentAssistant
     }
 
     /**
+     * Produkttext für den Shop: Kurzbeschreibung und ausführliche Beschreibung (HTML).
+     *
+     * @return array{short: string, html: string}
+     */
+    public function productText(string $name, string $notes): array
+    {
+        $system = $this->context()."\n\nDu schreibst Produkttexte für einen Online-Shop: verkaufsstark, ehrlich, gut lesbar, "
+            .'für Google optimiert. Erfinde keine Fakten wie Maße, Inhaltsstoffe, Zertifikate, Preise oder Garantien. '
+            .'Fehlen Angaben, beschreibe Nutzen und Einsatz allgemein. Keine Heilversprechen, keine Superlative ohne Beleg.';
+
+        $data = $this->ai->json($system, "Produkt: {$name}\n\nAngaben des Händlers:\n".($notes ?: '(keine)')
+            ."\n\nSchreibe eine Kurzbeschreibung (ein Satz, höchstens 200 Zeichen) und eine Beschreibung in HTML "
+            .'(2 bis 4 Absätze, gern eine Liste mit Vorteilen; erlaubte Tags: p, h3, ul, li, strong, em).', [
+                'type' => 'object', 'additionalProperties' => false, 'required' => ['short', 'html'],
+                'properties' => ['short' => ['type' => 'string'], 'html' => ['type' => 'string']],
+            ], 6000);
+
+        return [
+            'short' => mb_substr(trim((string) ($data['short'] ?? ''), " \"'„“"), 0, 300),
+            'html' => trim((string) ($data['html'] ?? '')),
+        ];
+    }
+
+    /**
      * Schlägt Suchbegriffe vor, mit denen eine Seite gefunden werden kann.
      *
      * @return list<string>

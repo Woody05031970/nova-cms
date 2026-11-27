@@ -176,6 +176,20 @@ class AiController extends Controller
         return $this->respond(fn () => ['description' => $assistant->metaDescription($data['title'], $data['text'])]);
     }
 
+    public function productText(Request $request, ContentAssistant $assistant, \App\Support\Blocks\BlockSanitizer $sanitizer): JsonResponse
+    {
+        $data = $request->validate([
+            'name' => ['required', 'string', 'max:160'],
+            'notes' => ['nullable', 'string', 'max:3000'],
+        ], ['name.required' => 'Geben Sie zuerst einen Produktnamen ein.']);
+
+        return $this->respond(function () use ($assistant, $data, $sanitizer) {
+            $out = $assistant->productText($data['name'], (string) ($data['notes'] ?? ''));
+
+            return ['short' => $out['short'], 'html' => $sanitizer->html($out['html'])];
+        });
+    }
+
     private function respond(\Closure $work): JsonResponse
     {
         if (! $this->ai->isConfigured()) {

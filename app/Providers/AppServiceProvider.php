@@ -31,12 +31,41 @@ class AppServiceProvider extends ServiceProvider
             return;
         }
 
+        $this->applyMailSettings();
         $this->registerCoreHints();
         $this->app->make(PluginManager::class)->bootEnabled();
 
-        View::composer(['layouts.admin', 'admin.*', 'site.*'], function ($view) {
+        View::composer(['layouts.admin', 'admin.*', 'site.*', 'shop.*'], function ($view) {
             $view->with('siteName', Setting::get('site_name', 'Meine Website'));
         });
+    }
+
+    /**
+     * E-Mail-Versand aus den Einstellungen (Postausgang des Hosters), sonst Vorgabe aus der .env.
+     */
+    private function applyMailSettings(): void
+    {
+        try {
+            $mode = Setting::get('mail_mode');
+        } catch (\Throwable) {
+            return; // Datenbank noch nicht bereit
+        }
+        if ($mode === 'smtp') {
+            $port = (int) Setting::get('mail_port', '587');
+            config([
+                'mail.default' => 'smtp',
+                'mail.mailers.smtp.host' => Setting::get('mail_host'),
+                'mail.mailers.smtp.port' => $port,
+                'mail.mailers.smtp.scheme' => $port === 465 ? 'smtps' : 'smtp',
+                'mail.mailers.smtp.username' => Setting::get('mail_user'),
+                'mail.mailers.smtp.password' => \App\Shop\ShopSettings::secret('mail_password'),
+            ]);
+        } elseif ($mode === 'sendmail') {
+            config(['mail.default' => 'sendmail']);
+        }
+        if ($from = Setting::get('mail_from', Setting::get('contact_email'))) {
+            config(['mail.from.address' => $from, 'mail.from.name' => Setting::get('site_name', config('app.name'))]);
+        }
     }
 
     /**
@@ -74,6 +103,25 @@ class AppServiceProvider extends ServiceProvider
         $hooks->addHint('Beschreibungen für Google ergänzen', 'Jede veröffentlichte Seite braucht einen kurzen Text für die Suchergebnisse.',
             fn () => Page::published()->exists() && ! Page::published()->where(fn ($q) => $q->whereNull('meta_description')->orWhere('meta_description', ''))->exists(),
             $pages, 'SEO');
+
+        // Shop: Pflichtangaben erst, wenn der Shop eingeschaltet ist (erst beim Anzeigen geprüft)
+        $hooks->addFilter('dashboard.hints', function (array $hints) use ($pages) {
+            if (! \App\Shop\ShopSettings::enabled()) {
+                return $hints;
+            }
+            foreach (['terms' => 'AGB', 'withdrawal' => 'Widerrufsbelehrung', 'shipping' => 'Seite „Versand und Zahlung“'] as $purpose => $label) {
+                $hints[] = ['title' => $label.' veröffentlichen', 'help' => 'Pflicht für Online-Shops. Eine Vorlage gibt es unter Seiten › Neue Seite.',
+                    'check' => fn () => Page::published()->where('purpose', $purpose)->exists(), 'url' => $pages, 'area' => 'Shop'];
+            }
+            $hints[] = ['title' => 'Zahlungsart einrichten', 'help' => 'Ohne Zahlungsart kann niemand bestellen. Am einfachsten: Vorkasse mit Ihrer IBAN.',
+                'check' => fn () => app(\App\Shop\Payments\PaymentRegistry::class)->available() !== [], 'url' => url('admin/shop/einstellungen'), 'area' => 'Shop'];
+            $hints[] = ['title' => 'E-Mail-Versand einrichten', 'help' => 'Sonst erhalten Kunden keine Bestellbestätigung. Tragen Sie das Postfach Ihres Hosters ein.',
+                'check' => fn () => Setting::get('mail_mode') !== null, 'url' => url('admin/einstellungen'), 'area' => 'Shop'];
+            $hints[] = ['title' => 'Steuernummer für Rechnungen eintragen', 'help' => 'Auf jeder Rechnung muss die USt-IdNr. oder die Steuernummer stehen.',
+                'check' => fn () => Setting::get('shop_vat_id') !== null, 'url' => url('admin/shop/einstellungen'), 'area' => 'Shop'];
+
+            return $hints;
+        });
 
         $hooks->addHint('Zwei-Faktor-Anmeldung einrichten', 'Schützt Ihr Konto, selbst wenn jemand Ihr Passwort kennt. Dauert zwei Minuten mit einer App auf dem Handy.',
             fn () => ! \App\Models\User::where('role', 'admin')->whereNull('two_factor_confirmed_at')->exists(), url('admin/konto'), 'Sicherheit');

@@ -1,1 +1,0 @@
-import{c as e,i as t,s as n,t as r}from"./seo-CAKHET-R.js";n(e),t(e),r(e),e.data(`busyForm`,()=>({busy:!1,seconds:0,start(){this.busy=!0,setInterval(()=>this.seconds++,1e3)}})),window.Alpine=e,e.start();

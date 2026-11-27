@@ -7,13 +7,18 @@ use App\Http\Controllers\Admin\MediaController;
 use App\Http\Controllers\Admin\PageController;
 use App\Http\Controllers\Admin\PluginController;
 use App\Http\Controllers\Admin\SecurityController;
+use App\Http\Controllers\Admin\Shop\OrderController as ShopOrderController;
+use App\Http\Controllers\Admin\Shop\ProductController as ShopProductController;
+use App\Http\Controllers\Admin\Shop\ShopController as AdminShopController;
 use App\Http\Controllers\Admin\SeoController;
 use App\Http\Controllers\Admin\SettingsController;
 use App\Http\Controllers\Admin\UploadController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\InstallController;
 use App\Http\Controllers\SeoFileController;
+use App\Http\Controllers\ShopController;
 use App\Http\Controllers\SiteController;
+use App\Http\Middleware\ShopEnabled;
 use Illuminate\Support\Facades\Route;
 
 // Installations-Assistent (nur erreichbar, solange Nova CMS nicht installiert ist)
@@ -29,6 +34,20 @@ Route::prefix('install')->name('install.')->group(function () {
 Route::get('/', [SiteController::class, 'home'])->name('home');
 Route::get('/robots.txt', [SeoFileController::class, 'robots'])->name('robots');
 Route::get('/sitemap.xml', [SeoFileController::class, 'sitemap'])->name('sitemap');
+
+// Shop
+Route::middleware(ShopEnabled::class)->group(function () {
+    Route::get('/shop', [ShopController::class, 'index'])->name('shop.index');
+    Route::get('/shop/{slug}', [ShopController::class, 'show'])->name('shop.product');
+    Route::get('/warenkorb', [ShopController::class, 'cart'])->name('shop.cart');
+    Route::post('/warenkorb', [ShopController::class, 'add'])->middleware('throttle:60,1')->name('shop.cart.add');
+    Route::patch('/warenkorb', [ShopController::class, 'update'])->name('shop.cart.update');
+    Route::get('/kasse', [ShopController::class, 'checkout'])->name('shop.checkout');
+    Route::post('/kasse', [ShopController::class, 'placeOrder'])->middleware('throttle:10,1')->name('shop.checkout.place');
+    Route::get('/bestellung/{token}', [ShopController::class, 'order'])->name('shop.order');
+    Route::post('/bestellung/{token}/bezahlen', [ShopController::class, 'pay'])->middleware('throttle:10,1')->name('shop.pay');
+    Route::get('/bestellung/{token}/zahlung/{method}', [ShopController::class, 'paymentReturn'])->name('shop.payment.return');
+});
 
 // Anmeldung
 Route::middleware('guest')->group(function () {
@@ -76,6 +95,20 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::post('/seo/suchbegriffe', [SeoController::class, 'keywords'])->middleware('throttle:20,1')->name('seo.keywords');
     Route::post('/seo/vergleich', [SeoController::class, 'compare'])->middleware('throttle:10,1')->name('seo.compare');
 
+    Route::get('/shop', [AdminShopController::class, 'index'])->name('shop.index');
+    Route::get('/shop/einstellungen', [AdminShopController::class, 'settings'])->name('shop.settings');
+    Route::put('/shop/einstellungen', [AdminShopController::class, 'update'])->name('shop.settings.update');
+    Route::get('/shop/produkte', [ShopProductController::class, 'index'])->name('shop.products.index');
+    Route::get('/shop/produkte/neu', [ShopProductController::class, 'create'])->name('shop.products.create');
+    Route::post('/shop/produkte', [ShopProductController::class, 'store'])->name('shop.products.store');
+    Route::get('/shop/produkte/{product}', [ShopProductController::class, 'edit'])->name('shop.products.edit');
+    Route::put('/shop/produkte/{product}', [ShopProductController::class, 'update'])->name('shop.products.update');
+    Route::delete('/shop/produkte/{product}', [ShopProductController::class, 'destroy'])->name('shop.products.destroy');
+    Route::get('/shop/bestellungen/{order}', [ShopOrderController::class, 'show'])->name('shop.orders.show');
+    Route::put('/shop/bestellungen/{order}', [ShopOrderController::class, 'update'])->name('shop.orders.update');
+    Route::get('/shop/bestellungen/{order}/rechnung', [ShopOrderController::class, 'invoice'])->name('shop.orders.invoice');
+    Route::post('/ki/produkt', [AiController::class, 'productText'])->middleware('throttle:30,1')->name('ai.product');
+
     Route::get('/sicherheit', [SecurityController::class, 'index'])->name('security');
     Route::post('/sicherheit/pruefen', [SecurityController::class, 'scan'])->middleware('throttle:10,1')->name('security.scan');
     Route::post('/sicherheit/beheben', [SecurityController::class, 'fix'])->name('security.fix');
@@ -93,6 +126,8 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
 
     Route::get('/einstellungen', [SettingsController::class, 'edit'])->name('settings');
     Route::put('/einstellungen', [SettingsController::class, 'update'])->name('settings.update');
+    Route::put('/einstellungen/email', [SettingsController::class, 'mail'])->name('settings.mail');
+    Route::post('/einstellungen/email/test', [SettingsController::class, 'testMail'])->middleware('throttle:5,1')->name('settings.mail.test');
 
     Route::get('/plugins', [PluginController::class, 'index'])->name('plugins');
     Route::post('/plugins', [PluginController::class, 'upload'])->name('plugins.upload');
