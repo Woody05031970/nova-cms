@@ -2,12 +2,14 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Coupon;
 use App\Models\Order;
 use App\Models\Product;
 use App\Shop\Cart;
 use App\Shop\Checkout;
 use App\Shop\Payments\PaymentRegistry;
 use App\Shop\ShopSettings;
+use App\Support\Members\Accounts;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -83,6 +85,27 @@ class ShopController extends Controller
         return redirect()->route('shop.cart')->with('status', 'Warenkorb aktualisiert.');
     }
 
+    /** Gutschein- oder Rabattcode einlösen (Modul Gutscheine und Rabatte) */
+    public function coupon(Request $request, Cart $cart): RedirectResponse
+    {
+        $request->validate(['code' => ['required', 'string', 'max:40']], ['code.required' => 'Bitte geben Sie Ihren Code ein.']);
+        $coupon = Coupon::findByCode($request->input('code'));
+        $problem = $coupon ? $coupon->problem((int) $cart->items()->sum('total')) : 'Diesen Code kennen wir leider nicht. Bitte prüfen Sie die Schreibweise.';
+        if ($problem) {
+            return redirect()->route('shop.cart')->withInput()->withErrors(['code' => $problem]);
+        }
+        $cart->applyCoupon($coupon);
+
+        return redirect()->route('shop.cart')->with('status', 'Code „'.$coupon->code.'“ eingelöst: '.$coupon->label().'.');
+    }
+
+    public function removeCoupon(Cart $cart): RedirectResponse
+    {
+        $cart->applyCoupon(null);
+
+        return redirect()->route('shop.cart')->with('status', 'Der Code wurde entfernt.');
+    }
+
     public function checkout(Cart $cart, PaymentRegistry $payments): View|RedirectResponse
     {
         $items = $cart->items();
@@ -98,6 +121,7 @@ class ShopController extends Controller
             'terms' => ShopSettings::legalPage('terms'),
             'withdrawal' => ShopSettings::legalPage('withdrawal'),
             'privacy' => ShopSettings::legalPage('privacy'),
+            'defaults' => Accounts::checkoutDefaults(Accounts::customer()),
         ]);
     }
 
@@ -116,7 +140,18 @@ class ShopController extends Controller
             'notes' => ['nullable', 'string', 'max:2000'],
             'payment_method' => ['required', Rule::in($methods)],
             'accept_terms' => ['accepted'],
+            'billing' => ['nullable', 'array'],
+            'billing.name' => [Rule::requiredIf(fn () => Accounts::on() && $request->boolean('billing_different')), 'nullable', 'string', 'max:160'],
+            'billing.company' => ['nullable', 'string', 'max:160'],
+            'billing.street' => [Rule::requiredIf(fn () => Accounts::on() && $request->boolean('billing_different')), 'nullable', 'string', 'max:160'],
+            'billing.zip' => [Rule::requiredIf(fn () => Accounts::on() && $request->boolean('billing_different')), 'nullable', 'string', 'max:12'],
+            'billing.city' => [Rule::requiredIf(fn () => Accounts::on() && $request->boolean('billing_different')), 'nullable', 'string', 'max:120'],
+            'billing.country' => ['nullable', Rule::in(array_keys(ShopSettings::COUNTRIES))],
         ], [
+            'billing.name.required' => 'Bitte geben Sie den Namen für die Rechnung an.',
+            'billing.street.required' => 'Bitte geben Sie die Straße für die Rechnung an.',
+            'billing.zip.required' => 'Bitte geben Sie die PLZ für die Rechnung an.',
+            'billing.city.required' => 'Bitte geben Sie den Ort für die Rechnung an.',
             'email.required' => 'Bitte geben Sie Ihre E-Mail-Adresse an.',
             'payment_method.required' => 'Bitte wählen Sie eine Zahlungsart.',
             'payment_method.in' => 'Bitte wählen Sie eine Zahlungsart.',
@@ -124,10 +159,19 @@ class ShopController extends Controller
             'country.in' => 'In dieses Land liefern wir leider nicht.',
         ]);
 
+        $customer = Accounts::customer();
+        $data['billing'] = Accounts::on() && $request->boolean('billing_different') ? Accounts::clean($data['billing'] ?? []) : null;
+        $data['user_id'] = $customer?->id;
         try {
             $order = $checkout->place($data, $data['payment_method']);
         } catch (RuntimeException $e) {
             return redirect()->route('shop.cart')->withErrors(['cart' => $e->getMessage()]);
+        }
+
+        if ($customer && $request->boolean('save_address')) {
+            $shipping = Accounts::clean(collect($data)->only(Accounts::ADDRESS_FIELDS)->all());
+            $customer->update(['billing_address' => $data['billing'] ?? $shipping, 'shipping_address' => $data['billing'] ? $shipping : null,
+                'phone' => $customer->phone ?: ($data['phone'] ?? null)]);
         }
 
         return $this->startPayment($order, $payments);

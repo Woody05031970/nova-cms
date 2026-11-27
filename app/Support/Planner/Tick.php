@@ -4,6 +4,8 @@ namespace App\Support\Planner;
 
 use App\Licensing\Features;
 use App\Models\Page;
+use App\Support\Backup\Backups;
+use App\Support\Booking\Bookings;
 use App\Support\Social\SocialPublisher;
 
 /**
@@ -29,6 +31,6 @@ class Tick
 
     public static function run(): array
     {
-        return ['pages' => self::publishDue(), 'posts' => app(SocialPublisher::class)->runDue()];
+        return ['pages' => self::publishDue(), 'posts' => app(SocialPublisher::class)->runDue(), 'reminders' => app(Bookings::class)->remind(), 'backup' => app(Backups::class)->runDue() !== null];
     }
 }

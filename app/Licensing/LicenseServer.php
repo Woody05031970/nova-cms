@@ -113,7 +113,8 @@ class LicenseServer
             'status' => $license->status,
             'customer' => $license->customer_name,
             'core' => $license->core,
-            'modules' => array_values($license->modules ?? []),
+            // Kostenlose Module (Einstellung „Module und Preise“) gehören zu jeder Lizenz
+            'modules' => array_values(array_unique([...($license->modules ?? []), ...($license->core ? ModulePricing::freeKeys() : [])])),
             'domain' => $domain,
             'install_id' => $install,
             'updates_until' => $license->updates_until?->toDateString(),

@@ -115,7 +115,7 @@ document.querySelectorAll('video[data-bg-video]').forEach((v) => {
     const label = toggle.querySelector('[data-menu-label]');
     const setOpen = (open, focusBack = false) => {
         toggle.setAttribute('aria-expanded', String(open));
-        label.textContent = open ? 'Menü schließen' : 'Menü öffnen';
+        label.textContent = open ? (label.dataset.close || 'Menü schließen') : (label.dataset.open || 'Menü öffnen');
         menu.hidden = !open;
         document.documentElement.classList.toggle('nova-menu-open', open);
         if (open) menu.querySelector('ul a')?.focus();

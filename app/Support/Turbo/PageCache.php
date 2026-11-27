@@ -22,7 +22,7 @@ class PageCache
 {
     private const TOKEN = '%%NOVA_CSRF%%';
 
-    private const SKIP = ['admin', 'admin/*', 'install', 'install/*', 'api/*', 'warenkorb', 'kasse', 'bestellung/*', 'newsletter/*', 'suche', 'robots.txt', 'sitemap.xml', 'llms.txt', 'up', 'kontakt/*'];
+    private const SKIP = ['admin', 'admin/*', 'install', 'install/*', 'api/*', 'warenkorb', 'kasse', 'bestellung/*', 'newsletter/*', 'suche', 'robots.txt', 'sitemap.xml', 'llms.txt', 'up', 'kontakt/*', 'termine', 'termine/*', 'mitglieder', 'mitglieder/*', 'konto', 'konto/*', 'passwort-neu/*', 'passwort-neu'];
 
     public static function store(): Repository
     {

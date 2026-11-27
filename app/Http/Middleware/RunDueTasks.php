@@ -2,6 +2,8 @@
 
 namespace App\Http\Middleware;
 
+use App\Support\Backup\Backups;
+use App\Support\Booking\Bookings;
 use App\Support\Install\InstallState;
 use App\Support\Planner\Tick;
 use App\Support\Social\SocialPublisher;
@@ -36,6 +38,8 @@ class RunDueTasks
         if ($this->due) {
             try {
                 app(SocialPublisher::class)->runDue();
+                app(Bookings::class)->remind();
+                app(Backups::class)->runDue();
             } catch (Throwable) {
             }
         }

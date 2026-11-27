@@ -22,14 +22,14 @@ class Order extends Model
     protected $fillable = [
         'number', 'token', 'status', 'payment_method', 'payment_status', 'payment_reference', 'currency',
         'email', 'name', 'company', 'street', 'zip', 'city', 'country', 'phone', 'notes',
-        'subtotal_cents', 'shipping_cents', 'total_cents', 'taxes', 'small_business', 'tracking_number',
-        'terms_accepted_at', 'paid_at', 'shipped_at',
+        'subtotal_cents', 'shipping_cents', 'total_cents', 'discount_cents', 'coupon_code', 'taxes', 'small_business', 'tracking_number',
+        'terms_accepted_at', 'paid_at', 'shipped_at', 'user_id', 'billing',
     ];
 
     protected function casts(): array
     {
         return [
-            'taxes' => 'array', 'small_business' => 'boolean',
+            'taxes' => 'array', 'billing' => 'array', 'small_business' => 'boolean',
             'terms_accepted_at' => 'datetime', 'paid_at' => 'datetime', 'shipped_at' => 'datetime',
         ];
     }

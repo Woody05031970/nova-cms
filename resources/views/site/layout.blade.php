@@ -14,30 +14,36 @@
     $wa = \App\Support\WhatsApp::button();
     $darkHeader = $design['header'] === 'dark';
     $searchOn = \App\Models\Setting::get('site_search', '1') === '1';
+    $L = \App\Support\I18n\Languages::class;
+    $languages = $L::switcher(isset($page) && $page instanceof \App\Models\Page ? $page : null);
+    $variants = isset($page) && $page instanceof \App\Models\Page && empty($preview) ? $L::variants($page) : collect();
 @endphp
 <!DOCTYPE html>
-<html lang="de">
+<html lang="{{ $L::current() }}">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>@yield('title')</title>
     @hasSection('description')<meta name="description" content="@yield('description')">@endif
     @yield('meta')
+    @foreach ($variants as $code => $v)<link rel="alternate" hreflang="{{ $code }}" href="{{ $v->url() }}">
+    @endforeach
+    @if ($variants->has('de'))<link rel="alternate" hreflang="x-default" href="{{ $variants['de']->url() }}">@endif
     @vite(['resources/css/app.css', 'resources/js/site.js'])
     <style>{!! \App\Support\Design\SiteDesign::css($design) !!}</style>
 </head>
 <body class="nova-site flex min-h-screen flex-col font-sans text-slate-900 antialiased" data-theme="{{ $design['theme'] }}" data-anim="{{ $design['animation'] }}" @if($design['heading_font'] || $design['font'] !== 'system') data-heading-font @endif>
-    <a href="#inhalt" class="nova-skip-link">Zum Inhalt springen</a>
+    <a href="#inhalt" class="nova-skip-link">{{ $L::t('Zum Inhalt springen') }}</a>
     @yield('banner')
     <header @class(['nova-header sticky top-0 z-40', 'border-b border-slate-100 bg-white' => $design['header'] === 'light', 'is-glass border-b border-white/40 bg-white/70 backdrop-blur-xl' => $design['header'] === 'glass', 'is-dark bg-slate-950 text-white' => $darkHeader]) data-site-header>
         <div class="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-3.5 sm:px-6">
-            <a href="{{ route('home') }}" class="flex min-w-0 items-center gap-2.5 text-lg font-semibold tracking-tight" data-site-brand @if($design['logo'] && ! $design['show_name']) aria-label="{{ $siteName }}, zur Startseite" @endif>
+            <a href="{{ $L::homeUrl() }}" class="flex min-w-0 items-center gap-2.5 text-lg font-semibold tracking-tight" data-site-brand @if($design['logo'] && ! $design['show_name']) aria-label="{{ $siteName }}, {{ $L::t('zur Startseite') }}" @endif>
                 @if ($design['logo'])<img src="{{ $design['logo'] }}" alt="" style="height: {{ $design['logo_height'] }}px" class="w-auto max-w-[55vw] shrink-0 object-contain object-left">@endif
                 @if (! $design['logo'] || $design['show_name'])<span class="truncate">{{ $siteName }}</span>@endif
             </a>
             <div class="flex shrink-0 items-center gap-1">
             @if ($menu)
-                <nav class="hidden items-center gap-1 lg:flex" aria-label="Hauptmenü">
+                <nav class="hidden items-center gap-1 lg:flex" aria-label="{{ $L::t('Hauptmenü') }}">
                     @foreach ($menu as $item)
                         @php $cls = ['inline-flex items-center gap-1 rounded-lg px-3 py-2 text-sm font-medium', 'text-nova-700 bg-nova-50' => $item['active'] && ! $darkHeader, 'text-slate-700 hover:bg-slate-50' => ! $item['active'] && ! $darkHeader, 'bg-white/10 text-white' => $item['active'] && $darkHeader, 'text-white/75 hover:bg-white/10 hover:text-white' => ! $item['active'] && $darkHeader]; @endphp
                         @if ($item['children'])
@@ -60,9 +66,22 @@
                     @endforeach
                 </nav>
             @endif
+            @if ($languages)
+                <nav class="flex items-center" aria-label="{{ $L::t('Sprache') }}" data-language-switcher>
+                    @foreach ($languages as $lang)
+                        <a href="{{ $lang['url'] }}" hreflang="{{ $lang['locale'] }}" lang="{{ $lang['locale'] }}" title="{{ $lang['name'] }}" @if($lang['current']) aria-current="true" @endif
+                           @class(['rounded-md px-1.5 py-1 text-xs font-semibold uppercase tracking-wide', 'text-nova-700 underline underline-offset-4' => $lang['current'] && ! $darkHeader, 'text-slate-500 hover:text-slate-900' => ! $lang['current'] && ! $darkHeader, 'text-white underline underline-offset-4' => $lang['current'] && $darkHeader, 'text-white/60 hover:text-white' => ! $lang['current'] && $darkHeader])><span class="sr-only">{{ $lang['name'] }}</span><span aria-hidden="true">{{ $lang['locale'] }}</span></a>
+                    @endforeach
+                </nav>
+            @endif
             @if ($searchOn)
-                <a href="{{ route('search') }}" @class(['hidden rounded-lg p-2 sm:inline-flex', 'text-slate-700 hover:bg-slate-50' => ! $darkHeader, 'text-white hover:bg-white/10' => $darkHeader]) aria-label="Website durchsuchen" data-search-link>
+                <a href="{{ route('search') }}" @class(['hidden rounded-lg p-2 sm:inline-flex', 'text-slate-700 hover:bg-slate-50' => ! $darkHeader, 'text-white hover:bg-white/10' => $darkHeader]) aria-label="{{ $L::t('Website durchsuchen') }}" data-search-link>
                     <x-icon name="search" class="size-6" />
+                </a>
+            @endif
+            @if ($shopOn && \App\Support\Members\Accounts::on())
+                <a href="{{ route('account.home') }}" @class(['rounded-lg p-2', 'text-slate-700 hover:bg-slate-50' => ! $darkHeader, 'text-white hover:bg-white/10' => $darkHeader]) aria-label="{{ \App\Support\Members\Accounts::customer() ? 'Mein Kundenkonto' : 'Anmelden oder Kundenkonto anlegen' }}" data-account-link>
+                    <x-icon name="user" class="size-6" />
                 </a>
             @endif
             @if ($shopOn)
@@ -74,7 +93,7 @@
             @if ($menu)
                 <button type="button" @class(['inline-flex size-11 items-center justify-center rounded-lg lg:hidden', 'text-slate-700 hover:bg-slate-100' => ! $darkHeader, 'text-white hover:bg-white/10' => $darkHeader])
                         aria-expanded="false" aria-controls="mobile-menu" data-menu-toggle>
-                    <span class="sr-only" data-menu-label>Menü öffnen</span>
+                    <span class="sr-only" data-menu-label data-open="{{ $L::t('Menü öffnen') }}" data-close="{{ $L::t('Menü schließen') }}">{{ $L::t('Menü öffnen') }}</span>
                     <svg class="size-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path class="nova-burger-open" d="M4 7h16M4 12h16M4 17h16"/><path class="nova-burger-close" d="M6 6l12 12M18 6 6 18"/></svg>
                 </button>
             @endif
@@ -82,7 +101,7 @@
         </div>
         @if ($menu)
             {{-- Handy und Tablet: Menü über die ganze Breite, Unterpunkte zum Aufklappen --}}
-            <nav id="mobile-menu" class="nova-mobile-menu lg:hidden" aria-label="Hauptmenü" hidden data-mobile-menu>
+            <nav id="mobile-menu" class="nova-mobile-menu lg:hidden" aria-label="{{ $L::t('Hauptmenü') }}" hidden data-mobile-menu>
                 @if ($searchOn)<div class="mx-auto max-w-6xl px-4 sm:px-6">@include('site.partials.search-form', ['id' => 'menu'])</div>@endif
                 <ul class="mx-auto max-w-6xl space-y-1 px-4 pt-3 pb-6 sm:px-6">
                     @foreach ($menu as $i => $item)
@@ -123,8 +142,9 @@
                 @if ($s('phone'))<p class="mt-2">Telefon: <a class="hover:text-slate-900" href="tel:{{ preg_replace('/[^+0-9]/', '', $s('phone')) }}">{{ $s('phone') }}</a></p>@endif
                 @if ($s('contact_email'))<p>E-Mail: <a class="hover:text-slate-900" href="mailto:{{ $s('contact_email') }}">{{ $s('contact_email') }}</a></p>@endif
             </div>
-            <nav class="flex flex-wrap items-end gap-x-5 gap-y-2 sm:justify-end" aria-label="Rechtliches">
+            <nav class="flex flex-wrap items-end gap-x-5 gap-y-2 sm:justify-end" aria-label="{{ $L::t('Rechtliches') }}">
                 @foreach ($legal as $l)<a class="hover:text-slate-900" href="{{ $l->url() }}">{{ $l->title }}</a>@endforeach
+                @if (\App\Support\Members\Members::on() && \App\Models\Setting::get('members_footer_link', '1') === '1')<a class="hover:text-slate-900" href="{{ route('members.home') }}" data-members-link>{{ \App\Support\Members\Members::title() }}</a>@endif
                 <span class="opacity-60">© {{ date('Y') }} {{ $siteName }}</span>
             </nav>
         </div>

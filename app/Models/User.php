@@ -8,10 +8,11 @@ use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
-#[Fillable(['name', 'email', 'password', 'role'])]
+#[Fillable(['name', 'email', 'password', 'role', 'phone', 'company', 'billing_address', 'shipping_address'])]
 #[Hidden(['password', 'remember_token', 'two_factor_secret', 'two_factor_recovery_codes'])]
 class User extends Authenticatable
 {
@@ -28,6 +29,8 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'billing_address' => 'array',
+            'shipping_address' => 'array',
             'two_factor_secret' => 'encrypted',
             'two_factor_recovery_codes' => 'encrypted:array',
             'two_factor_confirmed_at' => 'datetime',
@@ -66,5 +69,27 @@ class User extends Authenticatable
     public function isAdmin(): bool
     {
         return $this->role === 'admin';
+    }
+
+    /** Mitglied (Modul Mitgliederbereich): member = freigeschaltet, member_pending = wartet auf Freigabe, member_blocked = gesperrt */
+    public function isMember(): bool
+    {
+        return in_array($this->role, ['member', 'member_pending', 'member_blocked'], true);
+    }
+
+    /** Kundenkonto im Shop (Modul Kundenkonto) */
+    public function isCustomer(): bool
+    {
+        return $this->role === 'customer';
+    }
+
+    public function orders(): HasMany
+    {
+        return $this->hasMany(Order::class)->latest('id');
+    }
+
+    public function canSeeMembersArea(): bool
+    {
+        return in_array($this->role, ['admin', 'member'], true);
     }
 }

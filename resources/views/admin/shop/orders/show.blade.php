@@ -28,6 +28,7 @@
                     </tbody>
                 </table>
                 <dl class="space-y-1 border-t border-slate-100 px-5 py-3 text-sm">
+                    @if ($order->discount_cents)<div class="flex justify-between"><dt>Rabatt {{ $order->coupon_code }}</dt><dd>−{{ $order->money($order->discount_cents) }}</dd></div>@endif
                     <div class="flex justify-between"><dt>Versand</dt><dd>{{ $order->shipping_cents ? $order->money($order->shipping_cents) : 'kostenlos' }}</dd></div>
                     <div class="flex justify-between font-semibold"><dt>Gesamtsumme</dt><dd>{{ $order->money($order->total_cents) }}</dd></div>
                     @foreach ($order->taxes ?? [] as $t)
@@ -40,6 +41,8 @@
                 <section class="nova-card text-sm">
                     <h2 class="font-semibold">Lieferadresse</h2>
                     <p class="mt-2">{{ $order->name }}<br>@if ($order->company){{ $order->company }}<br>@endif{{ $order->street }}<br>{{ $order->zip }} {{ $order->city }}<br>{{ \App\Shop\ShopSettings::COUNTRIES[$order->country]['label'] ?? $order->country }}</p>
+                    @if ($order->billing)<p class="mt-3 text-sm"><span class="font-medium">Rechnungsadresse:</span><br>{{ $order->billing['name'] ?? '' }}<br>@if (! empty($order->billing['company'])){{ $order->billing['company'] }}<br>@endif{{ $order->billing['street'] ?? '' }}<br>{{ $order->billing['zip'] ?? '' }} {{ $order->billing['city'] ?? '' }}</p>@endif
+                    @if ($order->user_id)<p class="mt-2 text-xs text-slate-500">Bestellt mit Kundenkonto</p>@endif
                     <p class="mt-2"><a href="mailto:{{ $order->email }}" class="text-nova-700 hover:underline">{{ $order->email }}</a>@if ($order->phone)<br>{{ $order->phone }}@endif</p>
                 </section>
                 <section class="nova-card text-sm">

@@ -34,6 +34,25 @@
             </form>
 
             <div class="mt-6 ml-auto max-w-sm">
+                @if (\App\Licensing\Features::on('gutscheine'))
+                    <div class="mb-5 rounded-2xl border border-slate-200 p-4" id="gutschein">
+                        @if ($totals['coupon'])
+                            <form method="POST" action="{{ route('shop.coupon.remove') }}" class="flex items-center justify-between gap-3 text-sm">@csrf @method('DELETE')
+                                <span>Code <strong class="font-mono">{{ $totals['coupon']->code }}</strong> eingelöst</span>
+                                <button class="text-slate-600 underline hover:text-red-700">Entfernen</button></form>
+                        @else
+                            <form method="POST" action="{{ route('shop.coupon') }}" data-coupon-form>
+                                @csrf
+                                <label class="nova-label" for="code">Gutschein oder Rabattcode</label>
+                                <div class="flex gap-2">
+                                    <input class="nova-input font-mono uppercase" id="code" name="code" value="{{ old('code') }}" maxlength="40" autocomplete="off" @error('code') aria-invalid="true" aria-describedby="code-error" @enderror>
+                                    <button class="nova-btn-secondary shrink-0">Einlösen</button>
+                                </div>
+                                @error('code')<p id="code-error" class="mt-1 text-sm font-medium text-red-700">{{ $message }}</p>@enderror
+                            </form>
+                        @endif
+                    </div>
+                @endif
                 @include('shop.partials.totals')
                 @if ($totals['free_shipping_missing'])
                     <p class="mt-3 rounded-lg bg-nova-50 px-3 py-2 text-sm text-nova-800">Noch {{ \App\Shop\Money::format($totals['free_shipping_missing']) }}, dann liefern wir versandkostenfrei.</p>

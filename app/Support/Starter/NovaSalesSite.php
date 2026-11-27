@@ -3,6 +3,7 @@
 namespace App\Support\Starter;
 
 use App\Licensing\Features;
+use App\Licensing\ModulePricing;
 use App\Models\MenuItem;
 use App\Models\Page;
 use App\Models\Product;
@@ -40,7 +41,7 @@ class NovaSalesSite
     public const LICENSES = [
         'nova-cms-start' => ['Nova CMS Start', 14900, 1, 'Für eine Website, z. B. Ihr Unternehmen oder Ihren Verein.', []],
         'nova-cms-business' => ['Nova CMS Business', 34900, 3, 'Für bis zu drei Websites, z. B. Firma, Shop und Kampagnenseite.', ['design-pro', 'whatsapp', 'seo-pro', 'statistik']],
-        'nova-cms-agentur' => ['Nova CMS Agentur', 89900, 15, 'Für Webdesigner und Agenturen mit bis zu 15 Kunden-Websites.', ['design-pro', 'whatsapp', 'newsletter', 'seo-pro', 'geo', 'social', 'redaktionsplan', 'statistik', 'turbo']],
+        'nova-cms-agentur' => ['Nova CMS Agentur', 89900, 15, 'Für Webdesigner und Agenturen mit bis zu 15 Kunden-Websites.', ['design-pro', 'whatsapp', 'newsletter', 'seo-pro', 'geo', 'social', 'redaktionsplan', 'statistik', 'turbo', 'terminbuchung', 'mehrsprachigkeit', 'gutscheine', 'mitgliederbereich', 'warenwirtschaft', 'datensicherung', 'google-bewertungen', 'kundenkonto']],
     ];
 
     /** Leistungen der Pakete im Preis-Baustein */
@@ -69,11 +70,14 @@ class NovaSalesSite
         'modul-redaktionsplan' => ['Redaktionsplan', 3900, 'Inhalte', 'Seiten zu einem festen Termin automatisch veröffentlichen und Themen, Aktionen und Beiträge im Kalender planen.', true],
         'modul-statistik' => ['Besucherstatistik', 4900, 'Marketing', 'Aufrufe, beliebteste Seiten, Herkunft, Handy-Anteil und Suchbegriffe Ihrer Besucher. Ohne Cookies, ohne Banner, ohne fremde Dienste.', true],
         'modul-turbo' => ['Turbo', 2900, 'Technik', 'Ein Zwischenspeicher liefert Seiten an Besucher in Millisekunden aus. Gut für Besucher und für das Google-Ranking.', true],
-        'modul-terminbuchung' => ['Terminbuchung', 7900, 'Service', 'Kunden buchen freie Termine direkt auf Ihrer Website, mit Bestätigung und Erinnerung per E-Mail.'],
-        'modul-mehrsprachigkeit' => ['Mehrsprachigkeit', 9900, 'Inhalte', 'Jede Seite in mehreren Sprachen, mit Sprachumschalter und KI-Übersetzungsvorschlag.'],
-        'modul-gutscheine' => ['Gutscheine und Rabatte', 4900, 'Shop', 'Rabattcodes, Geschenkgutscheine und zeitlich begrenzte Aktionen für Ihren Shop.'],
-        'modul-mitgliederbereich' => ['Mitgliederbereich', 8900, 'Inhalte', 'Geschützte Seiten und Downloads für angemeldete Kunden oder Vereinsmitglieder.'],
-        'modul-warenwirtschaft' => ['Warenwirtschaft-Anbindung', 14900, 'Shop', 'Bestände und Bestellungen mit Ihrer Warenwirtschaft abgleichen, z. B. per CSV-Schnittstelle.'],
+        'modul-terminbuchung' => ['Terminbuchung', 7900, 'Service', 'Kunden buchen freie Termine direkt auf Ihrer Website, mit Bestätigung und Erinnerung per E-Mail.', true],
+        'modul-mehrsprachigkeit' => ['Mehrsprachigkeit', 9900, 'Inhalte', 'Jede Seite in mehreren Sprachen, mit Sprachumschalter und KI-Übersetzungsvorschlag.', true],
+        'modul-gutscheine' => ['Gutscheine und Rabatte', 4900, 'Shop', 'Rabattcodes, Geschenkgutscheine und zeitlich begrenzte Aktionen für Ihren Shop.', true],
+        'modul-mitgliederbereich' => ['Mitgliederbereich', 8900, 'Inhalte', 'Geschützte Seiten und Downloads für angemeldete Kunden oder Vereinsmitglieder.', true],
+        'modul-warenwirtschaft' => ['Warenwirtschaft-Anbindung', 14900, 'Shop', 'Bestände und Preise per CSV oder Schnittstelle mit Ihrer Warenwirtschaft abgleichen, Bestellungen für die Buchhaltung exportieren.', true],
+        'modul-kundenkonto' => ['Kundenkonto', 4900, 'Shop', 'Kunden legen ein Konto an, speichern Kontakt-, Rechnungs- und Lieferadresse und sehen alle Bestellungen. Die Kasse ist beim nächsten Einkauf schon ausgefüllt.', true],
+        'modul-datensicherung' => ['Datensicherung', 3900, 'Technik', 'Komplette Sicherung per Klick oder automatisch jeden Tag. Zurückspielen in einer Minute, auch für den Umzug auf einen neuen Server.', true],
+        'modul-google-bewertungen' => ['Google-Bewertungen', 3900, 'Marketing', 'Ihre Sterne und die neuesten Google-Bewertungen auf der Website, dazu Bewertungslink und QR-Code für zufriedene Kunden.', true],
     ];
 
     public static function installed(): bool
@@ -122,6 +126,10 @@ class NovaSalesSite
         foreach (self::PAID_MODULES as $slug => $m) {
             [$name, $cents, $area, $text] = $m;
             $available = $m[4] ?? false;
+            $key = str_replace('modul-', '', $slug);
+            $free = ModulePricing::isFree($key);
+            $cents = $free ? $cents : ModulePricing::price($key);
+            $available = $available && ! $free;
             $count += $this->product($slug, [
                 'name' => 'Modul: '.$name, 'sku' => strtoupper(Str::limit(str_replace('modul-', 'MOD-', $slug), 20, '')), 'price_cents' => $cents, 'tax_rate' => $taxRate,
                 'short_description' => $text,
@@ -156,7 +164,7 @@ class NovaSalesSite
                 ]);
             }
             foreach (self::PAID_MODULES as $slug => $m) {
-                if ($m[4] ?? false) {
+                if (($m[4] ?? false) && ! ModulePricing::isFree(str_replace('modul-', '', $slug))) {
                     Product::where('slug', $slug)->update(['is_active' => true]);
                 }
             }
@@ -188,6 +196,29 @@ class NovaSalesSite
 
             return ['products' => $added, 'pages' => $pages];
         });
+    }
+
+    /** Modul-Übersichten auf den Seiten neu aufbauen, z. B. nach geänderten Preisen */
+    public function refreshModuleBlocks(): int
+    {
+        $pages = 0;
+        foreach (Page::all() as $page) {
+            $blocks = $page->blocks ?? [];
+            $changed = false;
+            foreach ($blocks as &$b) {
+                if (($b['type'] ?? null) === 'modules' && ! empty($b['data']['builder'])) {
+                    $b['data']['items'] = $this->moduleItems();
+                    $changed = true;
+                }
+            }
+            unset($b);
+            if ($changed) {
+                $page->update(['blocks' => app(BlockSanitizer::class)->clean($blocks)]);
+                $pages++;
+            }
+        }
+
+        return $pages;
     }
 
     private static function modulesLine(array $modules): string
@@ -485,10 +516,15 @@ class NovaSalesSite
         ];
         $items = array_map(fn ($c) => ['name' => $c[0], 'category' => $c[1], 'text' => $c[2], 'kind' => 'core'], $core);
         $items[] = ['name' => 'Öffnungszeiten', 'category' => 'Inhalte', 'text' => 'Öffnungszeiten an einer Stelle pflegen. Das Dashboard erinnert Sie, wenn sie fehlen.', 'kind' => 'free'];
+        $pricing = ModulePricing::all();
         foreach (self::PAID_MODULES as $slug => $m) {
             [$name, $cents, $area, $text] = $m;
-            $items[] = ['name' => $name, 'category' => $area, 'text' => $text, 'kind' => 'paid', 'product' => $slug,
-                'price' => number_format($cents / 100, 2, ',', '.').' €', 'soon' => ! ($m[4] ?? false)];
+            $key = str_replace('modul-', '', $slug);
+            $p = $pricing[$key] ?? ['free' => false, 'price_cents' => $cents];
+            $items[] = $p['free']
+                ? ['name' => $name, 'category' => $area, 'text' => $text, 'kind' => 'free']
+                : ['name' => $name, 'category' => $area, 'text' => $text, 'kind' => 'paid', 'product' => $slug,
+                    'price' => number_format($p['price_cents'] / 100, 2, ',', '.').' €', 'soon' => ! ($m[4] ?? false)];
         }
 
         return $items;

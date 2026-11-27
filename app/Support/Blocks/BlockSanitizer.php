@@ -13,7 +13,7 @@ use Illuminate\Support\Str;
  */
 class BlockSanitizer
 {
-    public const TYPES = ['text', 'hero', 'image', 'video', 'slider', 'button', 'features', 'pricing', 'modules', 'compare', 'faq', 'cta', 'contact', 'newsletter', 'html'];
+    public const TYPES = ['text', 'hero', 'image', 'video', 'slider', 'button', 'features', 'pricing', 'modules', 'compare', 'faq', 'cta', 'contact', 'newsletter', 'booking', 'reviews', 'html'];
 
     /** Symbole für Vorteils-Kacheln */
     public const ICONS = ['sparkles', 'bolt', 'shield', 'cart', 'search', 'pages', 'menu', 'image', 'globe', 'layers', 'rocket', 'heart', 'users', 'chart', 'lock', 'clock', 'check', 'code', 'puzzle', 'key', 'eye', 'mail'];
@@ -187,6 +187,24 @@ class BlockSanitizer
         ];
     }
 
+    private function cleanReviews(array $d): array
+    {
+        return [
+            ...$this->heading($d),
+            'limit' => max(1, min(5, (int) ($d['limit'] ?? 3))),
+            'show_button' => (bool) ($d['show_button'] ?? true),
+        ];
+    }
+
+    private function cleanBooking(array $d): array
+    {
+        return [
+            ...$this->heading($d),
+            'button_label' => $this->str($d['button_label'] ?? '', 40) ?: 'Termin wählen',
+            'service' => max(0, (int) ($d['service'] ?? 0)),
+        ];
+    }
+
     /** Überschrift und Einleitung, die viele Blöcke gemeinsam haben */
     private function heading(array $d): array
     {
@@ -245,6 +263,7 @@ class BlockSanitizer
             'provider' => $parsed['provider'] ?? null,
             'video_id' => $parsed['id'] ?? null,
             'file' => $parsed ? null : $this->mediaUrl($d['file'] ?? null),
+            'poster' => $this->mediaUrl($d['poster'] ?? null),
             'caption' => $this->str($d['caption'] ?? '', 300),
         ];
     }

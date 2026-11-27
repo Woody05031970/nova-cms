@@ -2,9 +2,12 @@
 
 namespace App\Models;
 
+use App\Licensing\Features;
 use App\Support\Blocks\BlockSanitizer;
+use App\Support\I18n\Languages;
 use App\Support\Seo\PageAnalyzer;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Str;
@@ -17,7 +20,7 @@ class Page extends Model
 
     protected $fillable = [
         'title', 'slug', 'status', 'blocks', 'meta_title', 'meta_description', 'focus_keyword',
-        'is_home', 'show_in_menu', 'menu_order', 'purpose', 'published_at', 'updated_by',
+        'is_home', 'show_in_menu', 'menu_order', 'purpose', 'published_at', 'updated_by', 'locale', 'translation_of', 'visibility',
     ];
 
     protected function casts(): array
@@ -39,7 +42,7 @@ class Page extends Model
             }
             // Neue Adresse einer veröffentlichten Seite: alte Links und Google-Treffer leiten weiter
             $previous = $page->getPrevious();
-            if (isset($previous['slug']) && $page->wasChanged('slug') && ($previous['status'] ?? $page->status) === 'published' && ! $page->is_home) {
+            if (isset($previous['slug']) && $page->locale === null && $page->wasChanged('slug') && ($previous['status'] ?? $page->status) === 'published' && ! $page->is_home) {
                 Redirect::remember('/'.$previous['slug'], '/'.$page->slug);
             }
         });
@@ -68,7 +71,40 @@ class Page extends Model
 
     public function url(): string
     {
+        if ($this->locale !== null) {
+            return $this->source?->is_home ? route('home.locale', $this->locale) : route('page.locale', [$this->locale, $this->slug]);
+        }
+
         return $this->is_home ? route('home') : route('page.show', $this->slug);
+    }
+
+    /** Deutsche Ausgangsseite einer Übersetzung (Modul Mehrsprachigkeit) */
+    public function source(): BelongsTo
+    {
+        return $this->belongsTo(Page::class, 'translation_of');
+    }
+
+    public function translations(): HasMany
+    {
+        return $this->hasMany(Page::class, 'translation_of');
+    }
+
+    /** Nur für angemeldete Mitglieder sichtbar (Modul Mitgliederbereich) */
+    public function isMembersOnly(): bool
+    {
+        return $this->visibility === 'members' && Features::on('mitgliederbereich');
+    }
+
+    /** Seiten in der Hauptsprache, ohne Übersetzungen */
+    public function scopeMain($query)
+    {
+        return $query->whereNull('translation_of');
+    }
+
+    /** Für Gäste sichtbar: keine Seiten nur für Mitglieder */
+    public function scopePublic($query)
+    {
+        return Features::on('mitgliederbereich') ? $query->where(fn ($q) => $q->whereNull('visibility')->orWhere('visibility', '!=', 'members')) : $query;
     }
 
     public function scopePublished($query)
@@ -80,7 +116,7 @@ class Page extends Model
     {
         $base = Str::slug($value, '-', 'de') ?: 'seite';
         // Diese Pfade gehören dem System
-        if (in_array($base, ['admin', 'install', 'uploads', 'build', 'up', 'storage'], true)) {
+        if (in_array($base, ['admin', 'install', 'uploads', 'build', 'up', 'storage', 'termine', 'mitglieder', 'konto', 'passwort-neu', 'api', 'de', ...array_keys(Languages::AVAILABLE)], true)) {
             $base .= '-seite';
         }
 

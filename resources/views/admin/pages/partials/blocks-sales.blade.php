@@ -187,6 +187,35 @@
     </div>
 </template>
 
+{{-- TERMINBUCHUNG --}}
+<template x-if="block.type === 'booking'">
+    <div class="space-y-4">
+        <p x-show="!features.terminbuchung" class="rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-900">Das Modul „Terminbuchung“ ist in Ihrer Lizenz nicht enthalten. Der Baustein wird auf der Website erst angezeigt, wenn es freigeschaltet ist.</p>
+        {!! $heading !!}
+        <div class="grid gap-3 sm:grid-cols-2">
+            <div><label class="nova-label">Leistungen</label>
+                <select class="nova-input" x-model.number="block.data.service"><option :value="0">Alle Leistungen zeigen</option>
+                    <template x-for="s in services" :key="s.id"><option :value="s.id" x-text="'Nur: ' + s.name" :selected="block.data.service == s.id"></option></template></select></div>
+            <div><label class="nova-label">Knopf-Text</label><input class="nova-input" x-model="block.data.button_label" maxlength="40"></div>
+        </div>
+        <p class="text-xs text-slate-500">Leistungen, Öffnungszeiten und gebuchte Termine verwalten Sie unter „Termine“.</p>
+    </div>
+</template>
+
+{{-- GOOGLE-BEWERTUNGEN --}}
+<template x-if="block.type === 'reviews'">
+    <div class="space-y-4">
+        <p x-show="!features['google-bewertungen']" class="rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-900">Das Modul „Google-Bewertungen“ ist in Ihrer Lizenz nicht enthalten. Der Baustein wird auf der Website erst angezeigt, wenn es freigeschaltet ist.</p>
+        {!! $heading !!}
+        <div class="grid gap-3 sm:grid-cols-2">
+            <div><label class="nova-label">Wie viele Bewertungen?</label>
+                <select class="nova-input" x-model.number="block.data.limit"><template x-for="n in [1,2,3,4,5]" :key="n"><option :value="n" x-text="n" :selected="block.data.limit == n"></option></template></select></div>
+            <label class="flex items-center gap-2 pt-6 text-sm"><input type="checkbox" x-model="block.data.show_button" class="accent-nova-600"> Knopf „Bewertung schreiben“ zeigen</label>
+        </div>
+        <p class="text-xs text-slate-500">Verbindung zu Google und Mindest-Sterne stellen Sie unter „Bewertungen“ ein.</p>
+    </div>
+</template>
+
 {{-- NEWSLETTER --}}
 <template x-if="block.type === 'newsletter'">
     <div class="space-y-4">

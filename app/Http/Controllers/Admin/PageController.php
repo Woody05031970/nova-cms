@@ -23,7 +23,7 @@ class PageController extends Controller
     {
         $trash = $request->boolean('papierkorb');
 
-        $pages = ($trash ? Page::onlyTrashed() : Page::query())
+        $pages = ($trash ? Page::onlyTrashed() : Page::query()->main()->with('translations'))
             ->orderByDesc('is_home')->orderBy('menu_order')->orderBy('title')->get();
 
         return view('admin.pages.index', [
@@ -75,6 +75,7 @@ class PageController extends Controller
             'focus_keyword' => ['nullable', 'string', 'max:100'],
             'show_in_menu' => ['boolean'],
             'is_home' => ['boolean'],
+            'members_only' => ['nullable', 'boolean'],
             'action' => ['required', Rule::in(['save', 'publish', 'unpublish', 'schedule'])],
             'publish_at' => [Rule::excludeIf($request->input('action') !== 'schedule'), 'required', 'date', 'after:now'],
             'social_networks' => ['nullable', 'array'],
@@ -93,7 +94,7 @@ class PageController extends Controller
         DB::transaction(function () use ($page, $data, $blocks, $request) {
             $page->saveRevision($request->user()->id);
 
-            $isHome = (bool) ($data['is_home'] ?? false);
+            $isHome = $page->locale === null && (bool) ($data['is_home'] ?? false);
             if ($isHome && ! $page->is_home) {
                 Page::where('is_home', true)->update(['is_home' => false]);
             }
@@ -113,8 +114,9 @@ class PageController extends Controller
                 'meta_title' => $data['meta_title'] ?? null,
                 'meta_description' => $data['meta_description'] ?? null,
                 'focus_keyword' => isset($data['focus_keyword']) ? trim($data['focus_keyword']) : null,
-                'show_in_menu' => (bool) ($data['show_in_menu'] ?? false),
+                'show_in_menu' => $page->locale === null && (bool) ($data['show_in_menu'] ?? false),
                 'is_home' => $isHome,
+                'visibility' => Features::on('mitgliederbereich') && $request->has('members_only') ? ($request->boolean('members_only') && ! $isHome ? 'members' : 'public') : $page->visibility,
                 'status' => $status,
                 'published_at' => match (true) {
                     $schedule => Carbon::parse($data['publish_at']),

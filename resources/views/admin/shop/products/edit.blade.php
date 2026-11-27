@@ -97,6 +97,13 @@
                     <input type="hidden" name="is_active" value="0">
                     <input type="checkbox" name="is_active" value="1" class="size-4" @checked(old('is_active', $product->is_active))> Im Shop anzeigen
                 </label>
+                @if (\App\Licensing\Features::on('gutscheine'))
+                    <label class="flex items-start gap-2.5 text-sm">
+                        <input type="hidden" name="is_voucher" value="0">
+                        <input type="checkbox" name="is_voucher" value="1" class="mt-0.5 size-4" @checked(old('is_voucher', $product->is_voucher)) data-is-voucher>
+                        <span><span class="font-medium">Geschenkgutschein</span><span class="block text-xs text-slate-500">Nach der Zahlung bekommt der Käufer pro Stück einen Gutscheincode im Wert des Preises per E-Mail.</span></span>
+                    </label>
+                @endif
                 <div class="grid grid-cols-2 gap-3">
                     <div>
                         <label class="nova-label" for="price">Preis (brutto)</label>

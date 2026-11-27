@@ -18,6 +18,7 @@ use App\Models\Setting;
 use App\Models\User;
 use App\Plugins\Hooks;
 use App\Plugins\PluginManager;
+use App\Shop\GiftVouchers;
 use App\Shop\Payments\PaymentRegistry;
 use App\Shop\ShopSettings;
 use App\Support\Install\InstallState;
@@ -60,6 +61,8 @@ class AppServiceProvider extends ServiceProvider
             $model::deleted(fn () => PageCache::flush());
         }
         // Auf dem Lizenzserver: Lizenzen für bezahlte Bestellungen ausgeben
+        // Geschenkgutscheine nach der Zahlung ausstellen (Modul Gutscheine und Rabatte)
+        $this->app->make(Hooks::class)->addAction('shop.order.paid', fn ($order) => $this->app->make(GiftVouchers::class)->issue($order));
         $this->app->make(Hooks::class)->addAction('shop.order.paid', function ($order) {
             if (LicenseServer::enabled()) {
                 $this->app->make(LicenseIssuer::class)->forOrder($order);

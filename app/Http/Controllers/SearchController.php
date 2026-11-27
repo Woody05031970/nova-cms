@@ -19,7 +19,7 @@ class SearchController extends Controller
 
         if (mb_strlen($q) >= 2) {
             $terms = array_values(array_filter(preg_split('/\s+/u', mb_strtolower($q)), fn ($t) => mb_strlen($t) >= 2));
-            foreach (Page::published()->get() as $page) {
+            foreach (Page::published()->when(! $request->user()?->canSeeMembersArea(), fn ($q) => $q->public())->get() as $page) {
                 $text = $page->plainText();
                 $score = $this->score($page->title, $text.' '.$page->meta_description, $terms);
                 if ($score > 0) {
