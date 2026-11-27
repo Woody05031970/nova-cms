@@ -9,14 +9,14 @@
         @csrf
         <fieldset class="grid gap-3 sm:grid-cols-2">
             <legend class="sr-only">Art der Datenbank</legend>
-            <label class="flex cursor-pointer flex-col rounded-lg border p-4 has-checked:border-nova-500 has-checked:ring-2 has-checked:ring-nova-200 {{ $sqliteAvailable ? '' : 'pointer-events-none opacity-50' }}">
+            <label class="flex cursor-pointer flex-col rounded-lg border border-slate-200 p-4 has-checked:border-nova-500 has-checked:ring-2 has-checked:ring-nova-200 {{ $sqliteAvailable ? '' : 'pointer-events-none opacity-50' }}">
                 <span class="flex items-center gap-2 font-medium">
                     <input type="radio" name="driver" value="sqlite" class="accent-nova-600" @checked($driver === 'sqlite') @disabled(! $sqliteAvailable)>
                     Einfach (empfohlen)
                 </span>
                 <span class="mt-1 text-sm text-slate-600">Keine Zugangsdaten nötig. Ideal für kleine und mittlere Websites.</span>
             </label>
-            <label class="flex cursor-pointer flex-col rounded-lg border p-4 has-checked:border-nova-500 has-checked:ring-2 has-checked:ring-nova-200 {{ $mysqlAvailable ? '' : 'pointer-events-none opacity-50' }}">
+            <label class="flex cursor-pointer flex-col rounded-lg border border-slate-200 p-4 has-checked:border-nova-500 has-checked:ring-2 has-checked:ring-nova-200 {{ $mysqlAvailable ? '' : 'pointer-events-none opacity-50' }}">
                 <span class="flex items-center gap-2 font-medium">
                     <input type="radio" name="driver" value="mysql" class="accent-nova-600" @checked($driver === 'mysql') @disabled(! $mysqlAvailable)>
                     MySQL-Datenbank
