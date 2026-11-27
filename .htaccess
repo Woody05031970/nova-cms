@@ -1,0 +1,12 @@
+# Für Webspaces, bei denen sich das Startverzeichnis nicht auf "public" stellen lässt:
+# Alle Aufrufe werden in den Ordner public umgeleitet. Besser (wenn möglich):
+# Im Kundenbereich des Hosters das Zielverzeichnis der Domain auf ".../public" setzen.
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteRule ^(.*)$ public/$1 [L]
+</IfModule>
+
+# Vertrauliche Dateien niemals ausliefern
+<FilesMatch "^(\.env.*|composer\.(json|lock)|artisan|package(-lock)?\.json|phpunit\.xml)$">
+    Require all denied
+</FilesMatch>

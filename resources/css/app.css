@@ -1,0 +1,39 @@
+@import 'tailwindcss';
+
+@source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
+@source '../../storage/framework/views/*.php';
+@source '../../plugins/**/*.blade.php';
+@source '../../plugins/**/*.php';
+@source '../../plugin-examples/**/*.php';
+
+@theme {
+    --font-sans: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    --color-nova-50: #f3f1ff;
+    --color-nova-100: #e9e5ff;
+    --color-nova-200: #d5ceff;
+    --color-nova-500: #6d4fff;
+    --color-nova-600: #5a37f5;
+    --color-nova-700: #4a28d8;
+    --color-nova-900: #2a1777;
+}
+
+@layer components {
+    .nova-input {
+        @apply block w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-slate-900 shadow-xs placeholder:text-slate-400 focus:border-nova-500 focus:ring-2 focus:ring-nova-200 focus:outline-none;
+    }
+    .nova-label {
+        @apply mb-1.5 block text-sm font-medium text-slate-800;
+    }
+    .nova-help {
+        @apply mt-1 text-sm text-slate-500;
+    }
+    .nova-btn {
+        @apply inline-flex items-center justify-center gap-2 rounded-lg bg-nova-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-nova-700 focus:ring-2 focus:ring-nova-200 focus:outline-none disabled:opacity-50;
+    }
+    .nova-btn-secondary {
+        @apply inline-flex items-center justify-center gap-2 rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 shadow-xs hover:bg-slate-50;
+    }
+    .nova-card {
+        @apply rounded-xl border border-slate-200 bg-white p-6 shadow-xs;
+    }
+}

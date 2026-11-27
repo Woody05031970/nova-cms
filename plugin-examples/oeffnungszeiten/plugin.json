@@ -1,0 +1,10 @@
+{
+    "slug": "oeffnungszeiten",
+    "name": "Öffnungszeiten",
+    "version": "1.0.0",
+    "description": "Pflegen Sie Ihre Öffnungszeiten an einer Stelle. Das Dashboard erinnert Sie, wenn sie fehlen.",
+    "author": "Nova CMS",
+    "requires": "0.1.0",
+    "namespace": "NovaPlugins\\Oeffnungszeiten",
+    "provider": "NovaPlugins\\Oeffnungszeiten\\OeffnungszeitenServiceProvider"
+}
