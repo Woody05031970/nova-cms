@@ -68,4 +68,20 @@
             </form>
         </section>
     @endif
+    <section class="nova-card mt-6" id="funktionen">
+        <h2 class="text-base font-semibold">Freigeschaltete Funktionen</h2>
+        <p class="mt-1 text-sm text-slate-500">Welche Zusatzfunktionen diese Installation nutzen darf. In der Testphase ist alles freigeschaltet.</p>
+        <ul class="mt-4 divide-y divide-slate-100">
+            @foreach (app(\App\Licensing\Features::class)->overview() as $key => $f)
+                <li class="flex items-start justify-between gap-4 py-3" data-feature="{{ $key }}">
+                    <div><p class="text-sm font-medium text-slate-900">{{ $f['name'] }}</p><p class="text-xs text-slate-500">{{ $f['description'] }}</p></div>
+                    @if ($f['enabled'])
+                        <span class="shrink-0 rounded-full px-2.5 py-1 text-xs font-medium bg-emerald-50 text-emerald-700">Aktiv</span>
+                    @else
+                        <span class="shrink-0 rounded-full px-2.5 py-1 text-xs font-medium bg-slate-100 text-slate-600">Nicht enthalten</span>
+                    @endif
+                </li>
+            @endforeach
+        </ul>
+    </section>
 @endsection

@@ -96,6 +96,11 @@
             <p>Richtet eine komplette Website zum Verkauf von Nova CMS ein: Startseite, Funktionen, Module, Vergleich, Preise, häufige Fragen, Testversion und Kontakt, dazu Shop-Produkte für die Lizenzen und kostenpflichtige Module. Bestehende Seiten bleiben erhalten; die neue Startseite ersetzt nur die bisherige als Startseite.</p>
             @if (\App\Support\Starter\NovaSalesSite::installed())
                 <p class="flex items-center gap-2 font-medium text-emerald-700"><x-icon name="check" class="size-4" /> Bereits eingerichtet am {{ \Illuminate\Support\Carbon::parse(\App\Models\Setting::get(\App\Support\Starter\NovaSalesSite::SETTING))->format('d.m.Y') }}.</p>
+                <form method="POST" action="{{ route('admin.starter.update') }}">
+                    @csrf
+                    <p class="mb-2">Nach einem Update auf eine neue Version können Sie neue Module und Shop-Produkte ergänzen. Ihre eigenen Texte und Preise bleiben dabei erhalten.</p>
+                    <button class="nova-btn-secondary" data-starter-refresh>Neue Module ergänzen</button>
+                </form>
             @else
                 <form method="POST" action="{{ route('admin.starter.store') }}" onsubmit="return confirm('Verkaufswebsite jetzt einrichten?')">
                     @csrf

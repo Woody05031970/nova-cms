@@ -1,6 +1,6 @@
 {{-- Gezeichnete Ansicht der Nova-Verwaltung, ganz ohne Bilddatei --}}
 <div class="relative mx-auto w-full max-w-xl lg:mr-0" aria-hidden="true">
-    <div class="absolute -inset-8 -z-10 rounded-[2.5rem] bg-gradient-to-tr from-nova-500/30 via-fuchsia-500/20 to-transparent blur-3xl"></div>
+    <div class="nova-glow absolute -inset-8 -z-10 rounded-[2.5rem] bg-gradient-to-tr from-nova-500/30 via-fuchsia-500/20 to-transparent blur-3xl"></div>
     <div class="overflow-hidden rounded-2xl border border-white/10 bg-slate-900/80 shadow-2xl shadow-black/40 backdrop-blur">
         <div class="flex items-center gap-1.5 border-b border-white/10 px-4 py-3">
             <span class="size-2.5 rounded-full bg-white/20"></span><span class="size-2.5 rounded-full bg-white/20"></span><span class="size-2.5 rounded-full bg-white/20"></span>
@@ -31,7 +31,7 @@
             </div>
         </div>
     </div>
-    <div class="absolute -bottom-6 -left-4 w-56 rounded-xl border border-white/10 bg-slate-950/90 p-2 shadow-2xl backdrop-blur sm:-left-10">
+    <div class="nova-float absolute -bottom-6 -left-4 w-56 rounded-xl border border-white/10 bg-slate-950/90 p-2 shadow-2xl backdrop-blur sm:-left-10">
         <div class="flex items-center gap-2 border-b border-white/10 px-2 pb-2 text-[11px] text-white/60"><x-icon name="search" class="size-3.5" />Preise<span class="ml-auto rounded border border-white/15 px-1 font-mono text-[9px]">Strg K</span></div>
         <div class="mt-1.5 rounded-md bg-nova-600 px-2 py-1.5 text-[11px] text-white">Seite „Preise“ bearbeiten</div>
         <div class="px-2 py-1.5 text-[11px] text-white/50">Produkt „Nova Business“</div>
