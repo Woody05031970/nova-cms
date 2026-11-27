@@ -21,6 +21,14 @@ class Features
         'social' => ['Social-Media-Beiträge', 'Beiträge für Instagram, Facebook und LinkedIn aus einer Seite oder einem Produkt, per KI oder Vorlage.'],
         'redaktionsplan' => ['Redaktionsplan', 'Seiten zeitgesteuert veröffentlichen und Themen, Aktionen und Beiträge im Kalender planen.'],
         'statistik' => ['Besucherstatistik', 'Aufrufe, beliebte Seiten, Herkunft und Suchbegriffe, ohne Cookies und ohne fremde Dienste.'],
+        'terminbuchung' => ['Terminbuchung', 'Kunden buchen freie Termine auf der Website, mit Bestätigung, Erinnerung und Absage per E-Mail.'],
+        'mehrsprachigkeit' => ['Mehrsprachigkeit', 'Seiten in weiteren Sprachen mit Sprachumschalter, auf Wunsch von der KI übersetzt.'],
+        'gutscheine' => ['Gutscheine und Rabatte', 'Rabattcodes, Aktionen mit Zeitraum und Geschenkgutscheine zum Verkaufen im Shop.'],
+        'mitgliederbereich' => ['Mitgliederbereich', 'Geschützte Seiten und Downloads für angemeldete Kunden oder Vereinsmitglieder.'],
+        'warenwirtschaft' => ['Warenwirtschaft-Anbindung', 'Bestände und Preise per CSV abgleichen, Bestellungen exportieren und Schnittstelle für Ihre Warenwirtschaft.'],
+        'datensicherung' => ['Datensicherung', 'Komplette Sicherung von Inhalten, Bildern und Daten per Klick oder automatisch, Zurückspielen und Umzug auf einen neuen Server.'],
+        'google-bewertungen' => ['Google-Bewertungen', 'Sterne und neueste Bewertungen aus Google auf der Website, dazu Bewertungslink und QR-Code.'],
+        'kundenkonto' => ['Kundenkonto', 'Kunden registrieren sich im Shop, speichern Kontakt-, Rechnungs- und Lieferadresse und sehen ihre Bestellungen.'],
         'turbo' => ['Turbo', 'Zwischenspeicher für Besucher: Seiten laden deutlich schneller, gut für Google (Core Web Vitals).'],
     ];
 

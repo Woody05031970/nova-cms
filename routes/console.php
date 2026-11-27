@@ -49,6 +49,6 @@ Artisan::command('nova:license-keys', function () {
 // Geplante Seiten und Social-Media-Beiträge (läuft auch ohne Cronjob beim nächsten Seitenaufruf)
 Artisan::command('nova:tick', function () {
     $r = Tick::run();
-    $this->info("{$r['pages']} Seiten veröffentlicht, {$r['posts']} Beiträge gesendet.");
+    $this->info("{$r['pages']} Seiten veröffentlicht, {$r['posts']} Beiträge gesendet, {$r['reminders']} Terminerinnerungen".($r['backup'] ? ', Sicherung erstellt.' : '.'));
 })->purpose('Veröffentlicht fällige Seiten und Beiträge');
 Schedule::command('nova:tick')->everyMinute();

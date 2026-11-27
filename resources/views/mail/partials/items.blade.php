@@ -8,6 +8,7 @@
         </tr>
     @endforeach
     <tr><td colspan="2">Zwischensumme</td><td style="text-align:right;white-space:nowrap">{{ $order->money($order->subtotal_cents) }}</td></tr>
+    @if ($order->discount_cents)<tr><td colspan="2">Rabatt {{ $order->coupon_code }}</td><td style="text-align:right;white-space:nowrap">−{{ $order->money($order->discount_cents) }}</td></tr>@endif
     <tr><td colspan="2">Versand</td><td style="text-align:right;white-space:nowrap">{{ $order->shipping_cents ? $order->money($order->shipping_cents) : 'kostenlos' }}</td></tr>
     <tr style="font-weight:bold;border-top:2px solid #0f172a"><td colspan="2">Gesamtsumme</td><td style="text-align:right;white-space:nowrap">{{ $order->money($order->total_cents) }}</td></tr>
     @if ($order->small_business)

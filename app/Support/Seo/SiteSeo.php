@@ -31,7 +31,7 @@ class SiteSeo
 
     public function sitemap(): string
     {
-        $pages = Page::published()->orderByDesc('is_home')->orderBy('menu_order')->get(['slug', 'is_home', 'updated_at', 'purpose']);
+        $pages = Page::published()->public()->with('source:id,is_home')->orderByDesc('is_home')->orderBy('menu_order')->get(['id', 'slug', 'is_home', 'updated_at', 'purpose', 'locale', 'translation_of']);
 
         $xml = '<?xml version="1.0" encoding="UTF-8"?>'."\n".'<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">'."\n";
         foreach ($pages as $page) {

@@ -50,6 +50,11 @@ class LoginController extends Controller
 
         RateLimiter::clear($key);
 
+        // Mitglieder haben keinen Zugang zur Verwaltung
+        if (! $user->isAdmin()) {
+            return back()->onlyInput('email')->withErrors(['email' => 'Dieses Konto hat keinen Zugang zur Verwaltung.']);
+        }
+
         if ($user->hasTwoFactor()) {
             $request->session()->put('nova.2fa', ['id' => $user->id, 'remember' => $request->boolean('remember'), 'at' => time()]);
 

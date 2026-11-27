@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin\Shop;
 
 use App\Http\Controllers\Controller;
+use App\Licensing\Features;
 use App\Licensing\LicenseServer;
 use App\Models\OrderItem;
 use App\Models\Product;
@@ -103,6 +104,9 @@ class ProductController extends Controller
         $data['description'] = ! empty($data['description']) ? $sanitizer->html($data['description']) : null;
         $data['images'] = array_values(array_filter(array_map(fn ($u) => $sanitizer->image($u), $data['images'] ?? [])));
         $data['is_active'] = $request->boolean('is_active');
+        if (Features::on('gutscheine')) {
+            $data['is_voucher'] = $request->boolean('is_voucher');
+        }
         $data['sort'] = (int) ($data['sort'] ?? 0);
         // Auf dem Lizenzserver: beim Kauf eine Lizenz ausgeben
         if (LicenseServer::enabled()) {

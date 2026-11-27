@@ -3,7 +3,9 @@
 namespace App\Http\Controllers\Admin\Licensing;
 
 use App\Http\Controllers\Controller;
+use App\Licensing\Features;
 use App\Licensing\LicenseServer;
+use App\Licensing\ModulePricing;
 use App\Models\IssuedLicense;
 use App\Models\LicenseActivation;
 use App\Models\MarketModule;
@@ -44,6 +46,34 @@ class ServerController extends Controller
                 'active30' => LicenseActivation::where('last_seen_at', '>=', now()->subDays(30))->count(),
             ],
         ]);
+    }
+
+    /** Module und Preise: je Modul kostenlos oder kostenpflichtig, mit Preis */
+    public function pricing(): View
+    {
+        return view('admin.license.pricing', ['modules' => ModulePricing::all()]);
+    }
+
+    public function updatePricing(Request $request): RedirectResponse
+    {
+        $request->validate(['modules' => ['required', 'array'], 'modules.*.kind' => ['required', Rule::in(['free', 'paid'])], 'modules.*.price' => ['nullable', 'string', 'max:20']]);
+        $pricing = [];
+        $errors = [];
+        foreach ($request->input('modules') as $key => $m) {
+            $cents = Money::parse($m['price'] ?? null);
+            if ($m['kind'] === 'paid' && (! $cents || $cents < 1)) {
+                $errors['modules.'.$key.'.price'] = 'Bitte einen Preis für „'.(Features::ALL[$key][0] ?? $key).'“ angeben oder das Modul auf kostenlos stellen.';
+            }
+            $pricing[$key] = ['free' => $m['kind'] === 'free', 'price_cents' => (int) $cents];
+        }
+        if ($errors) {
+            return back()->withInput()->withErrors($errors);
+        }
+        $changed = ModulePricing::save($pricing);
+        $free = count(array_filter($pricing, fn ($p) => $p['free']));
+
+        return redirect()->route('admin.license-server.pricing')->with('status', 'Gespeichert: '.$free.' kostenlose und '.(count($pricing) - $free).' kostenpflichtige Module.'
+            .($changed ? ' '.$changed.' Produkte im Shop angepasst.' : '').' Kunden bekommen kostenlose Module beim nächsten Lizenzabgleich automatisch.');
     }
 
     public function show(IssuedLicense $license): View

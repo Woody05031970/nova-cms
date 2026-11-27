@@ -1,21 +1,30 @@
 <?php
 
+use App\Http\Controllers\AccountController as CustomerAccountController;
 use App\Http\Controllers\Admin\AccessibilityController;
 use App\Http\Controllers\Admin\AccountController;
 use App\Http\Controllers\Admin\AiController;
+use App\Http\Controllers\Admin\BackupController;
+use App\Http\Controllers\Admin\BookingAdminController;
 use App\Http\Controllers\Admin\ContactMessageController;
+use App\Http\Controllers\Admin\CouponController;
+use App\Http\Controllers\Admin\CustomerController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\DesignController;
 use App\Http\Controllers\Admin\EditorialController;
+use App\Http\Controllers\Admin\ErpController;
 use App\Http\Controllers\Admin\GeoController;
+use App\Http\Controllers\Admin\LanguageController;
 use App\Http\Controllers\Admin\Licensing\LicenseController;
 use App\Http\Controllers\Admin\Licensing\MarketplaceController;
 use App\Http\Controllers\Admin\Licensing\ServerController as LicenseServerController;
 use App\Http\Controllers\Admin\MediaController;
+use App\Http\Controllers\Admin\MembersAdminController;
 use App\Http\Controllers\Admin\MenuController;
 use App\Http\Controllers\Admin\NewsletterAdminController;
 use App\Http\Controllers\Admin\PageController;
 use App\Http\Controllers\Admin\PluginController;
+use App\Http\Controllers\Admin\ReviewsController;
 use App\Http\Controllers\Admin\SearchController;
 use App\Http\Controllers\Admin\SecurityController;
 use App\Http\Controllers\Admin\SeoController;
@@ -30,15 +39,19 @@ use App\Http\Controllers\Admin\StatsController;
 use App\Http\Controllers\Admin\TurboController;
 use App\Http\Controllers\Admin\UploadController;
 use App\Http\Controllers\Admin\WhatsAppController;
+use App\Http\Controllers\Api\ErpApiController;
 use App\Http\Controllers\Auth\LoginController;
+use App\Http\Controllers\BookingController;
 use App\Http\Controllers\ContactController;
 use App\Http\Controllers\InstallController;
 use App\Http\Controllers\LicenseApiController;
+use App\Http\Controllers\MembersController;
 use App\Http\Controllers\NewsletterController;
 use App\Http\Controllers\SearchController as SiteSearchController;
 use App\Http\Controllers\SeoFileController;
 use App\Http\Controllers\ShopController;
 use App\Http\Controllers\SiteController;
+use App\Http\Middleware\ErpToken;
 use App\Http\Middleware\LicenseGate;
 use App\Http\Middleware\ShopEnabled;
 use Illuminate\Foundation\Http\Middleware\ValidateCsrfToken;
@@ -64,6 +77,43 @@ Route::middleware('feature:newsletter')->group(function () {
     Route::post('/newsletter/anmelden', [NewsletterController::class, 'subscribe'])->middleware('throttle:5,1')->name('newsletter.subscribe');
     Route::get('/newsletter/bestaetigen/{token}', [NewsletterController::class, 'confirm'])->name('newsletter.confirm');
 });
+Route::middleware('feature:terminbuchung')->prefix('termine')->name('booking.')->group(function () {
+    Route::get('/buchen', [BookingController::class, 'show'])->name('show');
+    Route::post('/buchen', [BookingController::class, 'store'])->middleware('throttle:10,1')->name('store');
+    Route::get('/{token}', [BookingController::class, 'status'])->where('token', '[A-Za-z0-9]{40}')->name('status');
+    Route::get('/{token}/kalender.ics', [BookingController::class, 'ics'])->where('token', '[A-Za-z0-9]{40}')->name('ics');
+    Route::get('/{token}/absagen', [BookingController::class, 'cancelForm'])->where('token', '[A-Za-z0-9]{40}')->name('cancel');
+    Route::post('/{token}/absagen', [BookingController::class, 'cancel'])->where('token', '[A-Za-z0-9]{40}')->middleware('throttle:10,1')->name('cancel.do');
+});
+Route::middleware('feature:mitgliederbereich')->prefix('mitglieder')->group(function () {
+    Route::get('/', [MembersController::class, 'home'])->name('members.home');
+    Route::get('/anmelden', [MembersController::class, 'loginForm'])->name('members.login');
+    Route::post('/anmelden', [MembersController::class, 'login'])->middleware('throttle:20,1')->name('members.login.do');
+    Route::post('/abmelden', [MembersController::class, 'logout'])->name('members.logout');
+    Route::get('/registrieren', [MembersController::class, 'registerForm'])->name('members.register');
+    Route::post('/registrieren', [MembersController::class, 'register'])->middleware('throttle:5,1')->name('members.register.do');
+    Route::get('/passwort-vergessen', [MembersController::class, 'forgotForm'])->name('members.forgot');
+    Route::post('/passwort-vergessen', [MembersController::class, 'forgot'])->middleware('throttle:5,1')->name('members.forgot.do');
+    Route::get('/downloads/{file}', [MembersController::class, 'download'])->name('members.download');
+});
+// Neues Passwort für Mitglieder und Kundenkonten
+Route::get('/passwort-neu/{token}', [MembersController::class, 'resetForm'])->name('password.reset');
+Route::post('/passwort-neu', [MembersController::class, 'reset'])->middleware('throttle:10,1')->name('members.reset.do');
+Route::middleware('feature:kundenkonto')->prefix('konto')->name('account.')->group(function () {
+    Route::get('/', [CustomerAccountController::class, 'home'])->name('home');
+    Route::get('/anmelden', [CustomerAccountController::class, 'loginForm'])->name('login');
+    Route::post('/anmelden', [CustomerAccountController::class, 'login'])->middleware('throttle:20,1')->name('login.do');
+    Route::post('/abmelden', [CustomerAccountController::class, 'logout'])->name('logout');
+    Route::get('/registrieren', [CustomerAccountController::class, 'registerForm'])->name('register');
+    Route::post('/registrieren', [CustomerAccountController::class, 'register'])->middleware('throttle:5,1')->name('register.do');
+    Route::get('/passwort-vergessen', [CustomerAccountController::class, 'forgotForm'])->name('forgot');
+    Route::post('/passwort-vergessen', [CustomerAccountController::class, 'forgot'])->middleware('throttle:5,1')->name('forgot.do');
+    Route::get('/daten', [CustomerAccountController::class, 'edit'])->name('edit');
+    Route::put('/daten', [CustomerAccountController::class, 'update'])->name('update');
+    Route::put('/passwort', [CustomerAccountController::class, 'password'])->middleware('throttle:10,1')->name('password');
+    Route::delete('/', [CustomerAccountController::class, 'destroy'])->name('destroy');
+});
+
 // Abmelden geht immer, auch wenn das Modul später wegfällt
 Route::get('/newsletter/abmelden/{token}', [NewsletterController::class, 'unsubscribeForm'])->name('newsletter.unsubscribe');
 Route::post('/newsletter/abmelden/{token}', [NewsletterController::class, 'unsubscribe'])->name('newsletter.unsubscribe.do');
@@ -75,6 +125,8 @@ Route::middleware(ShopEnabled::class)->group(function () {
     Route::get('/warenkorb', [ShopController::class, 'cart'])->name('shop.cart');
     Route::post('/warenkorb', [ShopController::class, 'add'])->middleware('throttle:60,1')->name('shop.cart.add');
     Route::patch('/warenkorb', [ShopController::class, 'update'])->name('shop.cart.update');
+    Route::post('/warenkorb/gutschein', [ShopController::class, 'coupon'])->middleware(['feature:gutscheine', 'throttle:20,1'])->name('shop.coupon');
+    Route::delete('/warenkorb/gutschein', [ShopController::class, 'removeCoupon'])->middleware('feature:gutscheine')->name('shop.coupon.remove');
     Route::get('/kasse', [ShopController::class, 'checkout'])->name('shop.checkout');
     Route::post('/kasse', [ShopController::class, 'placeOrder'])->middleware('throttle:10,1')->name('shop.checkout.place');
     Route::get('/bestellung/{token}', [ShopController::class, 'order'])->name('shop.order');
@@ -90,6 +142,16 @@ Route::prefix('api/nova')->middleware('throttle:60,1')
         Route::post('/freigeben', [LicenseApiController::class, 'release']);
         Route::post('/marktplatz', [LicenseApiController::class, 'catalog']);
         Route::post('/marktplatz/{slug}', [LicenseApiController::class, 'download'])->where('slug', '[a-z0-9-]+');
+    });
+
+// Schnittstelle für Warenwirtschaft und Buchhaltung (Modul Warenwirtschaft-Anbindung)
+Route::prefix('api/nova/ww')->middleware([ErpToken::class, 'throttle:120,1'])
+    ->withoutMiddleware([ValidateCsrfToken::class])
+    ->group(function () {
+        Route::get('/produkte', [ErpApiController::class, 'products']);
+        Route::patch('/produkte/{sku}', [ErpApiController::class, 'updateProduct'])->where('sku', '[^/]+');
+        Route::get('/bestellungen', [ErpApiController::class, 'orders']);
+        Route::patch('/bestellungen/{number}', [ErpApiController::class, 'updateOrder'])->where('number', '[A-Za-z0-9-]+');
     });
 
 // Anmeldung
@@ -145,6 +207,55 @@ Route::middleware(['auth', 'admin', LicenseGate::class])->prefix('admin')->name(
         Route::put('/{item}', [EditorialController::class, 'update'])->name('.update');
         Route::delete('/{item}', [EditorialController::class, 'destroy'])->name('.destroy');
     });
+    Route::middleware('feature:terminbuchung')->prefix('termine')->name('bookings')->group(function () {
+        Route::get('/', [BookingAdminController::class, 'index']);
+        Route::post('/{booking}/bestaetigen', [BookingAdminController::class, 'confirm'])->name('.confirm');
+        Route::post('/{booking}/absagen', [BookingAdminController::class, 'cancel'])->name('.cancel');
+        Route::post('/leistungen', [BookingAdminController::class, 'storeService'])->name('.services.store');
+        Route::put('/leistungen/{service}', [BookingAdminController::class, 'updateService'])->name('.services.update');
+        Route::delete('/leistungen/{service}', [BookingAdminController::class, 'destroyService'])->name('.services.destroy');
+        Route::put('/einstellungen', [BookingAdminController::class, 'settings'])->name('.settings');
+    });
+    Route::middleware('feature:gutscheine')->prefix('gutscheine')->name('coupons')->group(function () {
+        Route::get('/', [CouponController::class, 'index']);
+        Route::post('/', [CouponController::class, 'store'])->name('.store');
+        Route::put('/{coupon}', [CouponController::class, 'update'])->name('.update');
+        Route::delete('/{coupon}', [CouponController::class, 'destroy'])->name('.destroy');
+    });
+    Route::middleware('feature:mitgliederbereich')->prefix('mitglieder')->name('members')->group(function () {
+        Route::get('/', [MembersAdminController::class, 'index']);
+        Route::post('/einladen', [MembersAdminController::class, 'invite'])->middleware('throttle:30,1')->name('.invite');
+        Route::put('/einstellungen', [MembersAdminController::class, 'settings'])->name('.settings');
+        Route::post('/dateien', [MembersAdminController::class, 'upload'])->name('.files.store');
+        Route::delete('/dateien/{file}', [MembersAdminController::class, 'deleteFile'])->name('.files.destroy');
+        Route::put('/{user}', [MembersAdminController::class, 'update'])->name('.update');
+        Route::delete('/{user}', [MembersAdminController::class, 'destroy'])->name('.destroy');
+    });
+    Route::middleware('feature:warenwirtschaft')->prefix('warenwirtschaft')->name('erp')->group(function () {
+        Route::get('/', [ErpController::class, 'index']);
+        Route::get('/produkte.csv', [ErpController::class, 'products'])->name('.products');
+        Route::get('/bestellungen.csv', [ErpController::class, 'orders'])->name('.orders');
+        Route::post('/import', [ErpController::class, 'import'])->name('.import');
+        Route::post('/schluessel', [ErpController::class, 'token'])->name('.token');
+        Route::delete('/schluessel', [ErpController::class, 'revoke'])->name('.revoke');
+    });
+    Route::middleware('feature:datensicherung')->prefix('datensicherung')->name('backups')->group(function () {
+        Route::get('/', [BackupController::class, 'index']);
+        Route::post('/', [BackupController::class, 'store'])->middleware('throttle:10,1')->name('.store');
+        Route::put('/einstellungen', [BackupController::class, 'settings'])->name('.settings');
+        Route::post('/zurueckspielen', [BackupController::class, 'restore'])->middleware('throttle:5,1')->name('.restore');
+        Route::get('/{name}', [BackupController::class, 'download'])->where('name', 'nova-sicherung-[a-z0-9-]+\.zip')->name('.download');
+        Route::delete('/{name}', [BackupController::class, 'destroy'])->where('name', 'nova-sicherung-[a-z0-9-]+\.zip')->name('.destroy');
+    });
+    Route::middleware('feature:google-bewertungen')->prefix('google-bewertungen')->name('reviews')->group(function () {
+        Route::get('/', [ReviewsController::class, 'index']);
+        Route::put('/', [ReviewsController::class, 'update'])->middleware('throttle:20,1')->name('.update');
+        Route::post('/abrufen', [ReviewsController::class, 'refresh'])->middleware('throttle:10,1')->name('.refresh');
+    });
+    Route::middleware('feature:kundenkonto')->prefix('kunden')->name('customers')->group(function () {
+        Route::get('/', [CustomerController::class, 'index']);
+        Route::delete('/{user}', [CustomerController::class, 'destroy'])->name('.destroy');
+    });
     Route::get('/statistik', StatsController::class)->middleware('feature:statistik')->name('stats');
     Route::middleware('feature:turbo')->prefix('turbo')->name('turbo')->group(function () {
         Route::get('/', [TurboController::class, 'index']);
@@ -159,11 +270,17 @@ Route::middleware(['auth', 'admin', LicenseGate::class])->prefix('admin')->name(
     Route::get('/seiten/{page}/vorschau', [PageController::class, 'preview'])->name('pages.preview');
     Route::post('/seiten/{page}/versionen/{revision}', [PageController::class, 'restoreRevision'])->name('pages.revisions.restore');
     Route::delete('/seiten/{page}', [PageController::class, 'destroy'])->name('pages.destroy');
+    Route::post('/seiten/{page}/uebersetzung', [LanguageController::class, 'translate'])->middleware(['feature:mehrsprachigkeit', 'throttle:20,1'])->name('pages.translate');
+    Route::middleware('feature:mehrsprachigkeit')->prefix('sprachen')->name('languages')->group(function () {
+        Route::get('/', [LanguageController::class, 'index']);
+        Route::put('/', [LanguageController::class, 'update'])->name('.update');
+    });
     Route::post('/papierkorb/{id}', [PageController::class, 'restore'])->whereNumber('id')->name('pages.restore');
     Route::delete('/papierkorb/{id}', [PageController::class, 'forceDelete'])->whereNumber('id')->name('pages.force-delete');
 
     Route::get('/medien', [MediaController::class, 'index'])->name('media.index');
     Route::get('/medien/liste', [MediaController::class, 'list'])->name('media.list');
+    Route::post('/medien/video-vorschaubild', [MediaController::class, 'videoThumbnail'])->middleware('throttle:20,1')->name('media.video-thumb');
     Route::get('/medien/{media}', [MediaController::class, 'show'])->name('media.show');
     Route::patch('/medien/{media}', [MediaController::class, 'update'])->name('media.update');
     Route::delete('/medien/{media}', [MediaController::class, 'destroy'])->name('media.destroy');
@@ -246,6 +363,8 @@ Route::middleware(['auth', 'admin', LicenseGate::class])->prefix('admin')->name(
     Route::post('/plugins/marktplatz/{slug}', [MarketplaceController::class, 'install'])->middleware('throttle:20,1')->where('slug', '[a-z0-9-]+')->name('plugins.market.install');
 
     Route::get('/lizenzserver', [LicenseServerController::class, 'index'])->name('license-server');
+    Route::get('/lizenzserver/preise', [LicenseServerController::class, 'pricing'])->name('license-server.pricing');
+    Route::put('/lizenzserver/preise', [LicenseServerController::class, 'updatePricing'])->name('license-server.pricing.update');
     Route::post('/lizenzserver/lizenzen', [LicenseServerController::class, 'store'])->name('license-server.store');
     Route::get('/lizenzserver/lizenzen/{license}', [LicenseServerController::class, 'show'])->name('license-server.show');
     Route::put('/lizenzserver/lizenzen/{license}', [LicenseServerController::class, 'update'])->name('license-server.update');
@@ -259,6 +378,11 @@ Route::middleware(['auth', 'admin', LicenseGate::class])->prefix('admin')->name(
     Route::post('/plugins/{slug}/deaktivieren', [PluginController::class, 'deactivate'])->name('plugins.deactivate');
     Route::delete('/plugins/{slug}', [PluginController::class, 'destroy'])->name('plugins.destroy');
 });
+
+// Modul Mehrsprachigkeit: /en, /en/about-us. Ist die Sprache nicht eingeschaltet, gilt /xx als normale Seite.
+Route::get('/{locale}', [SiteController::class, 'localeHome'])->where('locale', '[a-z]{2}')->name('home.locale');
+Route::get('/{locale}/{slug}', [SiteController::class, 'localeShow'])
+    ->where(['locale' => '[a-z]{2}', 'slug' => '[a-z0-9]+(?:-[a-z0-9]+)*'])->name('page.locale');
 
 // Öffentliche Seiten, z. B. /ueber-uns. Muss als letzte Route stehen.
 Route::get('/{slug}', [SiteController::class, 'show'])

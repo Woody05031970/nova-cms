@@ -49,8 +49,17 @@
                                 @endif
                                 @if ($page->is_home)<span class="ml-2 rounded-full bg-nova-50 px-2 py-0.5 text-xs font-medium text-nova-700">Startseite</span>@endif
                                 @if (! $page->show_in_menu && ! $page->is_home)<span class="ml-2 text-xs text-slate-400">nicht im Menü</span>@endif
+                                @if ($page->visibility === 'members')<span class="ml-2 rounded-full bg-amber-50 px-2 py-0.5 text-xs font-medium text-amber-900">Nur Mitglieder</span>@endif
+                                @if ($page->locale)<span class="ml-2 rounded bg-slate-100 px-1.5 py-0.5 text-xs font-semibold uppercase text-slate-600">{{ $page->locale }}</span>@endif
+                                @if (! $trash && $page->relationLoaded('translations') && $page->translations->isNotEmpty())
+                                    <span class="ml-1 inline-flex flex-wrap gap-1 align-middle" data-page-translations>
+                                        @foreach ($page->translations->sortBy('locale') as $t)
+                                            <a href="{{ route('admin.pages.edit', $t) }}" @class(['rounded px-1.5 py-0.5 text-xs font-semibold uppercase', 'bg-emerald-50 text-emerald-800' => $t->isPublished(), 'bg-slate-100 text-slate-500' => ! $t->isPublished()]) title="{{ \App\Support\I18n\Languages::name($t->locale, false) }}: {{ $t->title }}{{ $t->isPublished() ? '' : ' (Entwurf)' }}">{{ $t->locale }}</a>
+                                        @endforeach
+                                    </span>
+                                @endif
                             </td>
-                            <td class="hidden px-5 py-3.5 text-slate-500 sm:table-cell">{{ $page->is_home ? '/' : '/'.$page->slug }}</td>
+                            <td class="hidden px-5 py-3.5 text-slate-500 sm:table-cell">{{ $page->is_home ? '/' : '/'.($page->locale ? $page->locale.'/' : '').$page->slug }}</td>
                             <td class="px-5 py-3.5">
                                 @if ($page->isPublished())
                                     <span class="inline-flex items-center gap-1.5 text-emerald-700"><span class="size-2 rounded-full bg-emerald-500"></span>Online</span>

@@ -8,6 +8,7 @@ use App\Ai\ContentAssistant;
 use App\Http\Controllers\Controller;
 use App\Models\Media;
 use App\Models\Product;
+use App\Support\Blocks\VideoUrl;
 use App\Support\Media\MediaLibrary;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -73,6 +74,23 @@ class MediaController extends Controller
         $library->delete($media);
 
         return response()->json(['deleted' => true]);
+    }
+
+    /** Vorschaubild eines YouTube- oder Vimeo-Videos in die Mediathek holen */
+    public function videoThumbnail(Request $request): JsonResponse
+    {
+        $url = (string) $request->validate(['url' => ['required', 'string', 'max:500']])['url'];
+        if (! VideoUrl::parse($url)) {
+            return response()->json(['message' => 'Bitte zuerst einen Link zu YouTube oder Vimeo eintragen.'], 422);
+        }
+        try {
+            $media = VideoUrl::fetchThumbnail($url, $request->user()?->id);
+        } catch (\Throwable) {
+            $media = null;
+        }
+
+        return $media ? response()->json(['url' => $media->url()])
+            : response()->json(['message' => 'Das Vorschaubild konnte nicht geladen werden. Laden Sie stattdessen ein eigenes Bild hoch.'], 422);
     }
 
     public function describe(Media $media, ContentAssistant $assistant): JsonResponse

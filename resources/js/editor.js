@@ -18,7 +18,7 @@ const DEFAULTS = {
     text: () => ({ html: '<p></p>' }),
     hero: () => ({ title: '', text: '', image: null, button_label: '', button_url: '' }),
     image: () => ({ url: null, alt: '', caption: '', size: 'normal' }),
-    video: () => ({ url: '', file: null, caption: '' }),
+    video: () => ({ url: '', file: null, caption: '', poster: null }),
     slider: () => ({ slides: [], autoplay: true }),
     button: () => ({ label: 'Jetzt anfragen', url: '/kontakt', style: 'primary', align: 'left' }),
     features: () => ({
@@ -41,6 +41,8 @@ const DEFAULTS = {
     faq: () => ({ eyebrow: '', title: 'Häufige Fragen', intro: '', items: [{ q: 'Ihre Frage?', a: 'Ihre Antwort.' }] }),
     cta: () => ({ title: 'Bereit für den nächsten Schritt?', text: '', button_label: 'Kontakt aufnehmen', button_url: '/kontakt', button2_label: '', button2_url: '', style: 'dark' }),
     contact: () => ({ eyebrow: '', title: 'Schreiben Sie uns', intro: 'Wir antworten in der Regel innerhalb eines Werktags.', button_label: 'Nachricht senden', success: '', subjects: [] }),
+    reviews: () => ({ eyebrow: 'Das sagen unsere Kunden', title: 'Bewertungen bei Google', intro: '', limit: 3, show_button: true }),
+    booking: () => ({ eyebrow: 'Online-Termin', title: 'Termin buchen', intro: 'Wählen Sie eine Leistung und einen freien Termin. Sie erhalten sofort eine Bestätigung per E-Mail.', button_label: 'Termin wählen', service: 0 }),
     newsletter: () => ({ eyebrow: 'Newsletter', title: 'Nichts mehr verpassen', intro: 'Neuigkeiten, Aktionen und Tipps, etwa einmal im Monat. Abmeldung jederzeit.', button_label: 'Abonnieren', ask_name: false, style: 'dark' }),
     html: () => ({ code: '' }),
 };
@@ -74,6 +76,7 @@ Alpine.data('pageEditor', (cfg) => ({
     host: cfg.host,
     types: cfg.types,
     products: cfg.products || [],
+    services: cfg.services || [],
     icons: cfg.icons || [],
     features: cfg.features || {},
     picker: null,

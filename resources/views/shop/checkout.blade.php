@@ -10,31 +10,48 @@
         <form method="POST" action="{{ route('shop.checkout.place') }}" class="grid gap-8 lg:grid-cols-[1fr_22rem]">
             @csrf
             <div class="space-y-8">
+                @if (\App\Support\Members\Accounts::on() && ! \App\Support\Members\Accounts::customer())
+                    <p class="rounded-xl bg-slate-50 px-4 py-3 text-sm text-slate-700" data-checkout-login>Schon Kunde? <a href="{{ route('account.login') }}" class="font-medium text-nova-700 hover:underline">Anmelden</a>, dann sind Ihre Daten schon ausgefüllt. Oder <a href="{{ route('account.register') }}" class="font-medium text-nova-700 hover:underline">Kundenkonto anlegen</a>.</p>
+                @endif
                 <fieldset class="space-y-4">
-                    <legend class="text-lg font-semibold">Ihre Adresse</legend>
+                    <legend class="text-lg font-semibold">{{ \App\Support\Members\Accounts::on() ? 'Lieferadresse' : 'Ihre Adresse' }}</legend>
                     <div class="grid gap-4 sm:grid-cols-2">
                         <div class="sm:col-span-2"><label class="nova-label" for="email">E-Mail *</label>
-                            <input class="nova-input" id="email" name="email" type="email" required autocomplete="email" value="{{ old('email') }}"></div>
+                            <input class="nova-input" id="email" name="email" type="email" required autocomplete="email" value="{{ old('email', $defaults['email'] ?? '') }}"></div>
                         <div><label class="nova-label" for="name">Vor- und Nachname *</label>
-                            <input class="nova-input" id="name" name="name" required autocomplete="name" value="{{ old('name') }}"></div>
+                            <input class="nova-input" id="name" name="name" required autocomplete="name" value="{{ old('name', $defaults['name'] ?? '') }}"></div>
                         <div><label class="nova-label" for="company">Firma</label>
-                            <input class="nova-input" id="company" name="company" autocomplete="organization" value="{{ old('company') }}"></div>
+                            <input class="nova-input" id="company" name="company" autocomplete="organization" value="{{ old('company', $defaults['company'] ?? '') }}"></div>
                         <div class="sm:col-span-2"><label class="nova-label" for="street">Straße und Hausnummer *</label>
-                            <input class="nova-input" id="street" name="street" required autocomplete="street-address" value="{{ old('street') }}"></div>
+                            <input class="nova-input" id="street" name="street" required autocomplete="street-address" value="{{ old('street', $defaults['street'] ?? '') }}"></div>
                         <div><label class="nova-label" for="zip">PLZ *</label>
-                            <input class="nova-input" id="zip" name="zip" required autocomplete="postal-code" value="{{ old('zip') }}"></div>
+                            <input class="nova-input" id="zip" name="zip" required autocomplete="postal-code" value="{{ old('zip', $defaults['zip'] ?? '') }}"></div>
                         <div><label class="nova-label" for="city">Ort *</label>
-                            <input class="nova-input" id="city" name="city" required autocomplete="address-level2" value="{{ old('city') }}"></div>
+                            <input class="nova-input" id="city" name="city" required autocomplete="address-level2" value="{{ old('city', $defaults['city'] ?? '') }}"></div>
                         <div><label class="nova-label" for="country">Land *</label>
                             <select class="nova-input" id="country" name="country" autocomplete="country">
-                                @foreach ($countries as $code => $label)<option value="{{ $code }}" @selected(old('country') === $code)>{{ $label }}</option>@endforeach
+                                @foreach ($countries as $code => $label)<option value="{{ $code }}" @selected(old('country', $defaults['country'] ?? null) === $code)>{{ $label }}</option>@endforeach
                             </select></div>
                         <div><label class="nova-label" for="phone">Telefon (für Rückfragen)</label>
-                            <input class="nova-input" id="phone" name="phone" type="tel" autocomplete="tel" value="{{ old('phone') }}"></div>
+                            <input class="nova-input" id="phone" name="phone" type="tel" autocomplete="tel" value="{{ old('phone', $defaults['phone'] ?? '') }}"></div>
                         <div class="sm:col-span-2"><label class="nova-label" for="notes">Anmerkung zur Bestellung</label>
                             <textarea class="nova-input" id="notes" name="notes" rows="2">{{ old('notes') }}</textarea></div>
                     </div>
                 </fieldset>
+
+                @if (\App\Support\Members\Accounts::on())
+                    @php $bill = old('billing', $defaults['billing'] ?? null); @endphp
+                    <fieldset class="group space-y-4">
+                        <legend class="text-lg font-semibold">Rechnungsadresse</legend>
+                        <input type="hidden" name="billing_different" value="0">
+                        <div class="flex items-center gap-2"><input type="checkbox" id="billing_different" name="billing_different" value="1" class="size-4" @checked(old('billing_different', $bill ? 1 : 0)) data-billing-different>
+                            <label for="billing_different" class="text-sm">Rechnung an eine andere Adresse</label></div>
+                        <div class="hidden group-has-[#billing_different:checked]:block" data-billing-fields>@include('site.account._address', ['p' => 'billing', 'a' => $bill ?? [], 'ac' => 'billing'])</div>
+                    </fieldset>
+                    @if (\App\Support\Members\Accounts::customer())
+                        <label class="flex items-center gap-2 text-sm"><input type="checkbox" name="save_address" value="1" class="size-4" @checked(old('save_address', 1))> Adressen in meinem Kundenkonto speichern</label>
+                    @endif
+                @endif
 
                 <fieldset>
                     <legend class="text-lg font-semibold">Zahlungsart</legend>

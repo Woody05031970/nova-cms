@@ -14,6 +14,8 @@ class SecurityEvent extends Model
 
     public const LABELS = [
         'login_failed' => 'Anmeldung fehlgeschlagen',
+        'backup_created' => 'Sicherung erstellt',
+        'backup_restored' => 'Sicherung zurückgespielt',
         'login' => 'Anmeldung',
         'lockout' => 'Anmeldung gesperrt',
         'attack' => 'Angriffsversuch abgewehrt',

@@ -3,8 +3,13 @@
 @section('width', 'max-w-6xl')
 
 @section('content')
-    <h1 class="text-2xl font-semibold tracking-tight">Lizenzserver</h1>
-    <p class="mt-1 text-slate-600">Lizenzen für Ihre Kunden ausgeben und Module im Marktplatz anbieten.</p>
+    <div class="flex flex-wrap items-end justify-between gap-4">
+        <div>
+            <h1 class="text-2xl font-semibold tracking-tight">Lizenzserver</h1>
+            <p class="mt-1 text-slate-600">Lizenzen für Ihre Kunden ausgeben und Module im Marktplatz anbieten.</p>
+        </div>
+        <a href="{{ route('admin.license-server.pricing') }}" class="nova-btn-secondary" data-pricing-link>Module und Preise festlegen</a>
+    </div>
 
     <dl class="mt-6 grid grid-cols-3 gap-4">
         <div class="nova-card"><dt class="text-sm text-slate-500">Aktive Lizenzen</dt><dd class="mt-1 text-2xl font-semibold">{{ $stats['licenses'] }}</dd></div>

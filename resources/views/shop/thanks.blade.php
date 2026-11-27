@@ -32,7 +32,8 @@
                 @endforeach
             </ul>
             <dl class="mt-4 space-y-1 border-t border-slate-100 pt-3 text-sm">
-                <div class="flex justify-between"><dt>Versand</dt><dd>{{ $order->shipping_cents ? $order->money($order->shipping_cents) : 'kostenlos' }}</dd></div>
+                @if ($order->discount_cents)<div class="flex justify-between"><dt>Rabatt {{ $order->coupon_code }}</dt><dd>−{{ $order->money($order->discount_cents) }}</dd></div>@endif
+                    <div class="flex justify-between"><dt>Versand</dt><dd>{{ $order->shipping_cents ? $order->money($order->shipping_cents) : 'kostenlos' }}</dd></div>
                 <div class="flex justify-between font-semibold"><dt>Gesamtsumme</dt><dd>{{ $order->money($order->total_cents) }}</dd></div>
             </dl>
         </section>

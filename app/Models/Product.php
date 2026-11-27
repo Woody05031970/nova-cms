@@ -12,13 +12,13 @@ class Product extends Model
 {
     protected $fillable = [
         'name', 'slug', 'sku', 'short_description', 'description', 'price_cents', 'compare_price_cents',
-        'tax_rate', 'stock', 'base_quantity', 'base_unit', 'delivery_time', 'images', 'is_active', 'sort', 'license_spec',
+        'tax_rate', 'stock', 'base_quantity', 'base_unit', 'delivery_time', 'images', 'is_active', 'sort', 'license_spec', 'is_voucher',
     ];
 
     protected function casts(): array
     {
         return [
-            'images' => 'array', 'is_active' => 'boolean', 'price_cents' => 'integer', 'compare_price_cents' => 'integer',
+            'images' => 'array', 'is_active' => 'boolean', 'is_voucher' => 'boolean', 'price_cents' => 'integer', 'compare_price_cents' => 'integer',
             'tax_rate' => 'float', 'stock' => 'integer', 'base_quantity' => 'float', 'license_spec' => 'array',
         ];
     }

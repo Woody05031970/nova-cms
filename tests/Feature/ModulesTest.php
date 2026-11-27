@@ -167,7 +167,7 @@ class ModulesTest extends TestCase
 
         $this->travel(25)->hours();
         $result = Tick::run();
-        $this->assertSame(['pages' => 1, 'posts' => 1], $result);
+        $this->assertSame(['pages' => 1, 'posts' => 1, 'reminders' => 0, 'backup' => false], $result);
         $this->assertTrue($page->fresh()->isPublished());
         $this->assertSame('sent', SocialPost::first()->status);
         auth()->logout();

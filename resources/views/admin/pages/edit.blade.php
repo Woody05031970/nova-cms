@@ -18,6 +18,8 @@
         'faq' => ['label' => 'Häufige Fragen', 'description' => 'Aufklappbare Fragen, von Google lesbar', 'icon' => 'search', 'group' => 'verkauf'],
         'cta' => ['label' => 'Aufruf', 'description' => 'Auffälliges Band mit Knöpfen', 'icon' => 'rocket', 'group' => 'verkauf'],
         'newsletter' => ['label' => 'Newsletter', 'description' => 'Anmeldung mit Bestätigung per E-Mail', 'icon' => 'mail', 'group' => 'verkauf'],
+        'booking' => ['label' => 'Terminbuchung', 'description' => 'Leistungen mit freien Terminen zum Buchen', 'icon' => 'calendar', 'group' => 'verkauf'],
+        'reviews' => ['label' => 'Google-Bewertungen', 'description' => 'Sterne und neueste Bewertungen aus Google', 'icon' => 'heart', 'group' => 'verkauf'],
         'contact' => ['label' => 'Kontaktformular', 'description' => 'Anfragen landen unter „Anfragen“ und per E-Mail', 'icon' => 'mail', 'group' => 'verkauf'],
         'html' => ['label' => 'HTML', 'description' => 'Eigener Code für Fortgeschrittene', 'icon' => 'settings', 'group' => 'profi'],
     ];
@@ -37,6 +39,7 @@
         'types' => $types,
         'icons' => \App\Support\Blocks\BlockSanitizer::ICONS,
         'features' => collect(app(\App\Licensing\Features::class)->overview())->map(fn ($f) => $f['enabled']),
+        'services' => \App\Models\Service::active()->get(['id', 'name'])->map(fn ($s) => ['id' => $s->id, 'name' => $s->name])->values(),
         'products' => \App\Models\Product::orderBy('name')->get(['slug', 'name', 'price_cents', 'is_active'])->map(fn ($p) => ['slug' => $p->slug, 'label' => $p->name.' · '.$p->price().($p->is_active ? '' : ' (ausgeblendet)')])->values(),
         'focusKeyword' => old('focus_keyword', $page->focus_keyword),
         'purpose' => $page->purpose,
@@ -186,7 +189,7 @@
                         <div x-show="!isHome">
                             <label class="nova-label" for="slug">Adresse der Seite</label>
                             <div class="flex items-center rounded-lg border border-slate-300 bg-white text-sm focus-within:border-nova-500 focus-within:ring-2 focus-within:ring-nova-200">
-                                <span class="pl-3 text-slate-400">/</span>
+                                <span class="pl-3 text-slate-400">/{{ $page->locale ? $page->locale.'/' : '' }}</span>
                                 <input id="slug" name="slug" x-model="slug" maxlength="160" class="w-full border-0 bg-transparent py-2 pr-3 pl-0.5 focus:outline-none">
                             </div>
                         </div>
@@ -280,11 +283,43 @@
 
                 <section class="nova-card space-y-3 p-5">
                     <h2 class="font-semibold">Optionen</h2>
-                    <input type="hidden" name="show_in_menu" value="0">
-                    <label class="flex items-start gap-2 text-sm"><input type="checkbox" name="show_in_menu" value="1" x-model="showInMenu" class="mt-0.5 accent-nova-600"> <span>Im Hauptmenü anzeigen</span></label>
-                    <input type="hidden" name="is_home" value="0">
-                    <label class="flex items-start gap-2 text-sm"><input type="checkbox" name="is_home" value="1" x-model="isHome" class="mt-0.5 accent-nova-600"> <span>Als Startseite verwenden<span class="block text-xs text-slate-500">Die bisherige Startseite wird dann zu einer normalen Seite.</span></span></label>
+                    @if ($page->locale)
+                        <p class="text-sm text-slate-600" data-translation-of>{{ \App\Support\I18n\Languages::name($page->locale, false) }}e Fassung von <a href="{{ route('admin.pages.edit', $page->translation_of) }}" class="font-medium text-nova-700 hover:underline">„{{ $page->source?->title }}“</a>. Im Menü erscheint sie automatisch, wenn Besucher die Sprache wählen.</p>
+                    @else
+                        <input type="hidden" name="show_in_menu" value="0">
+                        <label class="flex items-start gap-2 text-sm"><input type="checkbox" name="show_in_menu" value="1" x-model="showInMenu" class="mt-0.5 accent-nova-600"> <span>Im Hauptmenü anzeigen</span></label>
+                        <input type="hidden" name="is_home" value="0">
+                        <label class="flex items-start gap-2 text-sm"><input type="checkbox" name="is_home" value="1" x-model="isHome" class="mt-0.5 accent-nova-600"> <span>Als Startseite verwenden<span class="block text-xs text-slate-500">Die bisherige Startseite wird dann zu einer normalen Seite.</span></span></label>
+                    @endif
+                    @if (\App\Licensing\Features::on('mitgliederbereich') && ! $page->is_home)
+                        <input type="hidden" name="members_only" value="0">
+                        <label class="flex items-start gap-2 text-sm"><input type="checkbox" name="members_only" value="1" class="mt-0.5 accent-nova-600" @checked(old('members_only', $page->visibility === 'members')) data-members-only> <span>Nur für Mitglieder<span class="block text-xs text-slate-500">Gäste sehen stattdessen die Anmeldung. Die Seite erscheint nicht bei Google und nur angemeldeten Mitgliedern im Menü.</span></span></label>
+                    @endif
                 </section>
+
+                @if (\App\Support\I18n\Languages::on() && ! $page->locale)
+                    @php $translations = $page->translations()->get()->keyBy('locale'); @endphp
+                    <section class="nova-card p-5" aria-labelledby="tr-title" data-translations>
+                        <h2 id="tr-title" class="font-semibold">Übersetzungen</h2>
+                        <ul class="mt-3 space-y-2 text-sm">
+                            @foreach (\App\Support\I18n\Languages::active() as $code)
+                                <li class="flex items-center justify-between gap-2">
+                                    <span><span class="mr-1 inline-block w-7 rounded bg-slate-100 text-center text-xs font-semibold uppercase">{{ $code }}</span> {{ \App\Support\I18n\Languages::name($code, false) }}</span>
+                                    @if ($t = $translations->get($code))
+                                        <a href="{{ route('admin.pages.edit', $t) }}" class="text-xs font-medium text-nova-700 hover:underline">{{ $t->isPublished() ? 'Bearbeiten' : 'Entwurf bearbeiten' }}</a>
+                                    @else
+                                        <button form="tr-{{ $code }}" class="text-xs font-medium text-nova-700 hover:underline" data-translate="{{ $code }}">Anlegen</button>
+                                    @endif
+                                </li>
+                            @endforeach
+                        </ul>
+                        @if (app(\App\Ai\AiManager::class)->isConfigured())
+                            <label class="mt-3 flex items-start gap-2 text-xs text-slate-600"><input type="checkbox" form="tr-ai" class="mt-0.5 accent-nova-600" checked x-ref="trAi"> Beim Anlegen mit KI übersetzen</label>
+                        @else
+                            <p class="mt-3 text-xs text-slate-500">Die Übersetzung startet als Kopie zum Überschreiben. Mit eingerichteter KI wird sie automatisch übersetzt.</p>
+                        @endif
+                    </section>
+                @endif
 
                 <section class="nova-card p-5">
                     <h2 class="font-semibold">Frühere Versionen</h2>
@@ -308,6 +343,11 @@
     @foreach ($revisions as $rev)
         <form id="rev-{{ $rev->id }}" method="POST" action="{{ route('admin.pages.revisions.restore', [$page, $rev]) }}" class="hidden" @submit="if (!confirm('Den Stand vom {{ $rev->created_at->format('d.m.Y, H:i') }} Uhr wiederherstellen? Der aktuelle Stand bleibt als Version erhalten.')) $event.preventDefault(); else dirty = false">@csrf</form>
     @endforeach
+    @if (\App\Support\I18n\Languages::on() && ! $page->locale)
+        @foreach (\App\Support\I18n\Languages::active() as $code)
+            <form id="tr-{{ $code }}" method="POST" action="{{ route('admin.pages.translate', $page) }}" class="hidden" @submit="if (dirty && !confirm('Ungespeicherte Änderungen gehen verloren. Trotzdem fortfahren?')) { $event.preventDefault(); return; } dirty = false; $el.querySelector('[name=ai]').value = $refs.trAi && $refs.trAi.checked ? 1 : 0">@csrf<input type="hidden" name="locale" value="{{ $code }}"><input type="hidden" name="ai" value="0"></form>
+        @endforeach
+    @endif
     <form id="delete-page" method="POST" action="{{ route('admin.pages.destroy', $page) }}" class="hidden" @submit="if (!confirm('Seite in den Papierkorb legen?')) $event.preventDefault(); else dirty = false">@csrf @method('DELETE')</form>
 </div>
 @endsection

@@ -4,6 +4,7 @@ namespace App\Shop;
 
 use App\Mail\OrderConfirmation;
 use App\Mail\OrderReceived;
+use App\Models\Coupon;
 use App\Models\Order;
 use App\Models\Product;
 use App\Plugins\Hooks;
@@ -34,12 +35,13 @@ class Checkout
         $order = DB::transaction(function () use ($items, $customer, $paymentMethod) {
             $this->reserveStock($items);
             $totals = $this->cart->totals($items);
+            $this->redeem($totals);
 
             $order = null;
             for ($try = 0; $try < 3 && ! $order; $try++) {
                 try {
                     $order = Order::create([
-                        ...collect($customer)->only(['email', 'name', 'company', 'street', 'zip', 'city', 'country', 'phone', 'notes'])->all(),
+                        ...collect($customer)->only(['email', 'name', 'company', 'street', 'zip', 'city', 'country', 'phone', 'notes', 'user_id', 'billing'])->all(),
                         'number' => Order::nextNumber(),
                         'token' => Str::random(40),
                         'payment_method' => $paymentMethod,
@@ -47,6 +49,8 @@ class Checkout
                         'subtotal_cents' => $totals['subtotal'],
                         'shipping_cents' => $totals['shipping'],
                         'total_cents' => $totals['total'],
+                        'discount_cents' => $totals['discount'],
+                        'coupon_code' => $totals['coupon']?->code,
                         'taxes' => $totals['taxes'],
                         'small_business' => ShopSettings::smallBusiness(),
                         'terms_accepted_at' => now(),
@@ -80,6 +84,23 @@ class Checkout
         $this->sendMails($order);
 
         return $order;
+    }
+
+    /** Gutschein verbindlich einlösen: Nutzung zählen, bei Geschenkgutscheinen den Restwert mindern */
+    private function redeem(array $totals): void
+    {
+        if (! $totals['coupon']) {
+            return;
+        }
+        $c = Coupon::whereKey($totals['coupon']->id)->lockForUpdate()->first();
+        if (! $c || $c->problem($totals['subtotal']) !== null) {
+            throw new RuntimeException('Ihr Gutschein ist nicht mehr gültig. Bitte prüfen Sie Ihren Warenkorb.');
+        }
+        $c->used++;
+        if ($c->is_gift) {
+            $c->value = max(0, $c->value - $totals['discount']);
+        }
+        $c->save();
     }
 
     /** Storno: Bestand zurückbuchen */

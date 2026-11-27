@@ -147,7 +147,7 @@ class Geo
     {
         $name = (string) Setting::get('site_name', config('app.name'));
         $summary = trim((string) (Setting::get('geo_summary') ?: Setting::get('tagline')));
-        $pages = Page::published()->orderByDesc('is_home')->orderBy('menu_order')->get();
+        $pages = Page::published()->public()->orderByDesc('is_home')->orderBy('menu_order')->get();
 
         $out = "# {$name}\n\n";
         if ($summary !== '') {

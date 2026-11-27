@@ -21,7 +21,9 @@
                 @if ($s('contact_email'))<p>{{ $s('contact_email') }}</p>@endif
             </div>
         </div>
-        <p class="mt-6">{{ $order->name }}<br>@if ($order->company){{ $order->company }}<br>@endif{{ $order->street }}<br>{{ $order->zip }} {{ $order->city }}<br>{{ \App\Shop\ShopSettings::COUNTRIES[$order->country]['label'] ?? $order->country }}</p>
+        @php $ba = $order->billing ?: ['name' => $order->name, 'company' => $order->company, 'street' => $order->street, 'zip' => $order->zip, 'city' => $order->city, 'country' => $order->country]; @endphp
+        <p class="mt-6">{{ $ba['name'] ?? '' }}<br>@if (! empty($ba['company'])){{ $ba['company'] }}<br>@endif{{ $ba['street'] ?? '' }}<br>{{ $ba['zip'] ?? '' }} {{ $ba['city'] ?? '' }}<br>{{ \App\Shop\ShopSettings::COUNTRIES[$ba['country'] ?? 'DE']['label'] ?? ($ba['country'] ?? '') }}</p>
+        @if ($order->billing)<p class="mt-2 text-xs text-slate-500">Lieferung an: {{ $order->name }}, {{ $order->street }}, {{ $order->zip }} {{ $order->city }}</p>@endif
 
         <div class="mt-10 flex flex-wrap justify-between gap-4">
             <h1 class="text-2xl font-semibold">Rechnung</h1>
@@ -38,6 +40,7 @@
                         <td class="text-right">{{ $item->quantity }}</td>@unless ($order->small_business)<td class="text-right">{{ \App\Shop\ShopSettings::rate($item->tax_rate) }} %</td>@endunless
                         <td class="text-right">{{ $order->money($item->price_cents) }}</td><td class="text-right">{{ $order->money($item->total_cents) }}</td></tr>
                 @endforeach
+                @if ($order->discount_cents)<tr><td></td><td>Rabatt {{ $order->coupon_code }}</td><td colspan="{{ $order->small_business ? 2 : 3 }}"></td><td class="text-right">−{{ $order->money($order->discount_cents) }}</td></tr>@endif
                 <tr><td></td><td>Versand</td><td colspan="{{ $order->small_business ? 2 : 3 }}"></td><td class="text-right">{{ $order->money($order->shipping_cents) }}</td></tr>
             </tbody>
         </table>

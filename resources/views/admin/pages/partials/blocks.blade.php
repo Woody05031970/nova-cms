@@ -224,6 +224,18 @@
             </template>
             @include('admin.pages.partials.upload', ['target' => 'block.data', 'key' => 'file', 'kind' => 'video', 'hint' => 'MP4 oder WebM, bis 100 MB. Viele Hoster erlauben nur kleinere Uploads.'])
         </div>
+        <div>
+            <p class="nova-label">Vorschaubild (optional)</p>
+            <template x-if="block.data.poster">
+                <div class="relative"><img :src="block.data.poster" alt="" class="aspect-video w-full rounded-lg object-cover">
+                    <button type="button" class="absolute top-2 right-2 rounded-md bg-white/90 px-2 py-1 text-xs shadow" @click="block.data.poster = null">Entfernen</button></div>
+            </template>
+            @include('admin.pages.partials.upload', ['target' => 'block.data', 'key' => 'poster', 'kind' => 'image', 'hint' => 'Wird vor dem Abspielen gezeigt. Ohne Bild erscheint eine dunkle Fläche.'])
+            <button type="button" x-show="block.data.url && !block.data.poster" :disabled="block.data._thumb" class="mt-2 inline-flex items-center gap-1 text-sm font-medium text-nova-700 hover:underline disabled:opacity-50" data-video-thumb
+                    @click="block.data._thumb = true; fetch(@js(route('admin.media.video-thumb')), {method: 'POST', headers: {'Content-Type': 'application/json', 'Accept': 'application/json', 'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').content}, body: JSON.stringify({url: block.data.url})}).then(r => r.json()).then(d => { if (d.url) block.data.poster = d.url; else block.data._thumbMsg = d.message || 'Kein Vorschaubild gefunden.'; }).catch(() => block.data._thumbMsg = 'Keine Verbindung.').finally(() => block.data._thumb = false)">
+                <x-icon name="image" class="size-4" /><span x-text="block.data._thumb ? 'Wird geholt …' : 'Vorschaubild vom Video übernehmen'"></span></button>
+            <p x-show="block.data._thumbMsg && !block.data.poster" x-text="block.data._thumbMsg" class="mt-1 text-sm text-amber-800" role="status"></p>
+        </div>
         <div><label class="nova-label">Beschreibung (optional)</label><input class="nova-input" x-model="block.data.caption" maxlength="300"></div>
     </div>
 </template>
