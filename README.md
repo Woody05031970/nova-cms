@@ -22,11 +22,16 @@ Hochgeladene Bilder und Videos liegen in `public/uploads/` (funktioniert ohne Sy
 
 ## Installation auf einem Webspace
 
-1. Alle Dateien per FTP in einen Ordner auf dem Webspace hochladen (inklusive `vendor` und `public/build`).
-2. Im Kundenbereich des Hosters das Zielverzeichnis der Domain auf den Unterordner `public` stellen. Geht das nicht, leitet die mitgelieferte `.htaccess` automatisch dorthin.
-3. Die Domain im Browser aufrufen. Der Installations-Assistent führt durch vier Schritte: Systemprüfung, Datenbank (SQLite ohne Zugangsdaten oder MySQL), Website-Name und Admin-Konto, fertig.
+Wichtig: Hochgeladen wird das **Installationspaket** `nova-cms-<version>.zip`, nicht der Quellcode von GitHub. Nur im Paket ist der Ordner `vendor` mit den Programmbibliotheken enthalten. Das Paket baut `scripts/release.sh` oder auf GitHub der Workflow „Installationspaket“ (Actions › Run workflow, oder automatisch bei einem Tag `v…`).
 
-Voraussetzungen: PHP 8.3 oder neuer mit den Erweiterungen pdo, pdo_sqlite oder pdo_mysql, mbstring, openssl, tokenizer, xml, ctype, json, fileinfo, zip.
+1. Das ZIP auf dem eigenen Computer entpacken und den **Inhalt** des Ordners `nova-cms` per FTP in einen Ordner auf dem Webspace hochladen. Im FTP-Programm „versteckte Dateien anzeigen“ einschalten, damit auch `.htaccess` und `.env.example` übertragen werden (Nova CMS kommt zur Not auch ohne sie aus).
+2. Im Kundenbereich des Hosters das Zielverzeichnis der Domain auf den Unterordner `public` stellen. Geht das nicht, leitet die mitgelieferte `.htaccess` automatisch dorthin.
+3. PHP-Version beim Hoster auf 8.3 oder neuer stellen.
+4. Die Domain im Browser aufrufen. Der Installations-Assistent führt durch vier Schritte: Systemprüfung, Datenbank (SQLite ohne Zugangsdaten oder MySQL), Website-Name und Admin-Konto, fertig.
+
+Fehlt etwas (zu alte PHP-Version, kein `vendor`, Ordner ohne Schreibrechte, fehlende PHP-Erweiterungen), zeigt `public/preflight.php` vor dem Start eine Seite mit dem Grund und der Lösung statt „HTTP Error 500“. Fehlende Ordner unter `storage` und die `.htaccess` in `public` legt sie selbst an.
+
+Voraussetzungen: PHP 8.3 oder neuer mit den Erweiterungen pdo, pdo_sqlite oder pdo_mysql, mbstring, openssl, tokenizer, xml, ctype, json, fileinfo, zip, sodium.
 
 ## Entwicklung
 
