@@ -36,7 +36,7 @@
         'templates' => \App\Http\Controllers\Admin\PageController::builderTemplates(),
         'showTitle' => (bool) old('show_title', $page->show_title ?? true),
         'widgets' => collect(\App\Support\Blocks\Builder::WIDGETS)->all(),
-        'design' => \Illuminate\Support\Arr::only(\App\Support\Design\SiteDesign::values(), ['brand', 'accent']),
+        'design' => \Illuminate\Support\Arr::only(\App\Support\Design\SiteDesign::values(), ['brand', 'accent']) + ['three' => \App\Licensing\Features::on('effekte-3d')],
         'icons' => \App\Support\Blocks\BlockSanitizer::ICONS,
         'iconPaths' => \App\Support\Icons::PATHS,
         'host' => request()->getHost(),

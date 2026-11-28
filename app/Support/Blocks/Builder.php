@@ -2,6 +2,7 @@
 
 namespace App\Support\Blocks;
 
+use App\Licensing\Features;
 use App\Support\Design\SiteDesign;
 
 /**
@@ -65,6 +66,9 @@ class Builder
         return preg_match('/^#[0-9a-f]{6}$/i', $hex) && ! SiteDesign::isLight($hex);
     }
 
+    /** 3D-Hintergründe (Modul „3D-Effekte“, resources/js/three/nova3d.js) */
+    public const SCENES = ['wellen' => 'Wellen aus Licht', 'netz' => 'Verbundenes Netz', 'kugel' => 'Leuchtende Kugel', 'formen' => 'Schwebende Formen'];
+
     /** Klassen und Inline-CSS eines Bereichs @return array{class: string, style: string, overlay: ?string, inner: string} */
     public static function section(array $d): array
     {
@@ -84,6 +88,13 @@ class Builder
                 $b = self::color($s['bg_color2'] ?? null) ?? self::COLORS['accent'][1];
                 $bgCss[] = 'background-image:linear-gradient('.(int) ($s['bg_angle'] ?? 135).'deg,'.$a.','.$b.')';
                 $dark = self::isDark($s['bg_color'] ?? 'brand');
+                break;
+            case '3d':
+                // Grundfarbe mit leichtem Verlauf; ohne Modul oder ohne WebGL bleibt genau diese Fläche stehen
+                $a = self::color($s['bg_color'] ?? null) ?? self::COLORS['dark'][1];
+                $bgCss[] = 'background-color:'.$a;
+                $bgCss[] = 'background-image:radial-gradient(120% 90% at 80% 10%,color-mix(in srgb,'.(self::color($s['bg_color2'] ?? null) ?? self::COLORS['accent'][1]).' 22%,transparent),transparent 60%)';
+                $dark = self::isDark($s['bg_color'] ?? 'dark');
                 break;
             case 'image':
                 if (! empty($s['bg_image'])) {
@@ -116,6 +127,14 @@ class Builder
         if (! empty($s['reverse'])) {
             $class[] = 'nb-reverse';
         }
+        $three = null;
+        if (($s['bg'] ?? 'none') === '3d') {
+            $class[] = 'nb-3d';
+            if (Features::on('effekte-3d')) {
+                $three = ['scene' => isset(self::SCENES[$s['bg_3d'] ?? '']) ? $s['bg_3d'] : 'wellen',
+                    'c1' => self::color($s['bg_color'] ?? null) ?? self::COLORS['dark'][1], 'c2' => self::color($s['bg_color2'] ?? null) ?? self::COLORS['accent'][1]];
+            }
+        }
         foreach ($s['hide'] ?? [] as $h) {
             $class[] = 'nb-hide-'.$h;
         }
@@ -125,6 +144,8 @@ class Builder
             'style' => implode(';', $card ? $css : array_merge($css, $bgCss)),
             'inner' => $card ? implode(';', $bgCss) : '',
             'overlay' => $overlay,
+            'three' => $three,
+            'card' => $card,
         ];
     }
 

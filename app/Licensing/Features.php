@@ -30,6 +30,7 @@ class Features
         'google-bewertungen' => ['Google-Bewertungen', 'Sterne und neueste Bewertungen aus Google auf der Website, dazu Bewertungslink und QR-Code.'],
         'kundenkonto' => ['Kundenkonto', 'Kunden registrieren sich im Shop, speichern Kontakt-, Rechnungs- und Lieferadresse und sehen ihre Bestellungen.'],
         'community' => ['Community', 'Treffpunkt für Mitglieder: Pinnwand, Profile mit eigener Seite, persönliche Nachrichten, Foren und Benachrichtigungen.'],
+        'effekte-3d' => ['3D-Effekte', 'Bewegte 3D-Hintergründe für Bereiche und Titelbilder: Wellen aus Licht, verbundenes Netz, leuchtende Kugel und schwebende Formen in Ihren Farben.'],
         'turbo' => ['Turbo', 'Zwischenspeicher für Besucher: Seiten laden deutlich schneller, gut für Google (Core Web Vitals).'],
     ];
 

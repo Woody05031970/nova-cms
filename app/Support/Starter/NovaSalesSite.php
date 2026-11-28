@@ -41,7 +41,7 @@ class NovaSalesSite
     public const LICENSES = [
         'nova-cms-start' => ['Nova CMS Start', 14900, 1, 'Für eine Website, z. B. Ihr Unternehmen oder Ihren Verein.', []],
         'nova-cms-business' => ['Nova CMS Business', 34900, 3, 'Für bis zu drei Websites, z. B. Firma, Shop und Kampagnenseite.', ['design-pro', 'whatsapp', 'seo-pro', 'statistik']],
-        'nova-cms-agentur' => ['Nova CMS Agentur', 89900, 15, 'Für Webdesigner und Agenturen mit bis zu 15 Kunden-Websites.', ['design-pro', 'whatsapp', 'newsletter', 'seo-pro', 'geo', 'social', 'redaktionsplan', 'statistik', 'turbo', 'terminbuchung', 'mehrsprachigkeit', 'gutscheine', 'mitgliederbereich', 'warenwirtschaft', 'datensicherung', 'google-bewertungen', 'kundenkonto', 'community']],
+        'nova-cms-agentur' => ['Nova CMS Agentur', 89900, 15, 'Für Webdesigner und Agenturen mit bis zu 15 Kunden-Websites.', ['design-pro', 'whatsapp', 'newsletter', 'seo-pro', 'geo', 'social', 'redaktionsplan', 'statistik', 'turbo', 'terminbuchung', 'mehrsprachigkeit', 'gutscheine', 'mitgliederbereich', 'warenwirtschaft', 'datensicherung', 'google-bewertungen', 'kundenkonto', 'community', 'effekte-3d']],
     ];
 
     /** Leistungen der Pakete im Preis-Baustein */
@@ -62,6 +62,7 @@ class NovaSalesSite
      */
     public const PAID_MODULES = [
         'modul-design-pro' => ['Design Pro', 4900, 'Design', 'Alle sechs Design-Vorlagen, eigene Akzentfarbe und Schrift, Einblend-Effekte und Hintergrundvideos mit Farbschleier.', true],
+        'modul-effekte-3d' => ['3D-Effekte', 3900, 'Design', 'Bewegte 3D-Hintergründe mit three.js: Wellen aus Licht, verbundenes Netz, leuchtende Kugel und schwebende Formen in Ihren Farben. Direkt im Editor wählbar, auch für die Anmeldeseite.', true],
         'modul-newsletter' => ['Newsletter', 6900, 'Marketing', 'Anmeldung mit Double-Opt-in, Abonnentenverwaltung, Newsletter im Design Ihrer Website und Versand über Ihren eigenen E-Mail-Server.', true],
         'modul-whatsapp' => ['WhatsApp', 2900, 'Marketing', 'Chat-Knopf auf jeder Seite und „Frage per WhatsApp stellen“ bei Produkten. Datenschutzfreundlich ohne fremde Skripte.', true],
         'modul-seo-pro' => ['SEO Pro', 7900, 'SEO', 'Mitbewerber-Analyse: Menü, Themen, Suchbegriffe und Funktionen von bis zu fünf Mitbewerbern, dazu eine Maßnahmenliste für besseres Ranking.', true],

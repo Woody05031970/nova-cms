@@ -37,8 +37,8 @@ class SalesSiteTest extends TestCase
             $this->assertTrue(Page::where('slug', $slug)->published()->exists(), $slug);
         }
         $this->assertTrue(Page::where('purpose', 'imprint')->exists());
-        // 3 Lizenzen und 17 lieferbare Module
-        $this->assertSame(21, Product::active()->count());
+        // 3 Lizenzen und 19 lieferbare Module
+        $this->assertSame(22, Product::active()->count());
         $this->assertSame(0, Product::where('is_active', false)->count());
         $this->assertSame(['design-pro', 'whatsapp', 'seo-pro', 'statistik'], Product::where('slug', 'nova-cms-business')->first()->license_spec['modules']);
         $this->assertTrue(Product::where('slug', 'nova-cms-business')->first()->license_spec['core']);

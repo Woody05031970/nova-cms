@@ -97,11 +97,14 @@ function draw() {
         morphdom(root, `<div id="nbx-root">${html()}</div>`, {
             onBeforeElUpdated(from, to) {
                 if (from === active) return false; // gerade getippter Text bleibt unangetastet
+                // Laufende 3D-Fläche behalten, solange Szene und Farben gleich sind
+                if (from.hasAttribute('data-nova-3d') && ['data-nova-3d', 'data-c1', 'data-c2'].every((a) => from.getAttribute(a) === to.getAttribute(a))) return false;
                 if (from.isEqualNode(to)) return false;
                 return true;
             },
         });
         markSelection();
+        if (root.querySelector('[data-nova-3d]') || window.Nova3D) import('./three/nova3d.js').then((m) => m.scan(root));
     });
 }
 

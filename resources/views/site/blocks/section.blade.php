@@ -6,7 +6,9 @@
 @endphp
 <section @if(! empty($d['style']['anchor'])) id="{{ $d['style']['anchor'] }}" @endif class="{{ $sec['class'] }}" style="{{ $sec['style'] }}">
     @if ($sec['overlay'])<div class="nb-overlay" style="{{ $sec['overlay'] }}"></div>@endif
+    @if ($sec['three'] && ! $sec['card'])<div class="nb-3d-canvas" data-nova-3d="{{ $sec['three']['scene'] }}" data-c1="{{ $sec['three']['c1'] }}" data-c2="{{ $sec['three']['c2'] }}"></div>@endif
     <div class="nb-inner" @if($sec['inner']) style="{{ $sec['inner'] }}" @endif>
+        @if ($sec['three'] && $sec['card'])<div class="nb-3d-canvas" data-nova-3d="{{ $sec['three']['scene'] }}" data-c1="{{ $sec['three']['c1'] }}" data-c2="{{ $sec['three']['c2'] }}"></div>@endif
         <div class="nb-row" data-n="{{ count($d['cols'] ?? []) }}" style="--nb-cols:{{ $B::gridColumns($layout) }}">
             @foreach ($d['cols'] ?? [] as $col)
                 @php $c = $B::column($col); @endphp

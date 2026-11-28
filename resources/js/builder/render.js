@@ -46,6 +46,9 @@ export function sectionParts(d, design) {
     } else if (s.bg === 'gradient') {
         bg.push(`background-image:linear-gradient(${+(s.bg_angle ?? 135)}deg,${color(s.bg_color) ?? COLORS.brand[1]},${color(s.bg_color2) ?? COLORS.accent[1]})`);
         dark = isDark(s.bg_color || 'brand', design);
+    } else if (s.bg === '3d') {
+        bg.push('background-color:' + (color(s.bg_color) ?? COLORS.dark[1]), `background-image:radial-gradient(120% 90% at 80% 10%,color-mix(in srgb,${color(s.bg_color2) ?? COLORS.accent[1]} 22%,transparent),transparent 60%)`);
+        dark = isDark(s.bg_color || 'dark', design);
     } else if (s.bg === 'image' && s.bg_image) {
         bg.push(`background-image:url('${esc(s.bg_image)}')`, 'background-position:' + (s.bg_pos || 'center'));
         dark = s.overlay ? isDark(s.overlay, design) && (s.overlay_opacity ?? 50) >= 30 : true;
@@ -62,8 +65,13 @@ export function sectionParts(d, design) {
     if (s.bg_fixed && s.bg === 'image') cls.push('nb-fixed');
     if (s.bg === 'image') cls.push('nb-bg-image');
     if (s.reverse) cls.push('nb-reverse');
+    let three = null;
+    if (s.bg === '3d') {
+        cls.push('nb-3d');
+        if (design?.three) three = { scene: s.bg_3d || 'wellen', c1: color(s.bg_color) ?? COLORS.dark[1], c2: color(s.bg_color2) ?? COLORS.accent[1] };
+    }
     (s.hide || []).forEach((h) => cls.push('nb-hide-' + h));
-    return { cls: cls.join(' '), style: (card ? css : [...css, ...bg]).join(';'), inner: card ? bg.join(';') : '', overlay };
+    return { cls: cls.join(' '), style: (card ? css : [...css, ...bg]).join(';'), inner: card ? bg.join(';') : '', overlay, three, card };
 }
 
 export const gridColumns = (layout) => (LAYOUTS[layout] || [1]).map((f) => `minmax(0,${f}fr)`).join(' ');
@@ -192,7 +200,9 @@ export function renderSection(block, ctx) {
     const edit = ctx.edit;
     let html = `<section${attr('id', d.style?.anchor)} class="${p.cls}" style="${p.style}"${edit ? ` data-nb-section="${esc(block.id)}"` : ''}>`;
     if (p.overlay) html += `<div class="nb-overlay" style="${p.overlay}"></div>`;
-    html += `<div class="nb-inner"${attr('style', p.inner)}><div class="nb-row" data-n="${cols.length}" style="--nb-cols:${gridColumns(d.layout || '1')}">`;
+    const three = p.three ? `<div class="nb-3d-canvas" data-nova-3d="${esc(p.three.scene)}" data-c1="${esc(p.three.c1)}" data-c2="${esc(p.three.c2)}"></div>` : '';
+    if (!p.card) html += three;
+    html += `<div class="nb-inner"${attr('style', p.inner)}>${p.card ? three : ''}<div class="nb-row" data-n="${cols.length}" style="--nb-cols:${gridColumns(d.layout || '1')}">`;
     for (const c of cols) {
         const cp = columnParts(c, ctx.design);
         html += `<div class="${cp.cls}"${attr('style', cp.style)}${edit ? ` data-nb-col="${esc(c.id)}"` : ''}>`;

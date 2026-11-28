@@ -11,8 +11,16 @@
     "file": "assets/module.esm-stJ4KnaK.js",
     "name": "module.esm"
   },
-  "_render-D_hEMsaP.js": {
-    "file": "assets/render-D_hEMsaP.js",
+  "_nova3d-BXH343Qi.js": {
+    "file": "assets/nova3d-BXH343Qi.js",
+    "name": "nova3d"
+  },
+  "_preload-helper-BPf9s95w.js": {
+    "file": "assets/preload-helper-BPf9s95w.js",
+    "name": "preload-helper"
+  },
+  "_render-gOPl-l9E.js": {
+    "file": "assets/render-gOPl-l9E.js",
     "name": "render"
   },
   "_seo-B-Uc-z_r.js": {
@@ -27,7 +35,7 @@
     "name": "sortable.esm"
   },
   "resources/css/app.css": {
-    "file": "assets/app-BynSeQ-C.css",
+    "file": "assets/app-WcZ0YYTv.css",
     "name": "app",
     "names": [
       "app.css"
@@ -53,16 +61,20 @@
     ]
   },
   "resources/js/canvas.js": {
-    "file": "assets/canvas-BPu_6QNO.js",
+    "file": "assets/canvas-COB_TfgH.js",
     "name": "canvas",
     "src": "resources/js/canvas.js",
     "isEntry": true,
     "imports": [
-      "_render-D_hEMsaP.js"
+      "_render-gOPl-l9E.js",
+      "_preload-helper-BPf9s95w.js"
+    ],
+    "dynamicImports": [
+      "_nova3d-BXH343Qi.js"
     ]
   },
   "resources/js/editor.js": {
-    "file": "assets/editor-BVSmSNUD.js",
+    "file": "assets/editor-BpfUx0Cq.js",
     "name": "editor",
     "src": "resources/js/editor.js",
     "isEntry": true,
@@ -72,7 +84,16 @@
       "_sortable.esm-BRxt44hw.js",
       "_media-CUdFIE3A.js",
       "_seo-B-Uc-z_r.js",
-      "_render-D_hEMsaP.js"
+      "_render-gOPl-l9E.js"
+    ]
+  },
+  "resources/js/login3d.js": {
+    "file": "assets/login3d-DzUn8_Gz.js",
+    "name": "login3d",
+    "src": "resources/js/login3d.js",
+    "isEntry": true,
+    "imports": [
+      "_nova3d-BXH343Qi.js"
     ]
   },
   "resources/js/menu.js": {
@@ -107,9 +128,15 @@
     ]
   },
   "resources/js/site.js": {
-    "file": "assets/site-BLpxcHLJ.js",
+    "file": "assets/site-BK2XSRUy.js",
     "name": "site",
     "src": "resources/js/site.js",
-    "isEntry": true
+    "isEntry": true,
+    "imports": [
+      "_preload-helper-BPf9s95w.js"
+    ],
+    "dynamicImports": [
+      "_nova3d-BXH343Qi.js"
+    ]
   }
 }

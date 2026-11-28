@@ -168,3 +168,8 @@ document.querySelectorAll('[data-has-submenu]').forEach((box) =>
     });
     first?.focus();
 })();
+
+// 3D-Hintergründe (Modul „3D-Effekte“): three.js wird nur geladen, wenn die Seite eine 3D-Fläche hat
+if (document.querySelector('[data-nova-3d]')) {
+    import('./three/nova3d.js').then((m) => m.scan());
+}

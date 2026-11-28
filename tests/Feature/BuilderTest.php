@@ -149,4 +149,26 @@ class BuilderTest extends TestCase
     {
         $this->assertSame([], array_values(array_diff(BlockSanitizer::ICONS, array_keys(Icons::PATHS))));
     }
+
+    public function test_3d_hintergrund_wird_bereinigt_und_ausgegeben(): void
+    {
+        $blocks = Page::cleanBlocks([$this->section('1', [['widgets' => [['type' => 'heading', 'data' => ['text' => 'Hallo 3D'], 'style' => ['tag' => 'h1']]]]],
+            ['bg' => '3d', 'bg_3d' => 'gibtsnicht', 'bg_color' => 'brand-dark', 'bg_color2' => '#19C3DC'])]);
+        $style = $blocks[0]['data']['style'];
+        $this->assertSame('3d', $style['bg']);
+        $this->assertSame('wellen', $style['bg_3d'], 'Unbekanntes Motiv fällt auf Wellen zurück');
+
+        $blocks[0]['data']['style']['bg_3d'] = 'kugel';
+        Page::create(['title' => 'Drei D', 'slug' => 'drei-d', 'blocks' => Page::cleanBlocks($blocks), 'status' => 'published', 'published_at' => now()]);
+        $html = $this->get('/drei-d')->assertOk()->getContent();
+        $this->assertStringContainsString('nb-3d', $html);
+        $this->assertStringContainsString('data-nova-3d="kugel"', $html);
+        $this->assertStringContainsString('data-c2="#19c3dc"', $html);
+        $this->assertStringContainsString('nb-dark', $html, 'Dunkle Grundfarbe ergibt helle Schrift');
+    }
+
+    public function test_anmeldeseite_hat_3d_hintergrund(): void
+    {
+        $this->get(route('login'))->assertOk()->assertSee('data-nova-3d="formen"', false)->assertSee('Anmelden');
+    }
 }
