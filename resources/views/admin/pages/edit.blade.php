@@ -1,8 +1,5 @@
-@extends('layouts.admin')
-@section('title', $page->title)
-@section('width', 'max-w-7xl')
-@push('head') @vite('resources/js/editor.js') @endpush
-
+{{-- Visueller Editor: links die Leiste mit Elementen und Einstellungen, rechts die Seite selbst --}}
+@php $siteName = $siteName ?? \App\Models\Setting::get('site_name', config('app.name')); @endphp
 @php
     $types = [
         'text' => ['label' => 'Text', 'description' => 'Absätze, Überschriften, Listen, Tabellen', 'icon' => 'pages', 'group' => 'basis'],
@@ -34,10 +31,16 @@
         'siteName' => $siteName,
         'pageId' => $page->id,
         'published' => $page->isPublished(),
-        'livePreviewUrl' => route('admin.pages.live-preview'),
+        'blockPreviewUrl' => route('admin.pages.block-preview'),
+        'templatesUrl' => route('admin.pages.templates'),
+        'templates' => \App\Http\Controllers\Admin\PageController::builderTemplates(),
+        'showTitle' => (bool) old('show_title', $page->show_title ?? true),
+        'widgets' => collect(\App\Support\Blocks\Builder::WIDGETS)->all(),
+        'design' => \Illuminate\Support\Arr::only(\App\Support\Design\SiteDesign::values(), ['brand', 'accent']),
+        'icons' => \App\Support\Blocks\BlockSanitizer::ICONS,
+        'iconPaths' => \App\Support\Icons::PATHS,
         'host' => request()->getHost(),
         'types' => $types,
-        'icons' => \App\Support\Blocks\BlockSanitizer::ICONS,
         'features' => collect(app(\App\Licensing\Features::class)->overview())->map(fn ($f) => $f['enabled']),
         'services' => \App\Models\Service::active()->get(['id', 'name'])->map(fn ($s) => ['id' => $s->id, 'name' => $s->name])->values(),
         'products' => \App\Models\Product::orderBy('name')->get(['slug', 'name', 'price_cents', 'is_active'])->map(fn ($p) => ['slug' => $p->slug, 'label' => $p->name.' · '.$p->price().($p->is_active ? '' : ' (ausgeblendet)')])->values(),
@@ -54,113 +57,231 @@
         ],
     ];
 @endphp
-
-@section('content')
-<div x-data="pageEditor(@js($cfg))" x-cloak
-     @pick-image="const cb = $event.detail; openLibrary('image', false, ([m]) => cb(m))"
-     @ai-error="error = $event.detail; window.scrollTo({top: 0, behavior: 'smooth'})"
-     @ai-done="error = ''; aiNotice = 'Text von der KI überarbeitet. Gefällt es nicht? Mit ↶ machen Sie es rückgängig.'; setTimeout(() => aiNotice = '', 6000)">
-    <form x-ref="form" method="POST" action="{{ route('admin.pages.update', $page) }}" @submit="dirty = false">
+@php
+    $legacyGroups = ['basis' => 'Große Bausteine', 'verkauf' => 'Überzeugen und verkaufen', 'profi' => 'Für Profis'];
+    $legacyHidden = ['text', 'image', 'button', 'video'];
+    $widgetIcons = ['heading' => 'type', 'text' => 'pages', 'image' => 'image', 'button' => 'cursor', 'icon' => 'star', 'list' => 'list', 'counter' => 'hash', 'quote' => 'quote', 'video' => 'play', 'gallery' => 'layers', 'spacer' => 'spacing', 'divider' => 'minus', 'html' => 'code'];
+    $tabBtn = 'flex-1 rounded-md px-2 py-1.5 text-sm font-medium';
+@endphp
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="robots" content="noindex">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <title>{{ $page->title }} bearbeiten · {{ $siteName }}</title>
+    @vite(['resources/css/app.css', 'resources/js/editor.js'])
+</head>
+<body class="nova-admin h-dvh overflow-hidden bg-slate-100 font-sans text-slate-900 antialiased">
+<div x-data="pageEditor(@js($cfg))" x-cloak class="flex h-full flex-col"
+     @pick-image.window="const cb = $event.detail; openLibrary('image', false, ([m]) => cb(m))"
+     @ai-error="error = $event.detail"
+     @ai-done="error = ''; notify('Text von der KI überarbeitet. Gefällt es nicht? Strg+Z macht es rückgängig.')"
+     x-init="@if (session('status')) notify(@js(session('status'))) @endif">
+    <form x-ref="form" method="POST" action="{{ route('admin.pages.update', $page) }}" @submit="dirty = false" class="flex min-h-0 flex-1 flex-col">
         @csrf @method('PUT')
-        <input type="hidden" name="blocks" :value="JSON.stringify(blocks.map(({id, type, data}) => ({id, type, data})))">
+        <input type="hidden" name="blocks" :value="serialized()">
+        <input type="hidden" name="title" :value="title">
+        <input type="hidden" name="show_title" :value="showTitle ? 1 : 0">
         <input type="hidden" name="action" x-ref="action" value="save">
 
         {{-- Kopfzeile --}}
-        <div class="sticky top-14 z-20 -mx-4 -mt-8 mb-6 flex flex-wrap items-center gap-3 border-b border-slate-200 bg-slate-50/90 px-4 py-3 backdrop-blur sm:-mx-8 sm:px-8 lg:-mx-10 lg:px-10">
-            <a href="{{ route('admin.pages.index') }}" class="text-sm text-slate-600 hover:text-slate-900">← Alle Seiten</a>
-            @if ($page->isPublished())
-                <span class="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-medium text-emerald-700"><span class="size-1.5 rounded-full bg-emerald-500"></span>Online</span>
-            @elseif ($page->isScheduled())
-                <span class="inline-flex items-center gap-1.5 rounded-full bg-sky-50 px-2.5 py-1 text-xs font-medium text-sky-800" data-scheduled><span class="size-1.5 rounded-full bg-sky-500"></span>Geplant für {{ $page->published_at->format('d.m.Y, H:i') }} Uhr</span>
-            @else
-                <span class="inline-flex items-center gap-1.5 rounded-full bg-slate-200/70 px-2.5 py-1 text-xs font-medium text-slate-600"><span class="size-1.5 rounded-full bg-slate-400"></span>Entwurf</span>
-            @endif
-            <span x-show="dirty" class="inline-flex items-center gap-1.5 text-xs text-amber-700"><span class="size-1.5 animate-pulse rounded-full bg-amber-500"></span>Ungespeichert</span>
-            <div class="ml-auto flex flex-wrap items-center gap-2">
-                <div class="hidden items-center rounded-lg border border-slate-200 bg-white p-0.5 lg:flex" role="group" aria-label="Ansicht">
-                    <button type="button" class="inline-flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-sm font-medium" :class="!live ? 'bg-slate-900 text-white' : 'text-slate-600 hover:bg-slate-50'" @click="live && toggleLive()"><x-icon name="settings" class="size-4" /> Einstellungen</button>
-                    <button type="button" class="inline-flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-sm font-medium" :class="live ? 'bg-slate-900 text-white' : 'text-slate-600 hover:bg-slate-50'" @click="!live && toggleLive()" data-live-toggle><x-icon name="eye" class="size-4" /> Live-Vorschau</button>
-                </div>
-                <a href="{{ route('admin.pages.preview', $page) }}" target="_blank" class="nova-btn-secondary lg:hidden" title="Zeigt den zuletzt gespeicherten Stand">Vorschau</a>
+        <header class="nbe-top">
+            <a href="{{ route('admin.pages.index') }}" class="nbe-tb" title="Zurück zu allen Seiten"><svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M15 18l-6-6 6-6"/></svg><span class="hidden xl:inline">Seiten</span></a>
+            <div class="min-w-0">
+                <button type="button" class="block max-w-64 truncate text-left text-sm font-semibold text-white hover:underline" @click="select('title')" x-text="title || 'Ohne Titel'" title="Titel ändern"></button>
+                <p class="flex items-center gap-2 text-[11px] text-slate-400">
+                    @if ($page->isPublished())<span class="inline-flex items-center gap-1"><span class="size-1.5 rounded-full bg-emerald-400"></span>Online</span>
+                    @elseif ($page->isScheduled())<span class="inline-flex items-center gap-1" data-scheduled><span class="size-1.5 rounded-full bg-sky-400"></span>Geplant für {{ $page->published_at->format('d.m.Y, H:i') }} Uhr</span>
+                    @else<span class="inline-flex items-center gap-1"><span class="size-1.5 rounded-full bg-slate-400"></span>Entwurf</span>@endif
+                    <span x-show="dirty" class="inline-flex items-center gap-1 text-amber-300"><span class="size-1.5 animate-pulse rounded-full bg-amber-400"></span>Ungespeichert</span>
+                </p>
+            </div>
+
+            <div class="mx-auto flex items-center gap-1 rounded-lg bg-white/5 p-0.5" role="group" aria-label="Gerät">
+                <button type="button" class="nbe-dev" :class="device === 'desktop' && 'is-on'" @click="device = 'desktop'" title="Computer" data-device="desktop"><x-icon name="monitor" class="size-4" /></button>
+                <button type="button" class="nbe-dev" :class="device === 'tablet' && 'is-on'" @click="device = 'tablet'" title="Tablet" data-device="tablet"><x-icon name="tablet" class="size-4" /></button>
+                <button type="button" class="nbe-dev" :class="device === 'phone' && 'is-on'" @click="device = 'phone'" title="Handy" data-device="phone"><x-icon name="phone" class="size-4" /></button>
+            </div>
+
+            <div class="flex items-center gap-1">
+                <button type="button" class="nbe-tb" @click="undo()" :disabled="!undoStack.length && lastSnap === serialized()" title="Rückgängig (Strg+Z)" data-undo><x-icon name="undo" class="size-4" /></button>
+                <button type="button" class="nbe-tb" @click="redo()" :disabled="!redoStack.length" title="Wiederholen (Strg+Y)" data-redo><x-icon name="redo" class="size-4" /></button>
+                <span class="mx-1 h-5 w-px bg-white/15"></span>
+                <button type="button" class="nbe-tb" :class="panel === 'tree' && 'is-on'" @click="panel = panel === 'tree' ? 'add' : 'tree'" title="Aufbau der Seite" data-panel-tree><x-icon name="layers" class="size-4" /><span class="hidden 2xl:inline">Aufbau</span></button>
+                <button type="button" class="nbe-tb" :class="panel === 'page' && 'is-on'" @click="panel = panel === 'page' ? 'add' : 'page'" title="Seiteneinstellungen, SEO und Veröffentlichung" data-panel-page><x-icon name="settings" class="size-4" /><span class="hidden xl:inline">Seite</span></button>
+                <a href="{{ route('admin.pages.preview', $page) }}" target="_blank" class="nbe-tb" title="Gespeicherten Stand in neuem Tab ansehen"><x-icon name="eye" class="size-4" /></a>
+                <span class="mx-1 h-5 w-px bg-white/15"></span>
                 @if ($page->isPublished())
-                    <button type="button" class="nova-btn-secondary" @click="submit('unpublish')">Offline nehmen</button>
-                    <button type="button" class="nova-btn" @click="submit('save')">Änderungen veröffentlichen</button>
+                    <button type="button" class="nbe-btn2 hidden lg:inline-flex" @click="submit('unpublish')">Offline nehmen</button>
+                    <button type="button" class="nbe-btn" @click="submit('save')" data-save>Veröffentlichen</button>
                 @else
-                    <button type="button" class="nova-btn-secondary" @click="submit('save')">Entwurf speichern</button>
-                    <button type="button" class="nova-btn" @click="submit('publish')">Veröffentlichen</button>
+                    <button type="button" class="nbe-btn2" @click="submit('save')" data-save>Speichern</button>
+                    <button type="button" class="nbe-btn" @click="submit('publish')">Veröffentlichen</button>
                 @endif
             </div>
-        </div>
+        </header>
 
-        <div x-show="error" x-text="error" class="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-900" role="alert"></div>
-        <div x-show="aiNotice" x-transition x-text="aiNotice" class="fixed right-4 bottom-4 z-30 max-w-sm rounded-lg bg-slate-900 px-4 py-3 text-sm text-white shadow-lg" role="status"></div>
+        <div class="flex min-h-0 flex-1">
+            {{-- ================= LEISTE ================= --}}
+            <aside class="nbe-panel" aria-label="Werkzeuge">
+                <div x-show="error" class="m-3 mb-0 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-900" role="alert"><span x-text="error"></span> <button type="button" class="ml-1 underline" @click="error = ''">OK</button></div>
+                @if ($errors->any())
+                    <div class="m-3 mb-0 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-900" role="alert">@foreach ($errors->all() as $e)<p>{{ $e }}</p>@endforeach</div>
+                @endif
+                <template x-if="converted && panel === 'add'">
+                    <div class="m-3 mb-0 rounded-lg border border-sky-200 bg-sky-50 px-3 py-2 text-xs text-sky-900" data-converted>Diese Seite wurde für den neuen Editor in Bereiche umgewandelt. Erst beim Speichern wird das übernommen. <button type="button" class="underline" @click="converted = false">Verstanden</button></div>
+                </template>
 
-        <div class="grid gap-8" :class="live ? 'lg:grid-cols-[minmax(0,1fr)_minmax(0,1.05fr)]' : 'lg:grid-cols-[minmax(0,1fr)_340px]'">
-            {{-- Inhalt --}}
-            <div class="min-w-0">
-                <label for="title" class="sr-only">Titel der Seite</label>
-                <input id="title" name="title" x-model="title" required maxlength="160" placeholder="Titel der Seite"
-                       class="mb-6 w-full border-0 bg-transparent p-0 text-3xl font-semibold tracking-tight placeholder:text-slate-300 focus:ring-0 focus:outline-none">
-
-                <div x-ref="blockList">
-                <template x-for="(block, i) in blocks" :key="block.id">
-                    <div data-block>
-                        {{-- Einfügen zwischen Blöcken --}}
-                        <div class="group relative flex h-6 items-center justify-center">
-                            <button type="button" @click="picker = (picker === i ? null : i)" class="z-10 rounded-full border border-slate-200 bg-white px-2.5 text-xs text-slate-500 opacity-0 shadow-xs transition group-hover:opacity-100 focus:opacity-100" :class="picker === i && 'opacity-100'">+ Block einfügen</button>
-                            <div class="absolute inset-x-0 top-1/2 h-px bg-slate-200 opacity-0 group-hover:opacity-100"></div>
-                        </div>
-                        <div x-show="picker === i" x-transition class="mb-3">@include('admin.pages.partials.picker')</div>
-
-                        <section :id="'block-' + block.id" class="group/block rounded-xl border border-slate-200 bg-white shadow-xs focus-within:border-nova-200 focus-within:ring-2 focus-within:ring-nova-100">
-                            <header class="flex items-center gap-2 border-b border-slate-100 px-2 py-1.5">
-                                <button type="button" data-block-handle class="cursor-grab touch-none rounded-md p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-700 active:cursor-grabbing" title="Ziehen zum Verschieben" aria-label="Block verschieben">
-                                    <svg class="size-4" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><circle cx="5.5" cy="3.5" r="1.3"/><circle cx="10.5" cy="3.5" r="1.3"/><circle cx="5.5" cy="8" r="1.3"/><circle cx="10.5" cy="8" r="1.3"/><circle cx="5.5" cy="12.5" r="1.3"/><circle cx="10.5" cy="12.5" r="1.3"/></svg>
-                                </button>
-                                <span class="font-mono text-[11px] font-semibold tracking-wider text-slate-500 uppercase" x-text="label(block.type)"></span>
-                                <div class="ml-auto flex items-center gap-1 text-slate-400">
-                                    <button type="button" class="rounded p-1 hover:bg-slate-100 hover:text-slate-700 disabled:opacity-30" :disabled="i === 0" @click="move(i, -1)" title="Nach oben">↑</button>
-                                    <button type="button" class="rounded p-1 hover:bg-slate-100 hover:text-slate-700 disabled:opacity-30" :disabled="i === blocks.length - 1" @click="move(i, 1)" title="Nach unten">↓</button>
-                                    <button type="button" class="rounded px-1.5 py-1 text-xs hover:bg-slate-100 hover:text-slate-700" @click="duplicate(i)" title="Doppeln">Doppeln</button>
-                                    <button type="button" class="rounded px-1.5 py-1 text-xs hover:bg-red-50 hover:text-red-700" @click="remove(i)" title="Entfernen">Entfernen</button>
+                {{-- ---------- Hinzufügen ---------- --}}
+                <div x-show="panel === 'add'" class="flex min-h-0 flex-1 flex-col">
+                    <div class="flex gap-1 border-b border-slate-200 p-2" role="tablist">
+                        <button type="button" role="tab" class="{{ $tabBtn }}" :class="addTab === 'widgets' ? 'bg-slate-900 text-white' : 'text-slate-600 hover:bg-slate-100'" @click="addTab = 'widgets'">Elemente</button>
+                        <button type="button" role="tab" class="{{ $tabBtn }}" :class="addTab === 'blocks' ? 'bg-slate-900 text-white' : 'text-slate-600 hover:bg-slate-100'" @click="addTab = 'blocks'" data-tab-blocks>Bausteine</button>
+                        <button type="button" role="tab" class="{{ $tabBtn }}" :class="addTab === 'templates' ? 'bg-slate-900 text-white' : 'text-slate-600 hover:bg-slate-100'" @click="addTab = 'templates'" data-tab-templates>Vorlagen</button>
+                    </div>
+                    <div class="flex-1 overflow-y-auto p-3">
+                        <div x-show="addTab === 'widgets'" class="space-y-5">
+                            <p x-show="addTarget?.col" class="rounded-lg bg-nova-50 px-3 py-2 text-xs text-nova-800">Klicken Sie auf ein Element, um es in die gewählte Spalte zu setzen. Oder ziehen Sie es an die gewünschte Stelle.</p>
+                            <div>
+                                <p class="nbp-group">Neuer Bereich mit Spalten</p>
+                                <div class="grid grid-cols-4 gap-1.5">
+                                    <template x-for="[key, parts] in layouts" :key="key">
+                                        <button type="button" class="nbp-layout" draggable="true" @dragstart="startDrag($event, { kind: 'layout', layout: key })" @dragend="endDrag()" @click="addSection(key, addAt ?? (hit ? hit.bi + 1 : blocks.length))" :title="parts.length + (parts.length === 1 ? ' Spalte' : ' Spalten')" :data-add-layout="key">
+                                            <template x-for="(f, fi) in parts" :key="fi"><i :style="'flex:' + f"></i></template>
+                                        </button>
+                                    </template>
                                 </div>
-                            </header>
-                            <div class="p-4">
+                            </div>
+                            <div>
+                                <p class="nbp-group">Elemente</p>
+                                <div class="grid grid-cols-3 gap-1.5">
+                                    @foreach (\App\Support\Blocks\Builder::WIDGETS as $wk => $wl)
+                                        <button type="button" class="nbp-tile" draggable="true" @dragstart="startDrag($event, { kind: 'widget', type: '{{ $wk }}' })" @dragend="endDrag()" @click="addWidget('{{ $wk }}')" data-add-widget="{{ $wk }}">
+                                            <x-icon :name="$widgetIcons[$wk]" class="size-6" /><span>{{ $wl }}</span>
+                                        </button>
+                                    @endforeach
+                                </div>
+                            </div>
+                            <p class="text-xs text-slate-500">Tipp: Ziehen Sie Elemente direkt in die Seite rechts. Texte ändern Sie, indem Sie hineinklicken und tippen.</p>
+                        </div>
+
+                        <div x-show="addTab === 'blocks'" class="space-y-5">
+                            <p class="text-xs text-slate-500">Fertige Bausteine mit eigener Gestaltung, z. B. Preise, Fragen oder Kontaktformular. Klicken oder in die Seite ziehen.</p>
+                            @foreach ($legacyGroups as $g => $gLabel)
+                                <div>
+                                    <p class="nbp-group">{{ $gLabel }}</p>
+                                    <div class="space-y-1.5">
+                                        @foreach ($types as $tk => $t)
+                                            @continue($t['group'] !== $g || in_array($tk, $legacyHidden, true))
+                                            <button type="button" class="nbp-row" draggable="true" @dragstart="startDrag($event, { kind: 'block', type: '{{ $tk }}' })" @dragend="endDrag()" @click="addLegacy('{{ $tk }}')" data-add-block="{{ $tk }}">
+                                                <x-icon :name="$t['icon']" class="size-5 shrink-0 text-nova-600" />
+                                                <span><strong>{{ $t['label'] }}</strong><small>{{ $t['description'] }}</small></span>
+                                            </button>
+                                        @endforeach
+                                    </div>
+                                </div>
+                            @endforeach
+                        </div>
+
+                        <div x-show="addTab === 'templates'" class="space-y-5">
+                            <p class="text-xs text-slate-500">Fertig gestaltete Bereiche zum Anpassen. Einfach klicken und danach Texte und Bilder austauschen.</p>
+                            <div class="grid grid-cols-2 gap-2">
+                                <template x-for="t in templates" :key="t.key">
+                                    <button type="button" class="nbp-tpl" draggable="true" @dragstart="startDrag($event, { kind: 'template', key: t.key })" @dragend="endDrag()" @click="insertTemplate(t)" :data-template="t.key">
+                                        <span class="nbp-scheme" :data-scheme="t.scheme"><i></i><i></i><i></i></span>
+                                        <strong x-text="t.name"></strong><small x-text="t.desc"></small>
+                                    </button>
+                                </template>
+                            </div>
+                            <div>
+                                <p class="nbp-group">Eigene Vorlagen</p>
+                                <p x-show="!ownTemplates.length" class="text-xs text-slate-500">Noch keine. Wählen Sie einen Bereich und speichern Sie ihn unter „Erweitert“ als Vorlage, um ihn auf anderen Seiten wiederzuverwenden.</p>
+                                <div class="space-y-1.5">
+                                    <template x-for="t in ownTemplates" :key="t.id">
+                                        <div class="flex items-center gap-1">
+                                            <button type="button" class="nbp-row flex-1" @click="insertTemplate(t, true)"><x-icon name="template" class="size-5 shrink-0 text-nova-600" /><span><strong x-text="t.name"></strong></span></button>
+                                            <button type="button" class="rounded p-2 text-slate-400 hover:bg-red-50 hover:text-red-700" @click="deleteTemplate(t)" title="Vorlage löschen"><x-icon name="trash" class="size-4" /></button>
+                                        </div>
+                                    </template>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {{-- ---------- Bearbeiten ---------- --}}
+                <div x-show="panel === 'edit'" class="flex min-h-0 flex-1 flex-col">
+                    <div class="flex items-center gap-1 border-b border-slate-200 px-3 py-2">
+                        <nav class="flex min-w-0 flex-1 flex-wrap items-center gap-1 text-xs text-slate-500" aria-label="Auswahl">
+                            <template x-for="(c, ci) in crumbs" :key="c.id">
+                                <span class="flex items-center gap-1"><span x-show="ci" aria-hidden="true">›</span>
+                                    <button type="button" class="rounded px-1 py-0.5 hover:bg-slate-100" :class="ci === crumbs.length - 1 && 'font-semibold text-slate-900'" @click="select(c.kind, c.id)" x-text="c.label"></button></span>
+                            </template>
+                            <span x-show="sel?.kind === 'title'" class="font-semibold text-slate-900">Seitentitel</span>
+                            <span x-show="sel?.kind === 'block'" class="font-semibold text-slate-900" x-text="selBlock && label(selBlock.type)"></span>
+                        </nav>
+                        <template x-if="sel && sel.kind !== 'title' && sel.kind !== 'col'">
+                            <div class="flex shrink-0 items-center text-slate-400">
+                                <button type="button" class="rounded p-1 hover:bg-slate-100 hover:text-slate-700" @click="moveBy(-1)" title="Nach oben">↑</button>
+                                <button type="button" class="rounded p-1 hover:bg-slate-100 hover:text-slate-700" @click="moveBy(1)" title="Nach unten">↓</button>
+                                <button type="button" class="rounded p-1 hover:bg-slate-100 hover:text-slate-700" @click="duplicate(sel.kind === 'widget' ? 'widget' : 'top', sel.id)" title="Doppeln"><x-icon name="copy" class="size-4" /></button>
+                                <button type="button" class="rounded p-1 hover:bg-red-50 hover:text-red-700" @click="remove(sel.kind === 'widget' ? 'widget' : 'top', sel.id)" title="Löschen (Entf)" data-remove><x-icon name="trash" class="size-4" /></button>
+                            </div>
+                        </template>
+                        <button type="button" class="rounded p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-700" @click="select(null)" title="Schließen (Esc)" aria-label="Schließen">✕</button>
+                    </div>
+                    <template x-if="sel?.kind === 'widget' || sel?.kind === 'section'">
+                        <div class="flex gap-1 border-b border-slate-200 p-2" role="tablist">
+                            <button type="button" role="tab" class="{{ $tabBtn }}" :class="tab === 'content' ? 'bg-slate-900 text-white' : 'text-slate-600 hover:bg-slate-100'" @click="tab = 'content'" x-text="sel.kind === 'section' ? 'Aufbau' : 'Inhalt'"></button>
+                            <button type="button" role="tab" class="{{ $tabBtn }}" :class="tab === 'style' ? 'bg-slate-900 text-white' : 'text-slate-600 hover:bg-slate-100'" @click="tab = 'style'" data-tab-style>Stil</button>
+                            <button type="button" role="tab" class="{{ $tabBtn }}" :class="tab === 'advanced' ? 'bg-slate-900 text-white' : 'text-slate-600 hover:bg-slate-100'" @click="tab = 'advanced'" data-tab-advanced>Erweitert</button>
+                        </div>
+                    </template>
+                    <div class="nbe-scroll flex-1 overflow-y-auto p-4">
+                        <template x-if="sel?.kind === 'title'">
+                            <div class="space-y-4">
+                                <div class="nbp-field"><label class="nbp-label" for="page-title">Titel der Seite</label><input id="page-title" class="nova-input" x-model="title" maxlength="160" required></div>
+                                <x-nb.toggle model="showTitle" label="Titel oben auf der Seite zeigen" hint="Aus, wenn der erste Bereich schon eine eigene große Überschrift hat." />
+                                <p x-show="startsWithHero" class="text-xs text-slate-500">Die Seite beginnt mit einem Titelbild, einem Baustein mit Überschrift oder einer H1-Überschrift. Der Titel wird dann ohnehin nicht doppelt gezeigt.</p>
+                            </div>
+                        </template>
+                        <template x-for="w in selWidgetList" :key="w.id">
+                            <div>@include('admin.pages.builder.widget')</div>
+                        </template>
+                        <template x-for="c in (sel?.kind === 'col' && selCol ? [selCol] : [])" :key="c.id">
+                            <div>@include('admin.pages.builder.column')</div>
+                        </template>
+                        <template x-for="s in (sel?.kind === 'section' && selSection ? [selSection] : [])" :key="s.id">
+                            <div>@include('admin.pages.builder.section')</div>
+                        </template>
+                        <template x-for="block in selBlockList" :key="block.id">
+                            <div class="nbe-legacy">
                                 @include('admin.pages.partials.blocks')
                                 @include('admin.pages.partials.blocks-sales')
                             </div>
-                        </section>
-                    </div>
-                </template>
-                </div>
-
-                <div class="mt-4">
-                    <button type="button" @click="picker = (picker === 'end' ? null : 'end')" class="flex w-full items-center justify-center gap-2 rounded-xl border-2 border-dashed border-slate-300 py-4 text-sm font-medium text-slate-600 hover:border-nova-500 hover:text-nova-700">+ Block hinzufügen</button>
-                    <div x-show="picker === 'end'" x-transition class="mt-3">
-                        @include('admin.pages.partials.picker', ['at' => 'blocks.length'])
+                        </template>
                     </div>
                 </div>
-            </div>
 
-            {{-- Live-Vorschau --}}
-            <section x-show="live" x-cloak class="sticky top-32 hidden h-[calc(100vh-9rem)] flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm lg:flex" aria-label="Live-Vorschau">
-                <div class="flex items-center gap-2 border-b border-slate-100 bg-slate-50 px-3 py-2">
-                    <span class="flex gap-1"><span class="size-2.5 rounded-full bg-red-300"></span><span class="size-2.5 rounded-full bg-amber-300"></span><span class="size-2.5 rounded-full bg-emerald-300"></span></span>
-                    <span class="ml-2 min-w-0 flex-1 truncate rounded-md bg-white px-2 py-0.5 font-mono text-[11px] text-slate-500" x-text="host + (isHome ? '/' : '/' + (slug || ''))"></span>
-                    <span x-show="liveBusy" class="size-2 animate-pulse rounded-full bg-nova-500" title="Aktualisiert …"></span>
-                    <div class="flex rounded-md border border-slate-200 bg-white p-0.5" role="group" aria-label="Gerät">
-                        <button type="button" class="rounded p-1" :class="device === 'desktop' ? 'bg-slate-900 text-white' : 'text-slate-500'" @click="device = 'desktop'" title="Computer"><x-icon name="monitor" class="size-4" /></button>
-                        <button type="button" class="rounded p-1" :class="device === 'phone' ? 'bg-slate-900 text-white' : 'text-slate-500'" @click="device = 'phone'" title="Handy"><x-icon name="phone" class="size-4" /></button>
+                {{-- ---------- Aufbau ---------- --}}
+                <div x-show="panel === 'tree'" class="flex min-h-0 flex-1 flex-col">
+                    <div class="flex items-center justify-between border-b border-slate-200 px-4 py-3"><h2 class="font-semibold">Aufbau der Seite</h2><button type="button" class="text-slate-400 hover:text-slate-700" @click="panel = 'add'" aria-label="Schließen">✕</button></div>
+                    <div class="flex-1 overflow-y-auto p-2">
+                        <p x-show="!tree.length" class="p-3 text-sm text-slate-500">Die Seite ist noch leer.</p>
+                        <template x-for="n in tree" :key="n.id">
+                            <button type="button" class="nbp-node" :class="sel?.id === n.id && 'is-on'" :style="'padding-left:' + (0.6 + n.depth * 1.1) + 'rem'" @click="select(n.kind, n.id); panel = 'tree'">
+                                <span class="font-medium" x-text="n.label"></span><span class="truncate text-slate-400" x-text="n.hint"></span>
+                            </button>
+                        </template>
                     </div>
                 </div>
-                <div x-ref="liveBox" class="flex flex-1 overflow-hidden bg-[radial-gradient(circle_at_1px_1px,#e2e8f0_1px,transparent_0)] [background-size:16px_16px]">
-                    <iframe x-ref="liveFrame" title="Live-Vorschau der Seite" class="shrink-0 bg-white" :style="frameStyle" :class="device === 'phone' ? 'mx-auto my-4 h-[calc(100%-2rem)] w-[390px] rounded-[1.5rem] border-8 border-slate-900 shadow-xl' : ''"></iframe>
-                </div>
-                <p class="border-t border-slate-100 px-3 py-1.5 text-[11px] text-slate-500">Zeigt Ihre Änderungen sofort, auch vor dem Speichern. Links öffnen sich in einem neuen Tab.</p>
-            </section>
 
-            {{-- Seitenleiste --}}
-            <aside class="space-y-5" x-show="!live">
+                {{-- ---------- Seite ---------- --}}
+                <div x-show="panel === 'page'" class="flex min-h-0 flex-1 flex-col">
+                    <div class="flex items-center justify-between border-b border-slate-200 px-4 py-3"><h2 class="font-semibold">Seiteneinstellungen</h2><button type="button" class="text-slate-400 hover:text-slate-700" @click="panel = 'add'" aria-label="Schließen">✕</button></div>
+                    <div class="nbe-page flex-1 space-y-4 overflow-y-auto p-3">
                 <section class="nova-card p-5">
                     <h2 class="font-semibold">Bei Google</h2>
                     <p class="mt-1 text-xs text-slate-500">So ungefähr erscheint die Seite in den Suchergebnissen.</p>
@@ -334,9 +455,24 @@
                 </section>
 
                 <button form="delete-page" class="w-full rounded-lg px-4 py-2 text-sm text-red-700 hover:bg-red-50">In den Papierkorb</button>
+                    </div>
+                </div>
             </aside>
+
+            {{-- ================= LEINWAND ================= --}}
+            <main class="nbe-stage" :class="'is-' + device" aria-label="Seite">
+                <div class="nbe-frame" :style="'width:' + frameWidth">
+                    <iframe x-ref="canvas" src="{{ route('admin.pages.canvas', $page) }}" title="Seite bearbeiten" data-canvas></iframe>
+                    <div x-show="!canvasOk" class="absolute inset-0 grid place-items-center bg-white text-sm text-slate-500">Seite wird geladen …</div>
+                </div>
+            </main>
         </div>
     </form>
+
+    <div x-show="toast" x-transition class="fixed bottom-4 left-1/2 z-50 flex -translate-x-1/2 items-center gap-3 rounded-xl bg-slate-900 px-4 py-3 text-sm text-white shadow-xl" role="status">
+        <span x-text="toast"></span>
+        <button type="button" x-show="toastUndo" class="font-semibold text-nova-200 hover:underline" @click="undo(); toast = ''">Rückgängig</button>
+    </div>
 
     @include('admin.media.picker')
 
@@ -350,4 +486,5 @@
     @endif
     <form id="delete-page" method="POST" action="{{ route('admin.pages.destroy', $page) }}" class="hidden" @submit="if (!confirm('Seite in den Papierkorb legen?')) $event.preventDefault(); else dirty = false">@csrf @method('DELETE')</form>
 </div>
-@endsection
+</body>
+</html>

@@ -9,6 +9,7 @@ use App\Models\Product;
 use App\Models\Redirect;
 use App\Models\Setting;
 use App\Shop\ShopSettings;
+use App\Support\Blocks\Builder;
 use App\Support\Menu\SiteMenu;
 use App\Support\WhatsApp;
 use Illuminate\Support\Collection;
@@ -42,7 +43,7 @@ class SeoAdvisor
     public function own(): array
     {
         $pages = Page::published()->get();
-        $types = $pages->flatMap(fn (Page $p) => collect($p->blocks ?? [])->pluck('type'))->unique();
+        $types = $pages->flatMap(fn (Page $p) => collect($p->blocks ?? [])->pluck('type')->merge(collect(Builder::flatten($p->blocks ?? []))->pluck('type')))->unique();
         $heroVideo = $pages->contains(fn (Page $p) => collect($p->blocks ?? [])->contains(fn ($b) => ($b['type'] ?? '') === 'hero' && ($b['data']['variant'] ?? '') === 'video'));
         $shop = ShopSettings::enabled() && Product::active()->exists();
 
@@ -210,10 +211,10 @@ class SeoAdvisor
         $known = ['shop', 'warenkorb', 'kasse', 'suche', 'bestellung', 'sitemap.xml', 'robots.txt', 'admin', 'login'];
         $broken = [];
         foreach ($pages as $p) {
-            foreach ($p->blocks ?? [] as $b) {
+            foreach (Builder::flatten($p->blocks ?? []) as $b) {
                 $html = (string) ($b['data']['html'] ?? '');
                 preg_match_all('/href="\/([a-z0-9\-\/]*)(?:[?#][^"]*)?"/i', $html, $mm);
-                $urls = array_merge($mm[1], array_filter([$b['data']['button_url'] ?? null, $b['data']['button2_url'] ?? null, $b['data']['url'] ?? null], fn ($u) => is_string($u) && str_starts_with($u, '/') && ! str_starts_with($u, '//') && ! str_starts_with($u, '/uploads/')));
+                $urls = array_merge($mm[1], array_filter([$b['data']['button_url'] ?? null, $b['data']['button2_url'] ?? null, $b['data']['url2'] ?? null, $b['data']['url'] ?? null], fn ($u) => is_string($u) && str_starts_with($u, '/') && ! str_starts_with($u, '//') && ! str_starts_with($u, '/uploads/')));
                 foreach ($urls as $u) {
                     $path = trim(strtok(ltrim($u, '/'), '?#') ?: '', '/');
                     $first = explode('/', $path)[0];

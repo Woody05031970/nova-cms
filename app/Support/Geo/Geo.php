@@ -7,6 +7,7 @@ use App\Models\Page;
 use App\Models\Product;
 use App\Models\Setting;
 use App\Shop\ShopSettings;
+use App\Support\Blocks\Builder;
 use App\Support\Design\SiteDesign;
 use App\Support\Seo\PageAnalyzer;
 use App\Support\Seo\SiteSeo;
@@ -190,7 +191,7 @@ class Geo
     public function check(Page $page): array
     {
         $analyzer = app(PageAnalyzer::class);
-        $blocks = $page->blocks ?? [];
+        $blocks = Builder::flatten($page->blocks ?? []);
         $text = $analyzer->text($blocks);
         $words = $analyzer->countWords($text);
         $html = collect($blocks)->where('type', 'text')->map(fn ($b) => (string) ($b['data']['html'] ?? ''))->implode("\n");

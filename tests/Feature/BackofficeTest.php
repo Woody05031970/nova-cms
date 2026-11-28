@@ -178,4 +178,19 @@ class BackofficeTest extends TestCase
             @unlink(AutoUpdate::markerPath());
         }
     }
+
+    public function test_update_laeuft_auch_mit_altem_einstellungs_zwischenspeicher(): void
+    {
+        // Ein alter config:cache meldet noch die alte Versionsnummer
+        config(['nova.version' => '0.0.1']);
+        file_put_contents(AutoUpdate::markerPath(), '0.0.1');
+        try {
+            $this->assertSame((require base_path('config/nova.php'))['version'], AutoUpdate::codeVersion());
+            $this->assertTrue(AutoUpdate::run());
+            $this->assertSame(AutoUpdate::codeVersion(), AutoUpdate::installedVersion());
+            $this->assertNotSame('0.0.1', AutoUpdate::installedVersion());
+        } finally {
+            @unlink(AutoUpdate::markerPath());
+        }
+    }
 }

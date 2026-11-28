@@ -6,14 +6,17 @@ use App\Http\Controllers\Controller;
 use App\Licensing\Features;
 use App\Models\Page;
 use App\Models\PageRevision;
+use App\Models\Setting;
 use App\Models\SocialPost;
 use App\Support\Pages\PageTemplates;
 use App\Support\Social\SocialPublisher;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 
@@ -75,6 +78,7 @@ class PageController extends Controller
             'focus_keyword' => ['nullable', 'string', 'max:100'],
             'show_in_menu' => ['boolean'],
             'is_home' => ['boolean'],
+            'show_title' => ['nullable', 'boolean'],
             'members_only' => ['nullable', 'boolean'],
             'action' => ['required', Rule::in(['save', 'publish', 'unpublish', 'schedule'])],
             'publish_at' => [Rule::excludeIf($request->input('action') !== 'schedule'), 'required', 'date', 'after:now'],
@@ -111,6 +115,7 @@ class PageController extends Controller
                 'title' => $data['title'],
                 'slug' => $isHome ? $page->slug : Page::uniqueSlug($data['slug'] ?: $data['title'], $page->id),
                 'blocks' => $blocks,
+                'show_title' => (bool) ($data['show_title'] ?? true),
                 'meta_title' => $data['meta_title'] ?? null,
                 'meta_description' => $data['meta_description'] ?? null,
                 'focus_keyword' => isset($data['focus_keyword']) ? trim($data['focus_keyword']) : null,
@@ -185,6 +190,58 @@ class PageController extends Controller
 
         return response()->view('site.page', ['page' => $page, 'preview' => true, 'live' => true])
             ->header('X-Robots-Tag', 'noindex');
+    }
+
+    /** Leinwand des visuellen Editors: die Seite im echten Design, Inhalt zeichnet canvas.js */
+    public function canvas(Page $page): View
+    {
+        return view('admin.pages.canvas', ['page' => $page]);
+    }
+
+    /** Vorschau eines fertigen Bausteins für die Leinwand */
+    public function blockPreview(Request $request): Response
+    {
+        $data = $request->validate(['page' => ['required', 'integer', 'exists:pages,id'], 'block' => ['required', 'json', 'max:200000']]);
+        $block = Page::cleanBlocks([json_decode($data['block'], true)])[0] ?? null;
+        abort_if(! $block || $block['type'] === 'section', 422);
+
+        $html = $block['type'] === 'html'
+            ? '<div class="mx-auto mt-8 max-w-3xl rounded-lg border border-dashed border-slate-300 p-6 text-center text-sm text-slate-500">Eigener HTML-Code. Er wird erst auf der Website ausgeführt.</div>'
+            : view('site.blocks.'.$block['type'], ['d' => $block['data'], 'first' => $request->boolean('first'), 'blockId' => $block['id'], 'pageId' => (int) $data['page']])->render();
+
+        return response($html)->header('Content-Type', 'text/html; charset=utf-8')->header('X-Robots-Tag', 'noindex');
+    }
+
+    private const TEMPLATE_KEY = 'builder_templates';
+
+    /** @return list<array{id: string, name: string, block: array<string, mixed>}> */
+    public static function builderTemplates(): array
+    {
+        $list = json_decode((string) Setting::get(self::TEMPLATE_KEY, '[]'), true);
+
+        return is_array($list) ? array_values($list) : [];
+    }
+
+    /** Einen Bereich als eigene Vorlage speichern (für alle Seiten) */
+    public function storeTemplate(Request $request): JsonResponse
+    {
+        $data = $request->validate(['name' => ['required', 'string', 'max:80'], 'block' => ['required', 'json', 'max:200000']]);
+        $block = Page::cleanBlocks([json_decode($data['block'], true)])[0] ?? null;
+        abort_if(! $block || $block['type'] !== 'section', 422, 'Nur Bereiche lassen sich als Vorlage speichern.');
+        $list = self::builderTemplates();
+        abort_if(count($list) >= 50, 422, 'Es sind schon 50 Vorlagen gespeichert. Löschen Sie zuerst eine.');
+        $list[] = ['id' => Str::lower(Str::random(10)), 'name' => strip_tags($data['name']), 'block' => $block];
+        Setting::put(self::TEMPLATE_KEY, json_encode($list, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));
+
+        return response()->json(['templates' => $list]);
+    }
+
+    public function destroyTemplate(string $id): JsonResponse
+    {
+        $list = array_values(array_filter(self::builderTemplates(), fn ($t) => ($t['id'] ?? null) !== $id));
+        Setting::put(self::TEMPLATE_KEY, json_encode($list, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));
+
+        return response()->json(['templates' => $list]);
     }
 
     public function destroy(Page $page): RedirectResponse

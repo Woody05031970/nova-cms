@@ -13,18 +13,23 @@ use Illuminate\Support\Str;
  */
 class BlockSanitizer
 {
-    public const TYPES = ['text', 'hero', 'image', 'video', 'slider', 'button', 'features', 'pricing', 'modules', 'compare', 'faq', 'cta', 'contact', 'newsletter', 'booking', 'reviews', 'html'];
+    public const TYPES = ['section', 'text', 'hero', 'image', 'video', 'slider', 'button', 'features', 'pricing', 'modules', 'compare', 'faq', 'cta', 'contact', 'newsletter', 'booking', 'reviews', 'html'];
 
     /** Symbole für Vorteils-Kacheln */
-    public const ICONS = ['sparkles', 'bolt', 'shield', 'cart', 'search', 'pages', 'menu', 'image', 'globe', 'layers', 'rocket', 'heart', 'users', 'chart', 'lock', 'clock', 'check', 'code', 'puzzle', 'key', 'eye', 'mail'];
+    public const ICONS = ['sparkles', 'bolt', 'shield', 'cart', 'search', 'pages', 'menu', 'image', 'globe', 'layers', 'rocket', 'heart', 'users', 'chart', 'lock', 'clock', 'check', 'code', 'puzzle', 'key', 'eye', 'mail', 'star', 'location', 'truck', 'leaf', 'award', 'smile', 'wrench', 'camera', 'gift', 'thumb', 'phone', 'calendar', 'chat', 'user', 'home', 'store', 'tag', 'send'];
 
     private const MAX_BLOCKS = 200;
+
+    private const MAX_WIDGETS = 400;
+
+    private bool $allowHtml = true;
 
     private ?HTMLPurifier $purifier = null;
 
     /** @param array<int, mixed> $blocks  @return list<array{id: string, type: string, data: array<string, mixed>}> */
     public function clean(array $blocks, bool $allowHtml = true): array
     {
+        $this->allowHtml = $allowHtml;
         $out = [];
         foreach (array_slice($blocks, 0, self::MAX_BLOCKS) as $block) {
             if (! is_array($block) || ! in_array($block['type'] ?? null, self::TYPES, true)) {
@@ -52,6 +57,176 @@ class BlockSanitizer
     public function image(?string $url): ?string
     {
         return $this->mediaUrl($url);
+    }
+
+    /**
+     * Bereich aus dem visuellen Editor: Spalten mit Elementen (Überschrift, Text, Bild …).
+     * Inhalte liegen unter "data", Aussehen unter "style", damit Übersetzungen nur Texte anfassen.
+     */
+    private function cleanSection(array $d): array
+    {
+        $layout = in_array($d['layout'] ?? null, array_keys(Builder::LAYOUTS), true) ? $d['layout'] : '1';
+        $count = count(Builder::LAYOUTS[$layout]);
+        $s = is_array($d['style'] ?? null) ? $d['style'] : [];
+        $cols = array_values(array_filter(is_array($d['cols'] ?? null) ? $d['cols'] : [], 'is_array'));
+        // Überzählige Spalten nicht verlieren: ihre Elemente wandern in die letzte Spalte
+        while (count($cols) > $count) {
+            $extra = array_pop($cols);
+            $cols[$count - 1]['widgets'] = array_merge(is_array($cols[$count - 1]['widgets'] ?? null) ? $cols[$count - 1]['widgets'] : [], is_array($extra['widgets'] ?? null) ? $extra['widgets'] : []);
+        }
+        while (count($cols) < $count) {
+            $cols[] = [];
+        }
+
+        $outCols = [];
+        $total = 0;
+        foreach ($cols as $c) {
+            $cs = is_array($c['style'] ?? null) ? $c['style'] : [];
+            $widgets = [];
+            foreach (is_array($c['widgets'] ?? null) ? array_values($c['widgets']) : [] as $w) {
+                if ($total >= self::MAX_WIDGETS || ! is_array($w) || ! isset(Builder::WIDGETS[$w['type'] ?? ''])) {
+                    continue;
+                }
+                if ($w['type'] === 'html' && ! $this->allowHtml) {
+                    continue;
+                }
+                $widgets[] = $this->cleanWidget($w);
+                $total++;
+            }
+            $outCols[] = [
+                'id' => $this->id($c['id'] ?? null),
+                'style' => [
+                    'bg' => $this->color($cs['bg'] ?? null),
+                    'pad' => $this->int($cs['pad'] ?? 0, 0, 80),
+                    'radius' => $this->int($cs['radius'] ?? 0, 0, 40),
+                    'shadow' => (bool) ($cs['shadow'] ?? false),
+                    'border' => (bool) ($cs['border'] ?? false),
+                    'valign' => $this->enum($cs['valign'] ?? null, ['top', 'center', 'bottom'], 'top'),
+                    'align' => $this->enum($cs['align'] ?? null, ['', 'left', 'center', 'right'], ''),
+                ],
+                'widgets' => $widgets,
+            ];
+        }
+
+        return [
+            'layout' => $layout,
+            'style' => [
+                'width' => $this->enum($s['width'] ?? null, ['narrow', 'boxed', 'full'], 'boxed'),
+                'height' => $this->enum($s['height'] ?? null, ['auto', 's', 'm', 'screen'], 'auto'),
+                'valign' => $this->enum($s['valign'] ?? null, ['top', 'center', 'bottom'], 'top'),
+                'gap' => $this->enum($s['gap'] ?? null, ['none', 's', 'm', 'l'], 'm'),
+                'pt' => $this->int($s['pt'] ?? 64, 0, 240),
+                'pb' => $this->int($s['pb'] ?? 64, 0, 240),
+                'bg' => $this->enum($s['bg'] ?? null, ['none', 'color', 'gradient', 'image'], 'none'),
+                'bg_color' => $this->color($s['bg_color'] ?? null),
+                'bg_color2' => $this->color($s['bg_color2'] ?? null),
+                'bg_angle' => $this->int($s['bg_angle'] ?? 135, 0, 360),
+                'bg_image' => $this->mediaUrl($s['bg_image'] ?? null),
+                'bg_pos' => $this->enum($s['bg_pos'] ?? null, ['center', 'top', 'bottom'], 'center'),
+                'bg_fixed' => (bool) ($s['bg_fixed'] ?? false),
+                'overlay' => $this->color($s['overlay'] ?? null),
+                'overlay_opacity' => $this->int($s['overlay_opacity'] ?? 50, 0, 90),
+                'text' => $this->enum($s['text'] ?? null, ['auto', 'dark', 'light'], 'auto'),
+                'card' => (bool) ($s['card'] ?? false),
+                'anchor' => preg_match('/^[a-z0-9][a-z0-9\-]{0,39}$/', (string) ($s['anchor'] ?? '')) ? $s['anchor'] : '',
+                'hide' => $this->hide($s['hide'] ?? null),
+                'reverse' => (bool) ($s['reverse'] ?? false),
+            ],
+            'cols' => $outCols,
+        ];
+    }
+
+    private function cleanWidget(array $w): array
+    {
+        $type = $w['type'];
+        $d = is_array($w['data'] ?? null) ? $w['data'] : [];
+        $s = is_array($w['style'] ?? null) ? $w['style'] : [];
+        $common = [
+            'align' => $this->enum($s['align'] ?? null, ['', 'left', 'center', 'right'], ''),
+            'mb' => $this->int($s['mb'] ?? 20, 0, 160),
+            'hide' => $this->hide($s['hide'] ?? null),
+        ];
+        [$data, $style] = match ($type) {
+            'heading' => [
+                ['text' => $this->str($d['text'] ?? '', 300), 'link' => $this->linkUrl($d['link'] ?? null)],
+                ['tag' => $this->enum($s['tag'] ?? null, ['h1', 'h2', 'h3', 'h4', 'p'], 'h2'), 'size' => $this->enum($s['size'] ?? null, ['s', 'm', 'l', 'xl', 'xxl'], 'l'),
+                    'weight' => $this->enum($s['weight'] ?? null, ['normal', 'semibold', 'bold'], 'semibold'), 'color' => $this->color($s['color'] ?? null), 'gradient' => (bool) ($s['gradient'] ?? false)],
+            ],
+            'text' => [
+                ['html' => $this->purify((string) ($d['html'] ?? ''))],
+                ['size' => $this->enum($s['size'] ?? null, ['s', 'm', 'l'], 'm'), 'color' => $this->color($s['color'] ?? null)],
+            ],
+            'image' => [
+                ['url' => $this->mediaUrl($d['url'] ?? null), 'alt' => $this->str($d['alt'] ?? '', 200), 'caption' => $this->str($d['caption'] ?? '', 300), 'link' => $this->linkUrl($d['link'] ?? null)],
+                ['width' => $this->int($s['width'] ?? 100, 10, 100), 'radius' => $this->enum($s['radius'] ?? null, ['none', 's', 'm', 'l', 'full'], 'm'),
+                    'shadow' => (bool) ($s['shadow'] ?? false), 'ratio' => $this->enum($s['ratio'] ?? null, ['auto', '1:1', '4:3', '3:2', '16:9', '3:4'], 'auto')],
+            ],
+            'button' => [
+                ['label' => $this->str($d['label'] ?? '', 60), 'url' => $this->linkUrl($d['url'] ?? null), 'label2' => $this->str($d['label2'] ?? '', 60), 'url2' => $this->linkUrl($d['url2'] ?? null)],
+                ['variant' => $this->enum($s['variant'] ?? null, Builder::BUTTONS, 'primary'), 'variant2' => $this->enum($s['variant2'] ?? null, Builder::BUTTONS, 'outline'),
+                    'size' => $this->enum($s['size'] ?? null, ['s', 'm', 'l'], 'm'), 'full' => (bool) ($s['full'] ?? false)],
+            ],
+            'icon' => [
+                ['icon' => in_array($d['icon'] ?? null, self::ICONS, true) ? $d['icon'] : 'sparkles', 'title' => $this->str($d['title'] ?? '', 120), 'text' => $this->str($d['text'] ?? '', 600), 'link' => $this->linkUrl($d['link'] ?? null)],
+                ['layout' => $this->enum($s['layout'] ?? null, ['top', 'left'], 'top'), 'shape' => $this->enum($s['shape'] ?? null, ['plain', 'circle', 'square'], 'circle'),
+                    'color' => $this->color($s['color'] ?? null), 'size' => $this->enum($s['size'] ?? null, ['s', 'm', 'l'], 'm')],
+            ],
+            'list' => [
+                ['items' => $this->lines($d['items'] ?? [], 30, 200)],
+                ['icon' => $this->enum($s['icon'] ?? null, ['check', 'arrow', 'dot', 'star'], 'check'), 'color' => $this->color($s['color'] ?? null), 'size' => $this->enum($s['size'] ?? null, ['s', 'm', 'l'], 'm')],
+            ],
+            'counter' => [
+                ['number' => $this->str($d['number'] ?? '', 20), 'prefix' => $this->str($d['prefix'] ?? '', 10), 'suffix' => $this->str($d['suffix'] ?? '', 10), 'label' => $this->str($d['label'] ?? '', 120)],
+                ['color' => $this->color($s['color'] ?? null), 'size' => $this->enum($s['size'] ?? null, ['m', 'l', 'xl'], 'l')],
+            ],
+            'quote' => [
+                ['text' => $this->str($d['text'] ?? '', 1000), 'name' => $this->str($d['name'] ?? '', 80), 'role' => $this->str($d['role'] ?? '', 120), 'image' => $this->mediaUrl($d['image'] ?? null)],
+                ['variant' => $this->enum($s['variant'] ?? null, ['card', 'plain'], 'card'), 'stars' => (bool) ($s['stars'] ?? false)],
+            ],
+            'video' => [$this->cleanVideo($d), []],
+            'gallery' => [
+                ['items' => $this->items($d['items'] ?? null, 24, fn (array $i) => ['url' => $this->mediaUrl($i['url'] ?? null), 'alt' => $this->str($i['alt'] ?? '', 200)], fn ($i) => $i['url'] !== null)],
+                ['cols' => $this->int($s['cols'] ?? 3, 2, 6), 'ratio' => $this->enum($s['ratio'] ?? null, ['1:1', '4:3', '3:2', '16:9', '3:4'], '1:1'),
+                    'gap' => $this->enum($s['gap'] ?? null, ['none', 's', 'm'], 's'), 'radius' => $this->enum($s['radius'] ?? null, ['none', 's', 'm', 'l'], 's')],
+            ],
+            'spacer' => [[], ['height' => $this->int($s['height'] ?? 48, 0, 400)]],
+            'divider' => [[], ['line' => $this->enum($s['line'] ?? null, ['solid', 'dashed', 'dotted'], 'solid'), 'width' => $this->int($s['width'] ?? 100, 10, 100),
+                'weight' => $this->int($s['weight'] ?? 1, 1, 10), 'color' => $this->color($s['color'] ?? null)]],
+            'html' => [$this->cleanHtml($d), []],
+        };
+
+        return ['id' => $this->id($w['id'] ?? null), 'type' => $type, 'data' => $data, 'style' => $common + $style];
+    }
+
+    private function id(mixed $v): string
+    {
+        return is_string($v) && preg_match('/^[a-z0-9]{1,24}$/i', $v) ? $v : Str::lower(Str::random(10));
+    }
+
+    private function enum(mixed $v, array $allowed, string $default): string
+    {
+        return in_array($v, $allowed, true) ? $v : $default;
+    }
+
+    private function int(mixed $v, int $min, int $max): int
+    {
+        return max($min, min($max, (int) $v));
+    }
+
+    /** Farbe: ein Name aus der Palette (folgt dem Design) oder #rrggbb */
+    private function color(mixed $v): ?string
+    {
+        if (is_string($v) && (isset(Builder::COLORS[$v]) || preg_match('/^#[0-9a-f]{6}$/i', $v))) {
+            return strtolower($v);
+        }
+
+        return null;
+    }
+
+    /** @return list<string> */
+    private function hide(mixed $v): array
+    {
+        return array_values(array_intersect(['desktop', 'tablet', 'phone'], is_array($v) ? $v : []));
     }
 
     private function cleanText(array $d): array

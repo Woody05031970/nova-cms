@@ -11,6 +11,10 @@
     "file": "assets/module.esm-stJ4KnaK.js",
     "name": "module.esm"
   },
+  "_render-D_hEMsaP.js": {
+    "file": "assets/render-D_hEMsaP.js",
+    "name": "render"
+  },
   "_seo-B-Uc-z_r.js": {
     "file": "assets/seo-B-Uc-z_r.js",
     "name": "seo",
@@ -23,7 +27,7 @@
     "name": "sortable.esm"
   },
   "resources/css/app.css": {
-    "file": "assets/app-C-9YhHI3.css",
+    "file": "assets/app-Ctu76-yq.css",
     "name": "app",
     "names": [
       "app.css"
@@ -48,8 +52,17 @@
       "_seo-B-Uc-z_r.js"
     ]
   },
+  "resources/js/canvas.js": {
+    "file": "assets/canvas-BPu_6QNO.js",
+    "name": "canvas",
+    "src": "resources/js/canvas.js",
+    "isEntry": true,
+    "imports": [
+      "_render-D_hEMsaP.js"
+    ]
+  },
   "resources/js/editor.js": {
-    "file": "assets/editor-pQ1am881.js",
+    "file": "assets/editor-BVSmSNUD.js",
     "name": "editor",
     "src": "resources/js/editor.js",
     "isEntry": true,
@@ -58,7 +71,8 @@
       "_dist-zlegaCcd.js",
       "_sortable.esm-BRxt44hw.js",
       "_media-CUdFIE3A.js",
-      "_seo-B-Uc-z_r.js"
+      "_seo-B-Uc-z_r.js",
+      "_render-D_hEMsaP.js"
     ]
   },
   "resources/js/menu.js": {
