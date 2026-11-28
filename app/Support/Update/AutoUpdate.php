@@ -25,9 +25,21 @@ class AutoUpdate
         return is_file($path) ? trim((string) file_get_contents($path)) : null;
     }
 
+    /**
+     * Version der hochgeladenen Dateien. Direkt aus config/nova.php gelesen, weil ein alter
+     * Einstellungs-Zwischenspeicher (config:cache) sonst noch die alte Nummer meldet und das Update nie läuft.
+     */
+    public static function codeVersion(): string
+    {
+        $file = base_path('config/nova.php');
+        $cfg = is_file($file) ? @include $file : null;
+
+        return (string) (is_array($cfg) && isset($cfg['version']) ? $cfg['version'] : config('nova.version'));
+    }
+
     public static function remember(): void
     {
-        @file_put_contents(self::markerPath(), (string) config('nova.version'));
+        @file_put_contents(self::markerPath(), self::codeVersion());
     }
 
     /**
@@ -52,7 +64,7 @@ class AutoUpdate
     /** true, wenn ein Update eingespielt wurde (oder nichts zu tun war) */
     public static function run(): bool
     {
-        if (self::installedVersion() === (string) config('nova.version')) {
+        if (self::installedVersion() === self::codeVersion()) {
             return true;
         }
 
@@ -64,12 +76,12 @@ class AutoUpdate
         }
 
         try {
-            if (self::installedVersion() !== (string) config('nova.version')) {
+            if (self::installedVersion() !== self::codeVersion()) {
                 $from = self::installedVersion() ?? 'unbekannt';
                 Artisan::call('migrate', ['--force' => true]);
                 self::clearCaches();
                 self::remember();
-                Log::info("Nova CMS von Version {$from} auf ".config('nova.version').' aktualisiert.');
+                Log::info("Nova CMS von Version {$from} auf ".self::codeVersion().' aktualisiert.');
             }
 
             return true;
