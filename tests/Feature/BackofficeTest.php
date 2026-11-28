@@ -160,4 +160,22 @@ class BackofficeTest extends TestCase
         $this->assertTrue(Schema::hasTable('menu_items'));
         @unlink(AutoUpdate::markerPath());
     }
+
+    public function test_update_leert_alte_zwischenspeicher(): void
+    {
+        $routes = app()->getCachedRoutesPath();
+        $view = storage_path('framework/views/nova-alt-test.php');
+        file_put_contents($routes, '<?php // alte Version');
+        file_put_contents($view, 'alt');
+        try {
+            @unlink(AutoUpdate::markerPath());
+            $this->assertTrue(AutoUpdate::run());
+            $this->assertFileDoesNotExist($routes);
+            $this->assertFileDoesNotExist($view);
+        } finally {
+            @unlink($routes);
+            @unlink($view);
+            @unlink(AutoUpdate::markerPath());
+        }
+    }
 }

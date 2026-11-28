@@ -30,6 +30,25 @@ class AutoUpdate
         @file_put_contents(self::markerPath(), (string) config('nova.version'));
     }
 
+    /**
+     * Nach dem Hochladen einer neuen Version dürfen keine alten Zwischenstände übrig bleiben:
+     * zwischengespeicherte Adressen (Routen), Einstellungen, übersetzte Vorlagen und der
+     * PHP-Zwischenspeicher (OPcache) mancher Hoster würden sonst noch die alte Version zeigen.
+     */
+    public static function clearCaches(): void
+    {
+        foreach (['route:clear', 'config:clear', 'view:clear', 'event:clear'] as $command) {
+            try {
+                Artisan::call($command);
+            } catch (Throwable $e) {
+                report($e);
+            }
+        }
+        if (function_exists('opcache_reset')) {
+            @opcache_reset();
+        }
+    }
+
     /** true, wenn ein Update eingespielt wurde (oder nichts zu tun war) */
     public static function run(): bool
     {
@@ -48,6 +67,7 @@ class AutoUpdate
             if (self::installedVersion() !== (string) config('nova.version')) {
                 $from = self::installedVersion() ?? 'unbekannt';
                 Artisan::call('migrate', ['--force' => true]);
+                self::clearCaches();
                 self::remember();
                 Log::info("Nova CMS von Version {$from} auf ".config('nova.version').' aktualisiert.');
             }
