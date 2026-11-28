@@ -12,7 +12,7 @@
 
 @section('content')
 <form method="POST" action="{{ route('admin.design.update') }}" enctype="multipart/form-data"
-      x-data="designEditor(@js(['state' => $state, 'themes' => $themes, 'pro' => $pro, 'home' => route('home'), 'logo' => $design['logo']]))" x-cloak>
+      x-data="designEditor(@js(['state' => $state, 'themes' => $themes, 'pro' => $pro, 'home' => route('home'), 'logo' => $design['logo'], 'favicon' => ($f = \App\Support\Design\Favicon::current()) ? $f.'/192.png' : null, 'siteName' => $siteName ?? config('app.name')]))" x-cloak>
     @csrf @method('PUT')
     <div class="flex flex-wrap items-end justify-between gap-4">
         <div>
@@ -34,7 +34,7 @@
                                 class="group relative overflow-hidden rounded-xl border text-left transition"
                                 :class="s.theme === key ? 'border-nova-600 ring-2 ring-nova-200' : 'border-slate-200 hover:border-slate-300'">
                             <div class="h-24 p-2" :style="'background:' + t.bg">
-                                <div class="flex h-4 items-center gap-1 rounded px-1.5" :style="t.header === 'dark' ? 'background:#0f172a' : (t.header === 'glass' ? 'background:rgba(255,255,255,.7);border:1px solid #e2e8f0' : 'background:#fff;border:1px solid #f1f5f9')">
+                                <div class="flex h-4 items-center gap-1 rounded px-1.5" :style="t.header === 'dark' ? 'background:' + (t.header_color || '#0f172a') + (t.header_color ? ';border-bottom:2px solid #19c3dc' : '') : (t.header === 'glass' ? 'background:rgba(255,255,255,.7);border:1px solid #e2e8f0' : 'background:#fff;border:1px solid #f1f5f9')">
                                     <span class="h-1.5 w-6 rounded-full" :style="'background:' + t.palette[600]"></span><span class="ml-auto h-1 w-10 rounded-full bg-slate-300"></span>
                                 </div>
                                 <div class="mt-1.5 h-10 p-2" :style="'background:linear-gradient(120deg,#0b0a1f,' + t.palette[700] + ');border-radius:' + (t.radius === 'sharp' ? '2px' : (t.radius === 'round' ? '12px' : '7px'))">
@@ -143,6 +143,32 @@
                     <label class="flex items-center gap-2 text-sm"><input type="checkbox" name="show_name" value="1" x-model="s.show_name" class="accent-nova-600"> Namen der Website neben dem Logo zeigen</label>
                 </div>
             </section>
+            {{-- Favicon --}}
+            <section class="nova-card space-y-4" data-favicon-section>
+                <div>
+                    <h2 class="font-semibold">Favicon</h2>
+                    <p class="mt-1 text-sm text-slate-600">Das kleine Bild im Browser-Tab, in Lesezeichen und auf dem Handy-Startbildschirm.</p>
+                </div>
+                <div class="flex flex-wrap items-center gap-5">
+                    <div class="w-64 max-w-full overflow-hidden rounded-t-xl border border-b-0 border-slate-200 bg-slate-100 px-2 pt-2" aria-hidden="true">
+                        <div class="flex items-center gap-2 rounded-t-lg bg-white px-3 py-2 shadow-sm">
+                            <template x-if="faviconPreview"><img :src="faviconPreview" alt="" class="size-4 rounded-sm object-contain"></template>
+                            <span x-show="!faviconPreview" class="size-4 rounded-sm bg-slate-200"></span>
+                            <span class="truncate text-xs text-slate-700" x-text="cfg.siteName"></span>
+                            <span class="ml-auto text-xs text-slate-400">×</span>
+                        </div>
+                    </div>
+                    <div class="grid size-16 place-items-center overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm" aria-hidden="true">
+                        <template x-if="faviconPreview"><img :src="faviconPreview" alt="" class="size-14 object-contain"></template>
+                    </div>
+                    <div class="space-y-2">
+                        <label class="nova-btn-secondary cursor-pointer">Favicon hochladen<input type="file" name="favicon_file" accept="image/png,image/jpeg,image/webp,image/gif" class="sr-only" @change="pickFavicon($event)"></label>
+                        <label x-show="faviconPreview" class="flex items-center gap-2 text-sm text-slate-600"><input type="checkbox" name="remove_favicon" value="1" x-model="removeFavicon" class="accent-nova-600"> Favicon entfernen</label>
+                    </div>
+                </div>
+                <p class="nova-help">Am besten ein quadratisches Bild, mindestens 512 × 512 Pixel, z. B. Ihr Zeichen ohne Schrift. Alle nötigen Größen erstellt Nova CMS selbst.</p>
+                @error('favicon_file')<p class="text-sm text-red-700">{{ $message }}</p>@enderror
+            </section>
         </div>
 
         {{-- Live-Vorschau --}}
@@ -162,7 +188,7 @@
     document.addEventListener('alpine:init', () => {
         Alpine.data('designEditor', (cfg) => ({
             s: { ...cfg.state, show_name: !!cfg.state.show_name, heading_font: cfg.state.heading_font || '' },
-            themes: cfg.themes, pro: cfg.pro, logoPreview: cfg.logo, removeLogo: false, loading: true, scale: 0.5, timer: null,
+            themes: cfg.themes, pro: cfg.pro, logoPreview: cfg.logo, removeLogo: false, faviconPreview: cfg.favicon, removeFavicon: false, cfg, loading: true, scale: 0.5, timer: null,
             // Kontrast weißer Schrift auf der Farbe nach WCAG 2.1
             contrast(hex) {
                 if (!/^#[0-9a-f]{6}$/i.test(hex || '')) return 21;
@@ -183,6 +209,7 @@
                 Object.assign(this.s, { theme: key, brand: t.brand, accent: t.accent, font: t.font, radius: t.radius, header: t.header, footer: t.footer });
             },
             pickLogo(e) { const f = e.target.files[0]; if (f) { this.logoPreview = URL.createObjectURL(f); this.removeLogo = false; } },
+            pickFavicon(e) { const f = e.target.files[0]; if (f) { this.faviconPreview = URL.createObjectURL(f); this.removeFavicon = false; } },
             refresh(delay = 350) {
                 clearTimeout(this.timer);
                 this.timer = setTimeout(() => {

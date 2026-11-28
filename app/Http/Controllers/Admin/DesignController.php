@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Licensing\Features;
 use App\Models\Setting;
+use App\Support\Design\Favicon;
 use App\Support\Design\SiteDesign;
 use App\Support\Media\MediaLibrary;
 use Illuminate\Http\RedirectResponse;
@@ -40,7 +41,9 @@ class DesignController extends Controller
             'show_name' => ['nullable', 'boolean'],
             'logo_file' => ['nullable', 'file', 'mimes:png,jpg,jpeg,webp,gif', 'max:4096'],
             'remove_logo' => ['nullable', 'boolean'],
-        ], ['brand.regex' => 'Bitte wählen Sie eine gültige Farbe.']);
+            'favicon_file' => ['nullable', 'file', 'mimes:png,jpg,jpeg,webp,gif', 'max:4096', 'dimensions:min_width=32,min_height=32'],
+            'remove_favicon' => ['nullable', 'boolean'],
+        ], ['brand.regex' => 'Bitte wählen Sie eine gültige Farbe.', 'favicon_file.dimensions' => 'Das Favicon braucht mindestens 32 × 32 Pixel, besser 512 × 512.', 'favicon_file.mimes' => 'Bitte laden Sie für das Favicon ein PNG-, JPG-, WebP- oder GIF-Bild hoch.']);
 
         if (! $pro && empty(SiteDesign::THEMES[$data['theme']]['free'])) {
             return back()->withErrors(['theme' => 'Diese Vorlage gehört zu Design Pro.']);
@@ -52,13 +55,26 @@ class DesignController extends Controller
             'logo_height' => (string) ($data['logo_height'] ?? 36), 'show_name' => $request->boolean('show_name') ? '1' : '0',
         ];
         if ($pro) {
-            $values += ['accent' => $data['accent'] ? strtolower($data['accent']) : null, 'font' => $data['font'] ?? null,
+            $values += ['accent' => ! empty($data['accent']) ? strtolower($data['accent']) : null, 'font' => $data['font'] ?? null,
                 'heading_font' => $data['heading_font'] ?? null, 'animation' => $data['animation'] ?? 'rise'];
         }
         if ($request->hasFile('logo_file')) {
             $values['logo'] = $media->store($request->file('logo_file'), 'image', $request->user()->id)->url();
         } elseif ($request->boolean('remove_logo')) {
             $values['logo'] = null;
+        }
+
+        if ($request->hasFile('favicon_file')) {
+            try {
+                $old = Favicon::current();
+                $values['favicon'] = Favicon::make($request->file('favicon_file'));
+                Favicon::remove($old);
+            } catch (\RuntimeException $e) {
+                return back()->withErrors(['favicon_file' => $e->getMessage()]);
+            }
+        } elseif ($request->boolean('remove_favicon')) {
+            Favicon::remove(Favicon::current());
+            $values['favicon'] = null;
         }
 
         Setting::putMany(collect($values)->mapWithKeys(fn ($v, $k) => ['design_'.$k => $v])->all());

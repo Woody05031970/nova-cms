@@ -29,6 +29,7 @@
     @foreach ($variants as $code => $v)<link rel="alternate" hreflang="{{ $code }}" href="{{ $v->url() }}">
     @endforeach
     @if ($variants->has('de'))<link rel="alternate" hreflang="x-default" href="{{ $variants['de']->url() }}">@endif
+    {!! \App\Support\Design\Favicon::tags() !!}
     @vite(['resources/css/app.css', 'resources/js/site.js'])
     <style>{!! \App\Support\Design\SiteDesign::css($design) !!}</style>
 </head>

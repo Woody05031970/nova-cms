@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>{{ $siteName }}</title>
     @if ($tagline)<meta name="description" content="{{ $tagline }}">@endif
+    {!! \App\Support\Design\Favicon::tags() !!}
     @vite(['resources/css/app.css'])
 </head>
 <body class="grid min-h-screen place-items-center bg-gradient-to-b from-nova-50 to-white px-4 font-sans text-slate-900 antialiased">
