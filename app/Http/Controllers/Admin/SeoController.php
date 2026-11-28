@@ -8,6 +8,7 @@ use App\Ai\ContentAssistant;
 use App\Http\Controllers\Controller;
 use App\Models\Page;
 use App\Models\Setting;
+use App\Support\Blocks\Builder;
 use App\Support\Seo\CompetitorAnalyzer;
 use App\Support\Seo\PageAnalyzer;
 use App\Support\Seo\SiteSeo;
@@ -130,7 +131,7 @@ class SeoController extends Controller
 
     private function ownMetrics(Page $page, PageAnalyzer $analyzer, ?string $keyword): array
     {
-        $blocks = $page->blocks ?? [];
+        $blocks = Builder::flatten($page->blocks ?? []);
         $text = $analyzer->text($blocks);
         $title = ($page->meta_title ?: $page->title).($page->is_home && ! $page->meta_title ? '' : ' – '.Setting::get('site_name', ''));
         $headings = [];

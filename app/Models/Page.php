@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Licensing\Features;
 use App\Support\Blocks\BlockSanitizer;
+use App\Support\Blocks\Builder;
 use App\Support\I18n\Languages;
 use App\Support\Seo\PageAnalyzer;
 use Illuminate\Database\Eloquent\Model;
@@ -20,7 +21,7 @@ class Page extends Model
 
     protected $fillable = [
         'title', 'slug', 'status', 'blocks', 'meta_title', 'meta_description', 'focus_keyword',
-        'is_home', 'show_in_menu', 'menu_order', 'purpose', 'published_at', 'updated_by', 'locale', 'translation_of', 'visibility',
+        'is_home', 'show_in_menu', 'menu_order', 'purpose', 'published_at', 'updated_by', 'locale', 'translation_of', 'visibility', 'show_title',
     ];
 
     protected function casts(): array
@@ -29,6 +30,7 @@ class Page extends Model
             'blocks' => 'array',
             'is_home' => 'boolean',
             'show_in_menu' => 'boolean',
+            'show_title' => 'boolean',
             'published_at' => 'datetime',
         ];
     }
@@ -132,7 +134,7 @@ class Page extends Model
     /** Reiner Text aller Blöcke, z. B. für Beschreibungs-Vorschläge. */
     public function plainText(): string
     {
-        return trim(preg_replace('/\s+/', ' ', collect($this->blocks ?? [])
+        return trim(preg_replace('/\s+/', ' ', collect(Builder::flatten($this->blocks ?? []))
             ->map(fn ($b) => match ($b['type'] ?? null) {
                 'text' => strip_tags(str_replace('<', ' <', $b['data']['html'] ?? '')),
                 'button' => $b['data']['label'] ?? '',

@@ -314,6 +314,10 @@ Route::middleware(['auth', 'admin', LicenseGate::class])->prefix('admin')->name(
     });
     Route::put('/menue', [MenuController::class, 'update'])->name('menu.update');
     Route::post('/seiten/live-vorschau', [PageController::class, 'livePreview'])->name('pages.live-preview');
+    Route::post('/seiten/baustein-vorschau', [PageController::class, 'blockPreview'])->name('pages.block-preview');
+    Route::post('/seiten/vorlagen', [PageController::class, 'storeTemplate'])->name('pages.templates');
+    Route::delete('/seiten/vorlagen/{id}', [PageController::class, 'destroyTemplate'])->where('id', '[a-z0-9]{1,24}')->name('pages.templates.destroy');
+    Route::get('/seiten/{page}/leinwand', [PageController::class, 'canvas'])->name('pages.canvas');
     Route::post('/seiten', [PageController::class, 'store'])->name('pages.store');
     Route::get('/seiten/{page}', [PageController::class, 'edit'])->name('pages.edit');
     Route::put('/seiten/{page}', [PageController::class, 'update'])->name('pages.update');

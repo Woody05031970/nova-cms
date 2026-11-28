@@ -6,6 +6,7 @@ use App\Models\Page;
 use App\Models\Product;
 use App\Models\Setting;
 use App\Shop\ShopSettings;
+use App\Support\Blocks\Builder;
 use App\Support\Geo\Geo;
 use Illuminate\Support\Str;
 
@@ -52,7 +53,7 @@ class SiteSeo
     /** Erstes Bild der Seite für Vorschauen in sozialen Netzwerken und Messengern. */
     public function shareImage(Page $page): ?string
     {
-        foreach ($page->blocks ?? [] as $b) {
+        foreach (Builder::flatten($page->blocks ?? []) as $b) {
             $url = match ($b['type'] ?? null) {
                 'hero' => $b['data']['image'] ?? null,
                 'image' => $b['data']['url'] ?? null,

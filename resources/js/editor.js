@@ -11,6 +11,7 @@ import { html as htmlLang } from '@codemirror/lang-html';
 import { aiPost, registerAi } from './ai.js';
 import { pickerMixin, registerMedia, uploadFile } from './media.js';
 import { seoMixin } from './seo.js';
+import { builderMixin, flatBlocks } from './builder/editor.js';
 
 const uid = () => Math.random().toString(36).slice(2, 12);
 
@@ -57,13 +58,15 @@ async function upload(file, kind = 'image') {
     return (await uploadFile(file, kind)).url;
 }
 
-Alpine.data('pageEditor', (cfg) => ({
-    ...pickerMixin(),
-    ...seoMixin(cfg),
+// Mischt Teile zusammen, ohne Getter auszuwerten (Spread würde sie sofort aufrufen)
+const mix = (...parts) => parts.reduce((o, p) => Object.defineProperties(o, Object.getOwnPropertyDescriptors(p)), {});
+
+Alpine.data('pageEditor', (cfg) => mix(pickerMixin(), seoMixin(cfg), builderMixin(cfg), {
     ai: (AI = cfg.ai),
     aiBusy: false,
     aiNotice: '',
-    blocks: cfg.blocks.length ? cfg.blocks : [{ id: uid(), type: 'text', data: DEFAULTS.text() }],
+    blocks: cfg.blocks,
+    defaults: DEFAULTS,
     title: cfg.title,
     slug: cfg.slug,
     metaTitle: cfg.metaTitle || '',
@@ -72,7 +75,6 @@ Alpine.data('pageEditor', (cfg) => ({
     isHome: cfg.isHome,
     siteName: cfg.siteName,
     pageId: cfg.pageId,
-    previewUrl2: cfg.livePreviewUrl,
     host: cfg.host,
     types: cfg.types,
     products: cfg.products || [],
@@ -82,35 +84,26 @@ Alpine.data('pageEditor', (cfg) => ({
     picker: null,
     dirty: false,
     error: '',
-    live: false,
     device: 'desktop',
-    liveBusy: false,
-    liveTimer: null,
-    frameScale: 1,
 
     init() {
-        try {
-            this.live = localStorage.getItem('nova.livePreview') === '1' && window.innerWidth >= 1280;
-        } catch {}
+        this.initBuilder();
         this.$nextTick(() => {
-            this.mountSortable();
-            new ResizeObserver(() => this.fitFrame()).observe(this.$refs.liveBox);
-            if (this.live) this.refreshPreview();
-            this.$watch('blocks', () => this.schedulePreview(), { deep: true });
             this.$watch('title', (now, before) => {
-                this.schedulePreview();
                 // Solange die Seite nicht online ist, folgt die Adresse dem Titel (außer sie wurde von Hand geändert)
                 const auto = !this.slug || this.slug === slugify(before || '') || /^neue-seite(-\d+)?$/.test(this.slug);
                 if (!cfg.published && !this.isHome && auto) this.slug = slugify(now);
             });
-            this.$watch('blocks', () => (this.dirty = true), { deep: true });
-            ['title', 'slug', 'metaTitle', 'metaDescription', 'focusKeyword', 'showInMenu', 'isHome'].forEach((k) => this.$watch(k, () => (this.dirty = true)));
+            this.dirty = false;
+            ['title', 'slug', 'metaTitle', 'metaDescription', 'focusKeyword', 'showInMenu', 'isHome', 'showTitle'].forEach((k) => this.$watch(k, () => (this.dirty = true)));
             this.initSeo();
         });
         window.addEventListener('beforeunload', (e) => {
             if (this.dirty) e.preventDefault();
         });
     },
+
+    upload,
 
     // Listen in Bausteinen (Vorteile, Pakete, Fragen …)
     listAdd(list, item) {
@@ -126,88 +119,6 @@ Alpine.data('pageEditor', (cfg) => ({
     },
     typesIn(group) {
         return Object.entries(this.types).filter(([, t]) => t.group === group);
-    },
-    add(type, index) {
-        const block = { id: uid(), type, data: DEFAULTS[type]() };
-        this.blocks.splice(index, 0, block);
-        this.picker = null;
-        this.$nextTick(() => document.getElementById('block-' + block.id)?.scrollIntoView({ behavior: 'smooth', block: 'center' }));
-    },
-    remove(i) {
-        if (confirm('Diesen Block entfernen?')) this.blocks.splice(i, 1);
-    },
-    move(i, dir) {
-        const j = i + dir;
-        if (j < 0 || j >= this.blocks.length) return;
-        const [b] = this.blocks.splice(i, 1);
-        this.blocks.splice(j, 0, b);
-    },
-    duplicate(i) {
-        const copy = JSON.parse(JSON.stringify(this.blocks[i]));
-        copy.id = uid();
-        this.blocks.splice(i + 1, 0, copy);
-    },
-    // Blöcke per Ziehen anordnen. SortableJS verschiebt das Element; wir setzen es zurück
-    // und ändern nur die Liste, damit Alpine die Reihenfolge (samt Editoren) selbst übernimmt.
-    mountSortable() {
-        const list = this.$refs.blockList;
-        if (!list) return;
-        Sortable.create(list, {
-            handle: '[data-block-handle]',
-            draggable: '[data-block]',
-            animation: 160,
-            ghostClass: 'nova-drag-ghost',
-            onEnd: ({ item, from, oldIndex, newIndex }) => {
-                if (oldIndex === newIndex) return;
-                item.remove();
-                const siblings = [...from.children].filter((el) => el.matches('[data-block]'));
-                from.insertBefore(item, siblings[oldIndex] || null);
-                const [b] = this.blocks.splice(oldIndex, 1);
-                this.blocks.splice(newIndex, 0, b);
-            },
-        });
-    },
-
-    // Live-Vorschau neben dem Editor
-    // Computer-Ansicht: Die Seite wird in 1280 px Breite gezeichnet und verkleinert, wie auf einem echten Bildschirm
-    fitFrame() {
-        const box = this.$refs.liveBox;
-        if (box) this.frameScale = Math.min(1, box.clientWidth / 1280);
-    },
-    get frameStyle() {
-        if (this.device === 'phone') return '';
-        const s = this.frameScale;
-        return `width:1280px;height:${100 / s}%;transform:scale(${s});transform-origin:0 0;`;
-    },
-    toggleLive() {
-        this.live = !this.live;
-        try {
-            localStorage.setItem('nova.livePreview', this.live ? '1' : '0');
-        } catch {}
-        if (this.live) this.refreshPreview();
-    },
-    schedulePreview() {
-        if (!this.live) return;
-        clearTimeout(this.liveTimer);
-        this.liveTimer = setTimeout(() => this.refreshPreview(), 700);
-    },
-    async refreshPreview() {
-        this.liveBusy = true;
-        try {
-            const res = await fetch(this.previewUrl2, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json', Accept: 'text/html', 'X-CSRF-TOKEN': csrf() },
-                body: JSON.stringify({ page: this.pageId, title: this.title, blocks: JSON.stringify(this.blocks.map(({ id, type, data }) => ({ id, type, data }))) }),
-            });
-            if (!res.ok) return;
-            const frame = this.$refs.liveFrame;
-            const y = frame.contentWindow?.scrollY || 0;
-            const html = (await res.text()).replace('<head>', '<head><base target="_blank">');
-            frame.srcdoc = html;
-            frame.onload = () => frame.contentWindow?.scrollTo(0, y);
-        } finally {
-            this.liveBusy = false;
-        }
     },
 
     label(type) {
@@ -254,14 +165,14 @@ Alpine.data('pageEditor', (cfg) => ({
     },
     descriptionFromText() {
         const div = document.createElement('div');
-        div.innerHTML = this.blocks.filter((b) => b.type === 'text').map((b) => b.data.html.replace(/<\/(p|h\d|li|blockquote)>/g, '$& ')).join(' ');
+        div.innerHTML = flatBlocks(this.blocks).filter((b) => b.type === 'text').map((b) => b.data.html.replace(/<\/(p|h\d|li|blockquote)>/g, '$& ')).join(' ');
         const text = (this.blocks.find((b) => b.type === 'hero')?.data.text || '') + ' ' + div.textContent;
         const clean = text.replace(/\s+/g, ' ').trim();
         this.metaDescription = clean.length > 155 ? clean.slice(0, 152).replace(/\s+\S*$/, '') + ' …' : clean;
     },
     pageText() {
         const div = document.createElement('div');
-        div.innerHTML = this.blocks.map((b) => {
+        div.innerHTML = flatBlocks(this.blocks).map((b) => {
             if (b.type === 'text') return b.data.html.replace(/<\/(p|h\d|li|blockquote)>/g, '$& ');
             if (b.type === 'hero') return `<p>${b.data.title || ''}. ${b.data.text || ''}</p>`;
             return '';
@@ -326,6 +237,13 @@ Alpine.data('richText', (block) => {
                 editorProps: { attributes: { class: 'nova-prose min-h-32 focus:outline-none' } },
                 onUpdate: ({ editor }) => (block.data.html = editor.getHTML()),
                 onTransaction: () => this.tick++,
+            });
+            // Wird der Text direkt auf der Leinwand geändert, zieht der Editor hier nach
+            Alpine.effect(() => {
+                const html = block.data.html;
+                if (editor && !editor.isDestroyed && !editor.isFocused && this.mode === 'visual' && html !== editor.getHTML()) {
+                    editor.commands.setContent(html, { emitUpdate: false });
+                }
             });
         },
         destroy() {

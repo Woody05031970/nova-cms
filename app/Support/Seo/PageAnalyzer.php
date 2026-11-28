@@ -4,6 +4,7 @@ namespace App\Support\Seo;
 
 use App\Models\Page;
 use App\Models\Setting;
+use App\Support\Blocks\Builder;
 use Illuminate\Support\Str;
 
 /**
@@ -17,7 +18,7 @@ class PageAnalyzer
      */
     public function analyze(array $page): array
     {
-        $blocks = $page['blocks'] ?? [];
+        $blocks = Builder::flatten($page['blocks'] ?? []);
         $text = $this->text($blocks);
         $words = $this->countWords($text);
         $headings = $this->headings($blocks);
@@ -136,7 +137,7 @@ class PageAnalyzer
     public function text(array $blocks): string
     {
         $parts = [];
-        foreach ($blocks as $b) {
+        foreach (Builder::flatten($blocks) as $b) {
             $d = $b['data'] ?? [];
             $parts[] = match ($b['type'] ?? null) {
                 'text' => strip_tags(preg_replace('/<\/(p|h\d|li|blockquote)>|<br\s*\/?>/i', '$0 ', (string) ($d['html'] ?? ''))),
