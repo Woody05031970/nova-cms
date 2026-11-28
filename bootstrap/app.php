@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Middleware\CommunityAccess;
 use App\Http\Middleware\CountVisit;
 use App\Http\Middleware\EnsureAdmin;
 use App\Http\Middleware\EnsureInstalled;
@@ -33,6 +34,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'admin' => EnsureAdmin::class,
             'feature' => RequireFeature::class,
+            'community' => CommunityAccess::class,
         ]);
         $middleware->redirectGuestsTo(fn () => route('login'));
         $middleware->redirectUsersTo(fn () => route('admin.dashboard'));

@@ -30,6 +30,9 @@ class MembersController extends Controller
         if (! $request->user()?->canSeeMembersArea()) {
             return redirect()->route('members.login');
         }
+        if (! Members::on()) {
+            return redirect()->route('community.home'); // nur das Modul Community ist aktiv
+        }
 
         return view('site.members.home', [
             'pages' => Page::published()->where('visibility', 'members')->orderBy('menu_order')->orderBy('title')->get(),
@@ -40,7 +43,7 @@ class MembersController extends Controller
 
     public function loginForm(Request $request): View|RedirectResponse
     {
-        return $request->user()?->canSeeMembersArea() ? redirect()->route('members.home') : view('site.members.login');
+        return $request->user()?->canSeeMembersArea() ? redirect()->route(Members::on() ? 'members.home' : 'community.home') : view('site.members.login');
     }
 
     public function login(Request $request): RedirectResponse
@@ -66,7 +69,7 @@ class MembersController extends Controller
         Auth::login($user, $request->boolean('remember'));
         $request->session()->regenerate();
 
-        return redirect()->to($request->session()->pull('members.intended', route('members.home')));
+        return redirect()->to($request->session()->pull('members.intended', route(Members::on() ? 'members.home' : 'community.home')));
     }
 
     public function logout(Request $request): RedirectResponse
@@ -115,7 +118,7 @@ class MembersController extends Controller
             Auth::login($user);
             $request->session()->regenerate();
 
-            return redirect()->route('members.home')->with('status', 'Willkommen! Ihr Zugang ist eingerichtet.');
+            return redirect()->to($request->session()->pull('members.intended', route(Members::on() ? 'members.home' : 'community.home')))->with('status', 'Willkommen! Ihr Zugang ist eingerichtet.');
         }
 
         return redirect()->route('members.login')->with('status', 'Vielen Dank. Wir prüfen Ihre Registrierung und schicken Ihnen eine E-Mail, sobald Ihr Zugang freigeschaltet ist.');
@@ -164,6 +167,7 @@ class MembersController extends Controller
 
     public function download(Request $request, MemberFile $file): StreamedResponse|RedirectResponse
     {
+        abort_unless(Members::on(), 404);
         if (! $request->user()?->canSeeMembersArea()) {
             return redirect()->route('members.login');
         }

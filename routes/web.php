@@ -6,6 +6,7 @@ use App\Http\Controllers\Admin\AccountController;
 use App\Http\Controllers\Admin\AiController;
 use App\Http\Controllers\Admin\BackupController;
 use App\Http\Controllers\Admin\BookingAdminController;
+use App\Http\Controllers\Admin\CommunityAdminController;
 use App\Http\Controllers\Admin\ContactMessageController;
 use App\Http\Controllers\Admin\CouponController;
 use App\Http\Controllers\Admin\CustomerController;
@@ -42,6 +43,10 @@ use App\Http\Controllers\Admin\WhatsAppController;
 use App\Http\Controllers\Api\ErpApiController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\BookingController;
+use App\Http\Controllers\Community\FeedController as CommunityFeed;
+use App\Http\Controllers\Community\ForumController as CommunityForums;
+use App\Http\Controllers\Community\MessageController as CommunityMessages;
+use App\Http\Controllers\Community\ProfileController as CommunityProfiles;
 use App\Http\Controllers\ContactController;
 use App\Http\Controllers\InstallController;
 use App\Http\Controllers\LicenseApiController;
@@ -86,7 +91,7 @@ Route::middleware('feature:terminbuchung')->prefix('termine')->name('booking.')-
     Route::get('/{token}/absagen', [BookingController::class, 'cancelForm'])->where('token', '[A-Za-z0-9]{40}')->name('cancel');
     Route::post('/{token}/absagen', [BookingController::class, 'cancel'])->where('token', '[A-Za-z0-9]{40}')->middleware('throttle:10,1')->name('cancel.do');
 });
-Route::middleware('feature:mitgliederbereich')->prefix('mitglieder')->group(function () {
+Route::middleware('feature:mitgliederbereich|community')->prefix('mitglieder')->group(function () {
     Route::get('/', [MembersController::class, 'home'])->name('members.home');
     Route::get('/anmelden', [MembersController::class, 'loginForm'])->name('members.login');
     Route::post('/anmelden', [MembersController::class, 'login'])->middleware('throttle:20,1')->name('members.login.do');
@@ -96,6 +101,41 @@ Route::middleware('feature:mitgliederbereich')->prefix('mitglieder')->group(func
     Route::get('/passwort-vergessen', [MembersController::class, 'forgotForm'])->name('members.forgot');
     Route::post('/passwort-vergessen', [MembersController::class, 'forgot'])->middleware('throttle:5,1')->name('members.forgot.do');
     Route::get('/downloads/{file}', [MembersController::class, 'download'])->name('members.download');
+});
+// Modul „Community“
+Route::middleware(['feature:community', 'community'])->prefix('community')->name('community.')->group(function () {
+    Route::get('/', [CommunityFeed::class, 'home'])->name('home');
+    Route::post('/beitraege', [CommunityFeed::class, 'store'])->middleware('throttle:10,1')->name('posts.store');
+    Route::get('/beitrag/{post}', [CommunityFeed::class, 'post'])->name('post');
+    Route::delete('/beitrag/{post}', [CommunityFeed::class, 'destroy'])->name('posts.destroy');
+    Route::post('/beitrag/{post}/gefaellt', [CommunityFeed::class, 'like'])->middleware('throttle:60,1')->name('posts.like');
+    Route::post('/beitrag/{post}/anheften', [CommunityFeed::class, 'pin'])->name('posts.pin');
+    Route::post('/beitrag/{post}/kommentare', [CommunityFeed::class, 'comment'])->middleware('throttle:20,1')->name('comments.store');
+    Route::delete('/kommentar/{comment}', [CommunityFeed::class, 'commentDestroy'])->name('comments.destroy');
+    Route::get('/leute', [CommunityFeed::class, 'people'])->name('people');
+    Route::get('/benachrichtigungen', [CommunityFeed::class, 'notifications'])->name('notifications');
+    Route::post('/melden', [CommunityFeed::class, 'report'])->middleware('throttle:10,1')->name('report');
+    Route::get('/profil', [CommunityProfiles::class, 'edit'])->name('edit');
+    Route::put('/profil', [CommunityProfiles::class, 'update'])->name('update');
+    Route::get('/meine-seite', [CommunityProfiles::class, 'pageEdit'])->name('page.edit');
+    Route::put('/meine-seite', [CommunityProfiles::class, 'pageUpdate'])->name('page.update');
+    Route::delete('/konto', [CommunityProfiles::class, 'destroyAccount'])->middleware('throttle:5,1')->name('account.destroy');
+    Route::get('/leute/{profile}', [CommunityProfiles::class, 'show'])->name('profile');
+    Route::get('/leute/{profile}/seite', [CommunityProfiles::class, 'page'])->name('page');
+    Route::post('/leute/{profile}/folgen', [CommunityFeed::class, 'follow'])->name('follow');
+    Route::post('/leute/{profile}/blockieren', [CommunityFeed::class, 'block'])->name('block');
+    Route::get('/nachrichten', [CommunityMessages::class, 'index'])->name('messages');
+    Route::get('/nachrichten/{profile}', [CommunityMessages::class, 'show'])->name('conversation');
+    Route::post('/nachrichten/{profile}', [CommunityMessages::class, 'store'])->middleware('throttle:20,1')->name('messages.store');
+    Route::get('/foren', [CommunityForums::class, 'index'])->name('forums');
+    Route::get('/foren/{board}', [CommunityForums::class, 'board'])->name('board');
+    Route::get('/foren/{board}/neu', [CommunityForums::class, 'create'])->name('topic.create');
+    Route::post('/foren/{board}', [CommunityForums::class, 'store'])->middleware('throttle:5,1')->name('topic.store');
+    Route::get('/thema/{topic}/{slug?}', [CommunityForums::class, 'topic'])->whereNumber('topic')->name('topic');
+    Route::post('/thema/{topic}/antworten', [CommunityForums::class, 'reply'])->middleware('throttle:20,1')->name('topic.reply');
+    Route::put('/thema/{topic}', [CommunityForums::class, 'moderate'])->name('topic.moderate');
+    Route::delete('/thema/{topic}', [CommunityForums::class, 'destroy'])->name('topic.destroy');
+    Route::delete('/antwort/{reply}', [CommunityForums::class, 'destroyReply'])->name('reply.destroy');
 });
 // Neues Passwort für Mitglieder und Kundenkonten
 Route::get('/passwort-neu/{token}', [MembersController::class, 'resetForm'])->name('password.reset');
@@ -223,7 +263,7 @@ Route::middleware(['auth', 'admin', LicenseGate::class])->prefix('admin')->name(
         Route::put('/{coupon}', [CouponController::class, 'update'])->name('.update');
         Route::delete('/{coupon}', [CouponController::class, 'destroy'])->name('.destroy');
     });
-    Route::middleware('feature:mitgliederbereich')->prefix('mitglieder')->name('members')->group(function () {
+    Route::middleware('feature:mitgliederbereich|community')->prefix('mitglieder')->name('members')->group(function () {
         Route::get('/', [MembersAdminController::class, 'index']);
         Route::post('/einladen', [MembersAdminController::class, 'invite'])->middleware('throttle:30,1')->name('.invite');
         Route::put('/einstellungen', [MembersAdminController::class, 'settings'])->name('.settings');
@@ -231,6 +271,15 @@ Route::middleware(['auth', 'admin', LicenseGate::class])->prefix('admin')->name(
         Route::delete('/dateien/{file}', [MembersAdminController::class, 'deleteFile'])->name('.files.destroy');
         Route::put('/{user}', [MembersAdminController::class, 'update'])->name('.update');
         Route::delete('/{user}', [MembersAdminController::class, 'destroy'])->name('.destroy');
+    });
+    Route::middleware('feature:community')->prefix('community')->name('community')->group(function () {
+        Route::get('/', [CommunityAdminController::class, 'index']);
+        Route::put('/einstellungen', [CommunityAdminController::class, 'settings'])->name('.settings');
+        Route::post('/foren', [CommunityAdminController::class, 'storeBoard'])->name('.boards.store');
+        Route::put('/foren/{board}', [CommunityAdminController::class, 'updateBoard'])->name('.boards.update');
+        Route::delete('/foren/{board}', [CommunityAdminController::class, 'destroyBoard'])->name('.boards.destroy');
+        Route::put('/meldungen/{report}', [CommunityAdminController::class, 'resolve'])->name('.reports.resolve');
+        Route::put('/sperren/{user}', [CommunityAdminController::class, 'ban'])->name('.ban');
     });
     Route::middleware('feature:warenwirtschaft')->prefix('warenwirtschaft')->name('erp')->group(function () {
         Route::get('/', [ErpController::class, 'index']);
