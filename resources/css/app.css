@@ -245,6 +245,13 @@ html.nova-menu-open { overflow: hidden; }
 .nb-section.nb-fixed { background-attachment: fixed; }
 @media (max-width: 1023px) { .nb-section.nb-fixed { background-attachment: scroll; } }
 .nb-overlay { position: absolute; inset: 0; pointer-events: none; }
+/* 3D-Hintergrund (three.js): Fläche hinter dem Inhalt */
+.nb-3d { overflow: hidden; }
+.nb-3d-canvas { position: absolute; inset: 0; z-index: 0; pointer-events: none; }
+.nb-3d-canvas canvas { display: block; width: 100%; height: 100%; animation: nb-3d-in 1.2s ease both; }
+@keyframes nb-3d-in { from { opacity: 0; } to { opacity: 1; } }
+.nb-3d > .nb-inner, .nb-card.nb-3d .nb-inner > .nb-row { position: relative; z-index: 1; }
+.nb-card.nb-3d .nb-inner { overflow: hidden; }
 .nb-inner { position: relative; margin-inline: auto; padding-inline: 1rem; }
 @media (min-width: 640px) { .nb-inner { padding-inline: 1.5rem; } }
 .nb-w-narrow .nb-inner { max-width: 48rem; }
@@ -387,6 +394,9 @@ html.nova-menu-open { overflow: hidden; }
 .nbp-scheme i { border-radius: 2px; background: var(--color-slate-300); }
 .nbp-scheme[data-scheme='hero'] { background: linear-gradient(135deg, var(--color-nova-500), var(--color-fuchsia-500)); grid-template-columns: 1fr; place-items: center; }
 .nbp-scheme[data-scheme='hero'] i { width: 60%; height: 5px; background: #fff; } .nbp-scheme[data-scheme='hero'] i:nth-child(n + 2) { width: 35%; }
+.nbp-scheme[data-scheme='hero3d'] { background: radial-gradient(circle at 70% 30%, rgb(25 195 220 / .5), transparent 55%), repeating-radial-gradient(ellipse at 50% 150%, transparent 0 4px, rgb(25 195 220 / .45) 5px 6px, transparent 7px 10px), #0f172a; grid-template-columns: 1fr; place-items: center; }
+.nbp-scheme[data-scheme='hero3d'] i { width: 60%; height: 5px; background: #fff; } .nbp-scheme[data-scheme='hero3d'] i:nth-child(n + 2) { width: 35%; }
+.nbp-scheme[data-scheme='split3d'] { background: radial-gradient(circle at 75% 50%, transparent 0 13px, rgb(25 195 220 / .8) 14px 15px, transparent 16px), var(--color-nova-900); grid-template-columns: 1fr 1fr; } .nbp-scheme[data-scheme='split3d'] i { background: #fff; grid-column: 1; }
 .nbp-scheme[data-scheme='split'] { grid-template-columns: 1.2fr 1fr; } .nbp-scheme[data-scheme='split'] i:first-child { grid-row: span 3; background: var(--color-nova-300); }
 .nbp-scheme[data-scheme='split-r'] { grid-template-columns: 1fr 1.2fr; } .nbp-scheme[data-scheme='split-r'] i:first-child { grid-column: 2; grid-row: 1 / span 3; background: var(--color-nova-300); }
 .nbp-scheme[data-scheme='four'] { background: var(--color-slate-800); grid-template-columns: repeat(3, 1fr); } .nbp-scheme[data-scheme='four'] i { background: var(--color-slate-500); }
@@ -410,3 +420,19 @@ html.nova-menu-open { overflow: hidden; }
 .peer:focus-visible + .nbp-switch { outline: 2px solid var(--color-nova-500); outline-offset: 2px; }
 .nbp-node { display: flex; width: 100%; align-items: baseline; gap: 0.5rem; padding-block: 0.4rem; padding-right: 0.6rem; border-radius: 0.4rem; font-size: 0.82rem; text-align: left; }
 .nbp-node:hover { background: var(--color-slate-100); } .nbp-node.is-on { background: var(--color-nova-50); color: var(--color-nova-800); }
+
+/* Auswahl der 3D-Motive im Editor */
+.nbp-scene { display: flex; flex-direction: column; gap: .35rem; border: 1px solid var(--color-slate-200); border-radius: .6rem; padding: .4rem; font-size: .75rem; font-weight: 500; color: var(--color-slate-700); text-align: left; background: #fff; }
+.nbp-scene:hover { border-color: var(--color-slate-300); }
+.nbp-scene.is-on { border-color: var(--color-nova-500); box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-nova-500) 25%, transparent); }
+.nbp-scene-art { display: block; height: 3.2rem; border-radius: .4rem; background-color: #0f172a; }
+.nbp-scene-wellen { background-image: repeating-radial-gradient(ellipse at 50% 140%, transparent 0 6px, rgb(25 195 220 / .55) 7px 8px, transparent 9px 14px), linear-gradient(#0f172a, #0f172a); }
+.nbp-scene-netz { background-image: radial-gradient(circle at 20% 30%, #19c3dc 0 2px, transparent 3px), radial-gradient(circle at 55% 60%, #19c3dc 0 2px, transparent 3px), radial-gradient(circle at 80% 25%, #19c3dc 0 2px, transparent 3px), radial-gradient(circle at 35% 80%, #19c3dc 0 2px, transparent 3px), linear-gradient(28deg, transparent 47%, rgb(25 195 220 / .45) 48% 50%, transparent 51%), linear-gradient(-20deg, transparent 47%, rgb(25 195 220 / .35) 48% 50%, transparent 51%); }
+.nbp-scene-kugel { background-image: radial-gradient(circle at 65% 50%, transparent 0 15px, rgb(25 195 220 / .7) 16px 17px, transparent 18px), radial-gradient(circle at 65% 50%, rgb(25 195 220 / .35), transparent 17px), radial-gradient(ellipse 34px 8px at 65% 50%, transparent 0 30px, rgb(255 255 255 / .5) 31px 32px, transparent 33px); }
+.nbp-scene-formen { background-image: radial-gradient(circle at 22% 40%, #f97a12 0 9px, transparent 10px), radial-gradient(circle at 48% 70%, rgb(226 232 240 / .85) 0 6px, transparent 7px), radial-gradient(circle at 74% 35%, transparent 0 6px, #19c3dc 7px 11px, transparent 12px), radial-gradient(circle at 88% 75%, #f97a12 0 5px, transparent 6px); }
+
+/* Anmeldeseite mit 3D-Hintergrund */
+.nova-login.is-3d { background-image: radial-gradient(90% 70% at 15% 10%, rgb(109 79 255 / .35), transparent 60%), radial-gradient(70% 60% at 90% 90%, rgb(217 70 239 / .25), transparent 60%); }
+.nova-login-3d { position: fixed; inset: 0; z-index: 0; pointer-events: none; }
+.nova-login-3d canvas { display: block; width: 100%; height: 100%; animation: nb-3d-in 1.4s ease both; }
+.nova-login.is-3d .nova-card { background: rgb(255 255 255 / .92); backdrop-filter: blur(14px); box-shadow: 0 30px 80px -30px rgb(0 0 0 / .6); }

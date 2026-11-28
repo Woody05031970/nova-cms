@@ -21,7 +21,7 @@
 </div>
 
 <div x-show="tab === 'style'" class="space-y-4">
-    <x-nb.seg model="s.data.style.bg" label="Hintergrund" :options="['none' => 'Ohne', 'color' => 'Farbe', 'gradient' => 'Verlauf', 'image' => 'Bild']" cols="4" />
+    <x-nb.seg model="s.data.style.bg" label="Hintergrund" :options="['none' => 'Ohne', 'color' => 'Farbe', 'gradient' => 'Verlauf', 'image' => 'Bild', '3d' => '3D']" cols="5" />
     <template x-if="s.data.style.bg === 'color'"><x-nb.color model="s.data.style.bg_color" label="Hintergrundfarbe" none="Keine" /></template>
     <template x-if="s.data.style.bg === 'gradient'">
         <div class="space-y-4">
@@ -37,6 +37,27 @@
             <x-nb.color model="s.data.style.overlay" label="Farbschleier über dem Bild" none="Kein Schleier" />
             <template x-if="s.data.style.overlay"><x-nb.range model="s.data.style.overlay_opacity" label="Stärke des Schleiers" min="0" max="90" step="5" unit=" %" /></template>
             <x-nb.toggle model="s.data.style.bg_fixed" label="Bild bleibt beim Scrollen stehen" hint="Parallax-Effekt am Computer" />
+        </div>
+    </template>
+    <template x-if="s.data.style.bg === '3d'">
+        <div class="space-y-4" data-panel-3d>
+            @unless (\App\Licensing\Features::on('effekte-3d'))
+                <p class="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-900">Bewegte 3D-Hintergründe gehören zum Modul <strong>3D-Effekte</strong>. Ohne das Modul zeigt die Website hier eine ruhige Farbfläche.</p>
+            @endunless
+            <div class="nbp-field">
+                <p class="nbp-label">3D-Motiv</p>
+                <div class="grid grid-cols-2 gap-2">
+                    @foreach (\App\Support\Blocks\Builder::SCENES as $key => $name)
+                        <button type="button" class="nbp-scene" :class="(s.data.style.bg_3d || 'wellen') === @js($key) && 'is-on'" @click="s.data.style.bg_3d = @js($key)" data-scene="{{ $key }}">
+                            <span class="nbp-scene-art nbp-scene-{{ $key }}" aria-hidden="true"></span>
+                            <span>{{ $name }}</span>
+                        </button>
+                    @endforeach
+                </div>
+            </div>
+            <x-nb.color model="s.data.style.bg_color" label="Grundfarbe" none="Fast schwarz" />
+            <x-nb.color model="s.data.style.bg_color2" label="Leuchtfarbe" none="Akzentfarbe" />
+            <p class="text-xs text-slate-500">Die Bewegung folgt leicht der Maus. Wer in seinem Gerät „Bewegung reduzieren“ eingestellt hat, sieht ein ruhiges Standbild.</p>
         </div>
     </template>
     <x-nb.seg model="s.data.style.text" label="Schriftfarbe" :options="['auto' => 'Automatisch', 'dark' => 'Dunkel', 'light' => 'Hell']" cols="3" />

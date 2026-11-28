@@ -2,6 +2,7 @@
 
 namespace App\Support\Update;
 
+use App\Support\Turbo\PageCache;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Log;
 use Throwable;
@@ -55,6 +56,12 @@ class AutoUpdate
             } catch (Throwable $e) {
                 report($e);
             }
+        }
+        try {
+            // Zwischengespeicherte Website-Seiten verweisen sonst noch auf alte Skripte und Stile
+            PageCache::flush();
+        } catch (Throwable $e) {
+            report($e);
         }
         if (function_exists('opcache_reset')) {
             @opcache_reset();

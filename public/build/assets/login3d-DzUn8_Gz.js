@@ -1,0 +1,1 @@
+import{n as e}from"./nova3d-BXH343Qi.js";e();

@@ -98,6 +98,22 @@ export const TEMPLATES = [
         ],
     },
     {
+        key: 'intro3d', name: '3D-Einstieg', desc: 'Bewegter 3D-Hintergrund mit großer Überschrift', scheme: 'hero3d', three: true,
+        make: () => [section('1', [[
+            wd(W.heading('Willkommen in der Zukunft Ihres Unternehmens', { tag: 'h1', size: 'xxl', weight: 'bold' })),
+            wd(W.text('<p>Ein, zwei Sätze, die sagen, was Sie besonders macht und warum man sich bei Ihnen melden sollte.</p>', { size: 'l' }), { mb: 32 }),
+            wd(W.button('Jetzt anfragen', '/kontakt', { variant: 'light', variant2: 'outline', size: 'l' }, { label2: 'Mehr erfahren', url2: '#mehr' })),
+        ]], { bg: '3d', bg_3d: 'wellen', bg_color: 'dark', bg_color2: 'accent', height: 'screen', valign: 'center', width: 'narrow', pt: 120, pb: 120 }, { align: 'center' })],
+    },
+    {
+        key: 'split3d', name: '3D-Kugel mit Text', desc: 'Text links, leuchtende 3D-Kugel rechts', scheme: 'split3d', three: true,
+        make: () => [section('1-1', [[
+            wd(W.heading('Wir bringen Sie weltweit nach vorn', { size: 'xl', weight: 'bold' })),
+            wd(W.text('<p>Beschreiben Sie hier Ihr Angebot in zwei, drei Sätzen. Die Kugel rechts dreht sich langsam und folgt der Maus.</p>', { size: 'l' }), { mb: 28 }),
+            wd(W.button('Mehr erfahren', '#mehr', { variant: 'light', size: 'l' })),
+        ], []], { bg: '3d', bg_3d: 'kugel', bg_color: 'brand-dark', bg_color2: 'accent', height: 'm', valign: 'center', pt: 96, pb: 96 })],
+    },
+    {
         key: 'cta', name: 'Aufruf', desc: 'Auffällige Karte mit Überschrift und Knöpfen', scheme: 'card',
         make: () => [section('1', [[
             wd(W.heading('Bereit für den nächsten Schritt?', { size: 'xl', weight: 'bold' })),
