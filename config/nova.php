@@ -2,7 +2,7 @@
 
 return [
     // Version des Nova-CMS-Kerns. Plugins können eine Mindestversion verlangen.
-    'version' => '0.9.0',
+    'version' => '0.9.1',
 
     // Wo die Konfigurationsdatei liegt, die der Installer schreibt.
     'env_path' => env('NOVA_ENV_PATH', base_path('.env')),
