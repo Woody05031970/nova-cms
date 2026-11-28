@@ -116,7 +116,7 @@ class Page extends Model
     {
         $base = Str::slug($value, '-', 'de') ?: 'seite';
         // Diese Pfade gehören dem System
-        if (in_array($base, ['admin', 'install', 'uploads', 'build', 'up', 'storage', 'termine', 'mitglieder', 'konto', 'passwort-neu', 'api', 'de', ...array_keys(Languages::AVAILABLE)], true)) {
+        if (in_array($base, ['admin', 'install', 'uploads', 'build', 'up', 'storage', 'termine', 'mitglieder', 'konto', 'passwort-neu', 'community', 'api', 'de', ...array_keys(Languages::AVAILABLE)], true)) {
             $base .= '-seite';
         }
 

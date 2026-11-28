@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
@@ -86,6 +87,17 @@ class User extends Authenticatable
     public function orders(): HasMany
     {
         return $this->hasMany(Order::class)->latest('id');
+    }
+
+    public function communityProfile(): HasOne
+    {
+        return $this->hasOne(CommunityProfile::class);
+    }
+
+    /** Darf in der Community schreiben (freigeschaltetes Mitglied oder Administrator, nicht gesperrt) */
+    public function canUseCommunity(): bool
+    {
+        return in_array($this->role, ['admin', 'member'], true) && ! $this->communityProfile?->isBanned();
     }
 
     public function canSeeMembersArea(): bool

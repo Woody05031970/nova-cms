@@ -12,9 +12,14 @@ class RequireFeature
 {
     public function handle(Request $request, Closure $next, string $feature): Response
     {
-        if (app(Features::class)->enabled($feature)) {
-            return $next($request);
+        // Mehrere Module mit | getrennt: eines davon genügt
+        $keys = explode('|', $feature);
+        foreach ($keys as $key) {
+            if (app(Features::class)->enabled($key)) {
+                return $next($request);
+            }
         }
+        $feature = $keys[0];
         if (! $request->is('admin', 'admin/*')) {
             abort(404);
         }

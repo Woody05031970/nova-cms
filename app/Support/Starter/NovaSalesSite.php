@@ -41,7 +41,7 @@ class NovaSalesSite
     public const LICENSES = [
         'nova-cms-start' => ['Nova CMS Start', 14900, 1, 'Für eine Website, z. B. Ihr Unternehmen oder Ihren Verein.', []],
         'nova-cms-business' => ['Nova CMS Business', 34900, 3, 'Für bis zu drei Websites, z. B. Firma, Shop und Kampagnenseite.', ['design-pro', 'whatsapp', 'seo-pro', 'statistik']],
-        'nova-cms-agentur' => ['Nova CMS Agentur', 89900, 15, 'Für Webdesigner und Agenturen mit bis zu 15 Kunden-Websites.', ['design-pro', 'whatsapp', 'newsletter', 'seo-pro', 'geo', 'social', 'redaktionsplan', 'statistik', 'turbo', 'terminbuchung', 'mehrsprachigkeit', 'gutscheine', 'mitgliederbereich', 'warenwirtschaft', 'datensicherung', 'google-bewertungen', 'kundenkonto']],
+        'nova-cms-agentur' => ['Nova CMS Agentur', 89900, 15, 'Für Webdesigner und Agenturen mit bis zu 15 Kunden-Websites.', ['design-pro', 'whatsapp', 'newsletter', 'seo-pro', 'geo', 'social', 'redaktionsplan', 'statistik', 'turbo', 'terminbuchung', 'mehrsprachigkeit', 'gutscheine', 'mitgliederbereich', 'warenwirtschaft', 'datensicherung', 'google-bewertungen', 'kundenkonto', 'community']],
     ];
 
     /** Leistungen der Pakete im Preis-Baustein */
@@ -77,6 +77,7 @@ class NovaSalesSite
         'modul-warenwirtschaft' => ['Warenwirtschaft-Anbindung', 14900, 'Shop', 'Bestände und Preise per CSV oder Schnittstelle mit Ihrer Warenwirtschaft abgleichen, Bestellungen für die Buchhaltung exportieren.', true],
         'modul-kundenkonto' => ['Kundenkonto', 4900, 'Shop', 'Kunden legen ein Konto an, speichern Kontakt-, Rechnungs- und Lieferadresse und sehen alle Bestellungen. Die Kasse ist beim nächsten Einkauf schon ausgefüllt.', true],
         'modul-datensicherung' => ['Datensicherung', 3900, 'Technik', 'Komplette Sicherung per Klick oder automatisch jeden Tag. Zurückspielen in einer Minute, auch für den Umzug auf einen neuen Server.', true],
+        'modul-community' => ['Community', 9900, 'Inhalte', 'Ein eigenes soziales Netzwerk auf Ihrer Website: Pinnwand mit Beiträgen und Fotos, Profile mit eigener Seite, persönliche Nachrichten, Foren, Folgen, Erwähnungen und Benachrichtigungen. Mit Meldefunktion und Moderation.', true],
         'modul-google-bewertungen' => ['Google-Bewertungen', 3900, 'Marketing', 'Ihre Sterne und die neuesten Google-Bewertungen auf der Website, dazu Bewertungslink und QR-Code für zufriedene Kunden.', true],
     ];
 

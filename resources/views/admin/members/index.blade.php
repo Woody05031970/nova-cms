@@ -46,6 +46,7 @@
         </form>
     </section>
 
+    @if (\App\Support\Members\Members::on())
     <section class="nova-card mt-6" id="downloads" aria-labelledby="m-files">
         <h2 id="m-files" class="font-semibold">Downloads für Mitglieder</h2>
         <p class="mt-1 text-sm text-slate-600">Die Dateien liegen geschützt auf dem Server und sind nur nach der Anmeldung erreichbar.</p>
@@ -66,6 +67,7 @@
             <button class="nova-btn">Hochladen</button>
         </form>
     </section>
+    @endif
 
     <section class="nova-card mt-6" id="einstellungen" aria-labelledby="m-settings">
         <h2 id="m-settings" class="font-semibold">Einstellungen</h2>

@@ -146,6 +146,7 @@
             <nav class="flex flex-wrap items-end gap-x-5 gap-y-2 sm:justify-end" aria-label="{{ $L::t('Rechtliches') }}">
                 @foreach ($legal as $l)<a class="hover:text-slate-900" href="{{ $l->url() }}">{{ $l->title }}</a>@endforeach
                 @if (\App\Support\Members\Members::on() && \App\Models\Setting::get('members_footer_link', '1') === '1')<a class="hover:text-slate-900" href="{{ route('members.home') }}" data-members-link>{{ \App\Support\Members\Members::title() }}</a>@endif
+                @if (\App\Support\Community\Community::on() && \App\Models\Setting::get('community_footer_link', '1') === '1')<a class="hover:text-slate-900" href="{{ route('community.home') }}" data-community-link>{{ \App\Support\Community\Community::title() }}</a>@endif
                 <span class="opacity-60">© {{ date('Y') }} {{ $siteName }}</span>
             </nav>
         </div>

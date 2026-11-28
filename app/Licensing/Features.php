@@ -29,6 +29,7 @@ class Features
         'datensicherung' => ['Datensicherung', 'Komplette Sicherung von Inhalten, Bildern und Daten per Klick oder automatisch, Zurückspielen und Umzug auf einen neuen Server.'],
         'google-bewertungen' => ['Google-Bewertungen', 'Sterne und neueste Bewertungen aus Google auf der Website, dazu Bewertungslink und QR-Code.'],
         'kundenkonto' => ['Kundenkonto', 'Kunden registrieren sich im Shop, speichern Kontakt-, Rechnungs- und Lieferadresse und sehen ihre Bestellungen.'],
+        'community' => ['Community', 'Treffpunkt für Mitglieder: Pinnwand, Profile mit eigener Seite, persönliche Nachrichten, Foren und Benachrichtigungen.'],
         'turbo' => ['Turbo', 'Zwischenspeicher für Besucher: Seiten laden deutlich schneller, gut für Google (Core Web Vitals).'],
     ];
 
