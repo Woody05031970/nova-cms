@@ -1,51 +1,18 @@
 @php
-    $core = [
-        ['label' => 'Dashboard', 'url' => route('admin.dashboard'), 'icon' => 'home', 'order' => 0, 'active' => 'admin.dashboard', 'group' => 'Inhalte'],
-        ['label' => 'Seiten', 'url' => route('admin.pages.index'), 'icon' => 'pages', 'order' => 10, 'active' => 'admin.pages.*', 'group' => 'Inhalte'],
-        ['label' => 'Menü', 'url' => route('admin.menu'), 'icon' => 'menu', 'order' => 12, 'active' => 'admin.menu*', 'group' => 'Inhalte'],
-        ['label' => 'Medien', 'url' => route('admin.media.index'), 'icon' => 'image', 'order' => 20, 'active' => 'admin.media.*', 'group' => 'Inhalte'],
-        ['label' => 'Anfragen', 'url' => route('admin.messages'), 'icon' => 'inbox', 'order' => 25, 'active' => 'admin.messages*', 'group' => 'Inhalte', 'badge' => \App\Models\ContactMessage::unread() ?: null],
-        ['label' => 'Design', 'url' => route('admin.design'), 'icon' => 'palette', 'order' => 22, 'active' => 'admin.design*', 'group' => 'Inhalte'],
-        ['label' => 'Newsletter', 'url' => route('admin.newsletter.index'), 'icon' => 'mail', 'order' => 50, 'active' => 'admin.newsletter.*', 'group' => 'Wachstum', 'locked' => ! \App\Licensing\Features::on('newsletter')],
-        ['label' => 'WhatsApp', 'url' => route('admin.whatsapp'), 'icon' => 'chat', 'order' => 55, 'active' => 'admin.whatsapp*', 'group' => 'Wachstum', 'locked' => ! \App\Licensing\Features::on('whatsapp')],
-        ['label' => 'KI-Assistent', 'url' => route('admin.ai'), 'icon' => 'sparkles', 'order' => 30, 'active' => 'admin.ai*', 'group' => 'Wachstum'],
-        ['label' => 'Shop', 'url' => route('admin.shop.index'), 'icon' => 'cart', 'order' => 40, 'active' => 'admin.shop.*', 'group' => 'Wachstum'],
-        ['label' => 'SEO', 'url' => route('admin.seo'), 'icon' => 'search', 'order' => 60, 'active' => ['admin.seo*', 'admin.geo*'], 'group' => 'Wachstum'],
-        ['label' => 'Social Media', 'url' => route('admin.social'), 'icon' => 'share', 'order' => 57, 'active' => 'admin.social*', 'group' => 'Wachstum', 'locked' => ! \App\Licensing\Features::on('social')],
-        ['label' => 'Statistik', 'url' => route('admin.stats'), 'icon' => 'chart', 'order' => 35, 'active' => 'admin.stats*', 'group' => 'Wachstum', 'locked' => ! \App\Licensing\Features::on('statistik')],
-        ['label' => 'Gutscheine', 'url' => route('admin.coupons'), 'icon' => 'tag', 'order' => 42, 'active' => 'admin.coupons*', 'group' => 'Wachstum', 'locked' => ! \App\Licensing\Features::on('gutscheine')],
-        ['label' => 'Sprachen', 'url' => route('admin.languages'), 'icon' => 'globe', 'order' => 13, 'active' => 'admin.languages*', 'group' => 'Inhalte', 'locked' => ! \App\Licensing\Features::on('mehrsprachigkeit')],
-        ['label' => 'Community', 'url' => route('admin.community'), 'icon' => 'community', 'order' => 29, 'active' => 'admin.community*', 'group' => 'Inhalte', 'locked' => ! \App\Licensing\Features::on('community'), 'badge' => \App\Licensing\Features::on('community') ? (\App\Support\Community\Community::openReports() ?: null) : null],
-        ['label' => 'Mitglieder', 'url' => route('admin.members'), 'icon' => 'users', 'order' => 28, 'active' => 'admin.members*', 'group' => 'Inhalte', 'locked' => ! \App\Licensing\Features::on('mitgliederbereich') && ! \App\Licensing\Features::on('community'), 'badge' => (\App\Licensing\Features::on('mitgliederbereich') || \App\Licensing\Features::on('community')) ? (\App\Models\User::where('role', 'member_pending')->count() ?: null) : null],
-        ['label' => 'Warenwirtschaft', 'url' => route('admin.erp'), 'icon' => 'layers', 'order' => 44, 'active' => 'admin.erp*', 'group' => 'Wachstum', 'locked' => ! \App\Licensing\Features::on('warenwirtschaft')],
-        ['label' => 'Bewertungen', 'url' => route('admin.reviews'), 'icon' => 'heart', 'order' => 58, 'active' => 'admin.reviews*', 'group' => 'Wachstum', 'locked' => ! \App\Licensing\Features::on('google-bewertungen')],
-        ['label' => 'Kunden', 'url' => route('admin.customers'), 'icon' => 'user', 'order' => 41, 'active' => 'admin.customers*', 'group' => 'Wachstum', 'locked' => ! \App\Licensing\Features::on('kundenkonto')],
-        ['label' => 'Termine', 'url' => route('admin.bookings'), 'icon' => 'clock', 'order' => 27, 'active' => 'admin.bookings*', 'group' => 'Inhalte', 'locked' => ! \App\Licensing\Features::on('terminbuchung'), 'badge' => \App\Licensing\Features::on('terminbuchung') ? (\App\Models\Booking::where('status', 'pending')->where('starts_at', '>=', now())->count() ?: null) : null],
-        ['label' => 'Redaktionsplan', 'url' => route('admin.plan'), 'icon' => 'calendar', 'order' => 14, 'active' => 'admin.plan*', 'group' => 'Inhalte', 'locked' => ! \App\Licensing\Features::on('redaktionsplan')],
-        ['label' => 'Datensicherung', 'url' => route('admin.backups'), 'icon' => 'upload', 'order' => 72, 'active' => 'admin.backups*', 'group' => 'System', 'locked' => ! \App\Licensing\Features::on('datensicherung')],
-        ['label' => 'Turbo', 'url' => route('admin.turbo'), 'icon' => 'bolt', 'order' => 68, 'active' => 'admin.turbo*', 'group' => 'System', 'locked' => ! \App\Licensing\Features::on('turbo')],
-        ['label' => 'Barrierefreiheit', 'url' => route('admin.accessibility'), 'icon' => 'accessibility', 'order' => 65, 'active' => 'admin.accessibility*', 'group' => 'System'],
-        ['label' => 'Sicherheit', 'url' => route('admin.security'), 'icon' => 'shield', 'order' => 70, 'active' => 'admin.security*', 'group' => 'System'],
-        ['label' => 'Plugins', 'url' => route('admin.plugins'), 'icon' => 'puzzle', 'order' => 80, 'active' => 'admin.plugins*', 'group' => 'System'],
-        ['label' => 'Einstellungen', 'url' => route('admin.settings'), 'icon' => 'settings', 'order' => 90, 'active' => 'admin.settings*', 'group' => 'System'],
-    ];
-    if (\App\Licensing\LicenseServer::enabled()) {
-        $core[] = ['label' => 'Lizenzserver', 'url' => route('admin.license-server'), 'icon' => 'key', 'order' => 95, 'active' => 'admin.license-server*', 'group' => 'System'];
-    }
+    use App\Support\Admin\AdminNav;
+    $nav = AdminNav::tree();
     $lic = app(\App\Licensing\License::class);
     $licStatus = $lic->status();
-    $menu = collect(app(\App\Plugins\Hooks::class)->applyFilters('admin.menu', $core))->sortBy('order');
-    $groups = $menu->groupBy(fn ($i) => $i['group'] ?? 'Erweiterungen')->sortBy(fn ($items, $g) => array_search($g, ['Inhalte', 'Wachstum', 'Erweiterungen', 'System']));
-    $isActive = function ($item) {
-        if (! empty($item['active'])) return request()->routeIs($item['active']);
-        return $item['url'] && request()->url() === $item['url'];
-    };
+    // Ausgeblendete Punkte bleiben über die Schnellsuche erreichbar
+    $allItems = collect(AdminNav::tree(true)['groups'])->pluck('items')->flatten(1)->merge($nav['top']);
+    $isActive = fn ($item) => AdminNav::isActive($item);
     $user = auth()->user();
     $initials = collect(preg_split('/\s+/', trim($user->name)))->filter()->map(fn ($p) => mb_substr($p, 0, 1))->take(2)->implode('');
-    $palette = $menu->reject(fn ($i) => ! empty($i['soon']))->map(fn ($i) => ['label' => $i['label'], 'url' => $i['url'], 'group' => 'Bereiche'])->values()->merge([
+    $palette = $allItems->reject(fn ($i) => ! empty($i['soon']))->map(fn ($i) => ['label' => $i['label'], 'url' => $i['url'], 'group' => 'Bereiche'])->values()->merge([
         ['label' => 'Neue Seite anlegen', 'url' => route('admin.pages.index').'#neu', 'group' => 'Aktionen'],
         ['label' => 'Bilder hochladen', 'url' => route('admin.media.index'), 'group' => 'Aktionen'],
         ['label' => 'Menü sortieren', 'url' => route('admin.menu'), 'group' => 'Aktionen'],
+        ['label' => 'Backoffice-Menü anpassen', 'url' => route('admin.nav'), 'group' => 'Aktionen'],
         ['label' => 'Farben, Vorlage und Logo ändern', 'url' => route('admin.design'), 'group' => 'Aktionen'],
         ['label' => 'Social-Media-Beitrag schreiben', 'url' => route('admin.social'), 'group' => 'Aktionen'],
         ['label' => 'Seite zeitgesteuert veröffentlichen', 'url' => route('admin.plan'), 'group' => 'Aktionen'],
@@ -83,30 +50,40 @@
                 <x-icon name="search" class="size-4" /> <span class="flex-1">Suchen …</span>
                 <kbd class="rounded border border-white/15 px-1.5 font-mono text-[10px] text-slate-400">Strg K</kbd>
             </button>
-            <nav class="flex-1 overflow-y-auto px-3 pb-4" aria-label="Hauptmenü">
-                @foreach ($groups as $group => $items)
-                    <p class="mt-4 mb-1.5 px-3 font-mono text-[10px] font-semibold tracking-[0.14em] text-slate-500 uppercase">{{ $group }}</p>
-                    <ul class="space-y-0.5">
-                        @foreach ($items as $item)
-                            <li>
-                                @if (! empty($item['soon']))
-                                    <span class="flex items-center gap-3 rounded-lg px-3 py-2 text-sm text-slate-600"><x-icon :name="$item['icon']" class="size-[18px]" /> {{ $item['label'] }}</span>
-                                @else
-                                    <a href="{{ $item['url'] }}" @class([
-                                        'nova-nav-link group relative flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition',
-                                        'is-active bg-white/10 text-white' => $isActive($item),
-                                        'text-slate-400 hover:bg-white/5 hover:text-white' => ! $isActive($item),
-                                    ]) @if($isActive($item)) aria-current="page" @endif>
-                                        <x-icon :name="$item['icon']" class="size-[18px] {{ $isActive($item) ? 'text-nova-300' : 'text-slate-500 group-hover:text-slate-300' }}" />
-                                        {{ $item['label'] }}
-                                        @if (! empty($item['locked']))<x-icon name="lock" class="ml-auto size-3.5 text-slate-500" /><span class="sr-only">(nicht in Ihrer Lizenz enthalten)</span>@endif
-                                        @if (! empty($item['badge']))<span class="ml-auto rounded-full bg-nova-500 px-1.5 py-0.5 font-mono text-[10px] font-semibold text-white">{{ $item['badge'] }}</span>@endif
-                                    </a>
-                                @endif
-                            </li>
-                        @endforeach
-                    </ul>
+            <nav class="nova-nav flex-1 overflow-y-auto px-3 pb-4" aria-label="Hauptmenü" data-nav data-nav-single="{{ $nav['single'] ? '1' : '0' }}">
+                <ul class="space-y-0.5">
+                    @foreach ($nav['top'] as $item)
+                        <li>@include('admin.partials.nav-link', ['item' => $item])</li>
+                    @endforeach
+                </ul>
+                @foreach ($nav['groups'] as $group)
+                    @php
+                        $groupActive = collect($group['items'])->contains(fn ($i) => $isActive($i));
+                        $groupBadge = collect($group['items'])->sum(fn ($i) => AdminNav::badge($i) ?? 0);
+                    @endphp
+                    <div class="nova-nav-group mt-1" data-nav-group="{{ $group['key'] }}" @if($groupActive) data-nav-current @endif>
+                        <button type="button" data-nav-toggle aria-expanded="{{ $groupActive ? 'true' : 'false' }}" aria-controls="nav-{{ $group['key'] }}" @class([
+                            'group flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left text-sm font-medium transition',
+                            'text-white' => $groupActive,
+                            'text-slate-300 hover:bg-white/5 hover:text-white' => ! $groupActive,
+                        ])>
+                            <x-icon :name="$group['icon']" class="size-[18px] {{ $groupActive ? 'text-nova-300' : 'text-slate-500 group-hover:text-slate-300' }}" />
+                            <span class="min-w-0 flex-1 truncate">{{ $group['label'] }}</span>
+                            @if ($groupBadge)<span class="nova-nav-group-badge rounded-full bg-nova-500 px-1.5 py-0.5 font-mono text-[10px] font-semibold text-white">{{ $groupBadge }}</span>@endif
+                            <x-icon name="chevron" class="nova-nav-chevron size-3.5 text-slate-500 transition-transform duration-200" />
+                        </button>
+                        <div id="nav-{{ $group['key'] }}" class="nova-nav-panel" @if(! $groupActive) data-closed @endif>
+                            <ul class="min-h-0 space-y-0.5 overflow-hidden border-l border-white/10 ml-[1.35rem] pl-2">
+                                @foreach ($group['items'] as $item)
+                                    <li>@include('admin.partials.nav-link', ['item' => $item, 'small' => true])</li>
+                                @endforeach
+                            </ul>
+                        </div>
+                    </div>
                 @endforeach
+                <a href="{{ route('admin.nav') }}" class="mt-4 flex items-center gap-2 rounded-lg px-3 py-1.5 text-xs text-slate-500 hover:bg-white/5 hover:text-slate-300" data-nav-customize>
+                    <x-icon name="menu" class="size-3.5" /> Menü anpassen
+                </a>
             </nav>
             <div class="border-t border-white/10 p-3">
                 <a href="{{ route('admin.license') }}" @class(['flex items-center gap-3 rounded-lg px-3 py-2 text-sm hover:bg-white/5', 'bg-white/10 text-white' => request()->routeIs('admin.license', 'admin.license.*'), 'text-slate-400' => ! request()->routeIs('admin.license', 'admin.license.*')])>

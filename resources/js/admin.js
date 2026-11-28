@@ -139,3 +139,33 @@ document.addEventListener('keydown', (e) => {
     }
     if (e.key === 'Escape') sidebar(false);
 });
+
+// --- Aufklappbare Kategorien in der Seitenleiste ----------------------------------
+// Die Kategorie der aktuellen Seite ist immer offen. Im Modus „nur eine offen“ schließt das Öffnen
+// einer Kategorie die anderen, sonst merkt sich der Browser, welche Kategorien offen sind.
+(() => {
+    const nav = $('[data-nav]');
+    if (!nav) return;
+    const single = nav.dataset.navSingle === '1';
+    const KEY = 'nova-nav-open';
+    const read = () => { try { return JSON.parse(localStorage.getItem(KEY) || '[]'); } catch { return []; } };
+    const write = (list) => { try { localStorage.setItem(KEY, JSON.stringify(list)); } catch { /* privat */ } };
+    const groups = $$('[data-nav-group]', nav);
+    const set = (g, open) => {
+        g.querySelector('[data-nav-toggle]').setAttribute('aria-expanded', String(open));
+        g.querySelector('.nova-nav-panel').toggleAttribute('data-closed', !open);
+    };
+    if (!single) {
+        const saved = read();
+        groups.forEach((g) => { if (saved.includes(g.dataset.navGroup)) set(g, true); });
+    }
+    nav.addEventListener('click', (e) => {
+        const btn = e.target.closest('[data-nav-toggle]');
+        if (!btn) return;
+        const g = btn.closest('[data-nav-group]');
+        const open = btn.getAttribute('aria-expanded') !== 'true';
+        if (single && open) groups.forEach((o) => { if (o !== g) set(o, false); });
+        set(g, open);
+        if (!single) write(groups.filter((o) => o.querySelector('[data-nav-toggle]').getAttribute('aria-expanded') === 'true').map((o) => o.dataset.navGroup));
+    });
+})();

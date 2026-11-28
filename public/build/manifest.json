@@ -27,7 +27,7 @@
     "name": "sortable.esm"
   },
   "resources/css/app.css": {
-    "file": "assets/app-Ctu76-yq.css",
+    "file": "assets/app-BynSeQ-C.css",
     "name": "app",
     "names": [
       "app.css"
@@ -36,7 +36,7 @@
     "isEntry": true
   },
   "resources/js/admin.js": {
-    "file": "assets/admin-hiLN5jda.js",
+    "file": "assets/admin-uoU9UlmQ.js",
     "name": "admin",
     "src": "resources/js/admin.js",
     "isEntry": true
@@ -79,6 +79,16 @@
     "file": "assets/menu-eZGetlea.js",
     "name": "menu",
     "src": "resources/js/menu.js",
+    "isEntry": true,
+    "imports": [
+      "_module.esm-stJ4KnaK.js",
+      "_sortable.esm-BRxt44hw.js"
+    ]
+  },
+  "resources/js/nav-editor.js": {
+    "file": "assets/nav-editor-jpGw18Sn.js",
+    "name": "nav-editor",
+    "src": "resources/js/nav-editor.js",
     "isEntry": true,
     "imports": [
       "_module.esm-stJ4KnaK.js",

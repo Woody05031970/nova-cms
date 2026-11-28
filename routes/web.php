@@ -3,6 +3,7 @@
 use App\Http\Controllers\AccountController as CustomerAccountController;
 use App\Http\Controllers\Admin\AccessibilityController;
 use App\Http\Controllers\Admin\AccountController;
+use App\Http\Controllers\Admin\AdminNavController;
 use App\Http\Controllers\Admin\AiController;
 use App\Http\Controllers\Admin\BackupController;
 use App\Http\Controllers\Admin\BookingAdminController;
@@ -211,6 +212,9 @@ Route::middleware(['auth', 'admin', LicenseGate::class])->prefix('admin')->name(
     Route::get('/seiten', [PageController::class, 'index'])->name('pages.index');
     Route::get('/suche', SearchController::class)->name('search');
     Route::get('/menue', [MenuController::class, 'index'])->name('menu');
+    Route::get('/backoffice-menue', [AdminNavController::class, 'index'])->name('nav');
+    Route::put('/backoffice-menue', [AdminNavController::class, 'update'])->name('nav.update');
+    Route::delete('/backoffice-menue', [AdminNavController::class, 'reset'])->name('nav.reset');
     Route::get('/anfragen', [ContactMessageController::class, 'index'])->name('messages');
     Route::patch('/anfragen/{message}', [ContactMessageController::class, 'read'])->name('messages.read');
     Route::delete('/anfragen/{message}', [ContactMessageController::class, 'destroy'])->name('messages.destroy');

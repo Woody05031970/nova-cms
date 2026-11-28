@@ -99,12 +99,22 @@
 
 /* Ziehen und Ablegen (Menü, Blöcke) */
 .nova-drag-ghost { @apply opacity-40; }
+.nova-dragging .nova-nav-drop { @apply rounded-b-xl bg-nova-50/40 outline-2 outline-dashed outline-nova-200 -outline-offset-4; }
 .nova-drag-chosen > div { @apply shadow-lg ring-2 ring-nova-200; }
 .nova-submenu:not(:has(> li)) { @apply mt-0 min-h-0 border-0; }
 .nova-dragging .nova-submenu { @apply mt-2 min-h-10 border-2 rounded-lg border-nova-300 bg-nova-50/40; }
 
 /* Verwaltung */
 .nova-nav-link.is-active::before { content: ''; @apply absolute top-1.5 bottom-1.5 -left-3 w-1 rounded-r-full bg-gradient-to-b from-nova-300 to-fuchsia-400; }
+/* Aufklappbare Kategorien in der Seitenleiste */
+.nova-nav-panel { display: grid; grid-template-rows: 1fr; transition: grid-template-rows .22s ease, opacity .22s ease; }
+.nova-nav-panel[data-closed] { grid-template-rows: 0fr; opacity: 0; visibility: hidden; }
+.nova-nav-panel > ul { padding-top: 2px; padding-bottom: 4px; }
+.nova-nav-panel[data-closed] > ul { padding: 0; }
+.nova-nav-panel .nova-nav-link.is-active::before { left: calc(-0.5rem - 2px); width: 3px; top: 0.35rem; bottom: 0.35rem; border-radius: 2px; }
+[data-nav-toggle][aria-expanded="true"] .nova-nav-chevron { transform: rotate(90deg); }
+[data-nav-toggle][aria-expanded="true"] .nova-nav-group-badge { display: none; }
+@media (prefers-reduced-motion: reduce) { .nova-nav-panel { transition: none; } }
 .nova-sidebar { background-image: radial-gradient(120% 60% at 0% 0%, rgb(109 79 255 / 0.18), transparent 60%); }
 .nova-palette[open] { animation: nova-pop 0.14s ease-out; }
 @keyframes nova-pop { from { opacity: 0; transform: translateY(-6px) scale(0.98); } }

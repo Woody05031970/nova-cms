@@ -147,7 +147,7 @@ class BackofficeTest extends TestCase
     public function test_neues_layout_der_verwaltung(): void
     {
         $this->actingAs($this->admin())->get('/admin')->assertOk()
-            ->assertSee('id="palette"', false)->assertSee('Strg K')->assertSee('Inhalte')->assertSee('Menü');
+            ->assertSee('id="palette"', false)->assertSee('Strg K')->assertSee('Website')->assertSee('Menü anpassen');
     }
 
     public function test_update_spielt_datenbank_aenderungen_automatisch_ein(): void
