@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="robots" content="noindex">
     <title>Gleich zurück – {{ $siteName }}</title>
+    {!! \App\Support\Design\Favicon::tags() !!}
     @vite(['resources/css/app.css'])
     <style>{!! \App\Support\Design\SiteDesign::css() !!}</style>
 </head>

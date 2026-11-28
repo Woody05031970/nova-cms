@@ -22,6 +22,7 @@ class SiteDesign
         'studio' => ['label' => 'Studio', 'description' => 'Elegant wie ein Magazin: Serifenschrift, klare Kanten.', 'brand' => '#111827', 'accent' => '#c2410c', 'font' => 'serif', 'radius' => 'sharp', 'header' => 'light', 'footer' => 'dark', 'bg' => '#ffffff'],
         'natur' => ['label' => 'Natur', 'description' => 'Warm und freundlich, ideal für Handwerk, Hofladen und Praxis.', 'brand' => '#15803d', 'accent' => '#ca8a04', 'font' => 'rounded', 'radius' => 'round', 'header' => 'light', 'footer' => 'light', 'bg' => '#faf7f2'],
         'ozean' => ['label' => 'Ozean', 'description' => 'Frisch und vertrauenswürdig in Blau, mit großzügigen Rundungen.', 'brand' => '#0369a1', 'accent' => '#06b6d4', 'font' => 'system', 'radius' => 'round', 'header' => 'glass', 'footer' => 'dark', 'bg' => '#f8fbff'],
+        'nova' => ['label' => 'Nova', 'description' => 'In den Farben des Nova-CMS-Logos: Petrol, Orange und ein Hauch Türkis.', 'brand' => '#0a4b5a', 'accent' => '#f97a12', 'font' => 'system', 'radius' => 'round', 'header' => 'dark', 'footer' => 'dark', 'bg' => '#f6fafb', 'header_color' => '#0a4b5a'],
         'nacht' => ['label' => 'Nacht', 'description' => 'Dunkle Kopf- und Fußzeile, kräftige Akzente. Wirkt edel.', 'brand' => '#8b5cf6', 'accent' => '#22d3ee', 'font' => 'system', 'radius' => 'soft', 'header' => 'dark', 'footer' => 'dark', 'bg' => '#ffffff'],
     ];
 
